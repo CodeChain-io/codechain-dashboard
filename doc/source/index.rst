@@ -14,23 +14,23 @@ Term
 Agent
 =====
 
-Agent is living in the same machine with a CodeChain.
-Agent queries the CodeChain to get management information.
-Agent could stop/update/run the CodeChain program.
+An agent lives in the same machine with a CodeChain node. It queries
+CodeChain nodes and get managerial information. It can stop/update/run a
+CodeChain program.
 
 
 Agent Server
 ============
 
-Agent server queries agent to get information.
-Agent saves data to its own DB.
+An agent server queries agents to get information. It saves the collected
+data to its own DB.
 
 
 Frontend
 =========
 
-Frontend visualizes information for a user.
-Frontend queries Agent server.
+A frontend provides the visualization of the information collected from agent
+servers.
 
 
 ***************
