@@ -26,11 +26,11 @@ Agent server queries agent to get information.
 Agent saves data to its own DB.
 
 
-Front End
+Frontend
 =========
 
-Front end visualizes information for a user.
-Front end queries Agent server.
+Frontend visualizes information for a user.
+Frontend queries Agent server.
 
 
 ***************
@@ -433,7 +433,7 @@ Second argument is the target score.
 
 
 **************************
-Front End <-> Agent Server
+Frontend <-> Agent Server
 **************************
 
 Dashboard Page
@@ -442,7 +442,7 @@ Dashboard Page
 dashboard_getNetwork ➡️ ⬅️ 
 --------------------------
 
-Front end requests information to agent server to render dashboard page.
+Frontend requests information to agent server to render dashboard page.
 
 Request
 """""""""
@@ -490,7 +490,7 @@ Node Page
 node_getInfo ➡️ ⬅️ 
 ------------------
 
-Front end requests information to agent server to render node page.
+Frontend requests information to agent server to render node page.
 
 Request
 """""""""
