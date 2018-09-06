@@ -392,6 +392,19 @@ Arguments
 links: :ref:`type-SocketAddr`, :ref:`type-Block`
 
 
+event_blockRequested ➡️ 
+------------------------
+
+This event fires when a node requests a block to another node.
+
+Arguments
+"""""""""
+
+``[SocketAddr, Block]``
+
+links: :ref:`type-SocketAddr`, :ref:`type-Block`
+
+
 event_blockReceived ➡️ 
 ------------------------
 
