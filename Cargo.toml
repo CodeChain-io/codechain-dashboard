@@ -1,0 +1,6 @@
+[package]
+name = "codechain-agent-hub"
+version = "0.1.0"
+authors = ["Juhyung Park"]
+
+[dependencies]
