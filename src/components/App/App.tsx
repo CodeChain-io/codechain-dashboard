@@ -1,8 +1,8 @@
 import * as React from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import Dashboard from "../Dashboard/Dashboard";
-import GlobalNavigationBar from "../GlobalNavigationBar/GlobalNavigationBar";
-import Header from "../Header/Header";
+import { GlobalNavigationBar } from "../GlobalNavigationBar/GlobalNavigationBar";
+import { Header } from "../Header/Header";
 import Nodelist from "../Nodelist/Nodelist";
 import "./App.css";
 

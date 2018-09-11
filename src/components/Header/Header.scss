@@ -8,4 +8,18 @@
   left: 0;
   background: $header-background-color;
   color: white;
+
+  .logo-container {
+    width: $gnb-width;
+    .logo {
+      width: 30px;
+      height: 30px;
+    }
+  }
+  .title-container {
+    flex: 1;
+  }
+  .option-container {
+    width: $gnb-width;
+  }
 }

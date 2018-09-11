@@ -7,4 +7,36 @@
   top: $header-height;
   left: 0;
   background-color: $header-background-color;
+  .gnb-list {
+    margin-top: 60px;
+    .gnb-list-item {
+      position: relative;
+      &:hover {
+        color: white;
+      }
+      transition: color 0.5s ease;
+      color: rgba(255, 255, 255, 0.5);
+      width: $gnb-width;
+      margin-bottom: 30px;
+
+      .gnb-list-item-icon {
+        font-size: 1.1rem;
+      }
+
+      .gnb-list-item-title {
+        font-size: 0.5rem;
+      }
+
+      &.active {
+        color: white;
+      }
+      .gnb-list-item-selected-arrow {
+        position: absolute;
+        top: 5px;
+        right: 0;
+        width: 10px;
+        color: white !important;
+      }
+    }
+  }
 }
