@@ -7,5 +7,6 @@
     overflow: scroll;
     height: calc(100vh - #{$header-height});
     width: calc(100vw - #{$gnb-width});
+    padding: 18px;
   }
 }

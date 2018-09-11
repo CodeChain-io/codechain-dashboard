@@ -1,0 +1,14 @@
+.connect-chart {
+  border: 1px solid rgb(207, 207, 207);
+  border-radius: 3px;
+  overflow: hidden;
+  .connect-chart-header {
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 9px;
+  }
+
+  .connect-chart-body {
+    background-color: white;
+    padding: 9px;
+  }
+}

@@ -15,7 +15,7 @@ const getGnbMenu = (
   isSelected: boolean
 ) => {
   return (
-    <li>
+    <li className="animated fadeIn">
       <Link to={`/${url}`}>
         <div className={`gnb-list-item ${isSelected ? "active" : null}`}>
           {isSelected ? (

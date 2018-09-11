@@ -17,10 +17,12 @@ export const Header = withRouter(props => {
   return (
     <div className="header d-flex align-items-center">
       <div className="logo-container text-center">
-        <img className="logo" src={Logo} />
+        <img className="animated fadeIn logo" src={Logo} />
       </div>
       <div className="title-container text-center">
-        <h3 className="mb-0">{getTitle(props.location.pathname)}</h3>
+        <h3 className="animated fadeIn mb-0">
+          {getTitle(props.location.pathname)}
+        </h3>
       </div>
       <div className="option-container" />
     </div>
