@@ -1,0 +1,11 @@
+@import "styles/variables.scss";
+
+.app {
+  .content-container {
+    margin-top: $header-height;
+    margin-left: $gnb-width;
+    overflow: scroll;
+    height: calc(100vh - #{$header-height});
+    width: calc(100vw - #{$gnb-width});
+  }
+}

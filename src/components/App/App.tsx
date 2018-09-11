@@ -1,28 +1,24 @@
 import * as React from "react";
-import { BrowserRouter as Router, Link, Route } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import GlobalNavigationBar from "../GlobalNavigationBar/GlobalNavigationBar";
+import Header from "../Header/Header";
+import "./App.css";
 
 const App = () => (
   <Router>
-    <div>
-      <ul>
-        <li>
-          <Link to="/">Dashboard</Link>
-        </li>
-        <li>
-          <Link to="/nodelist">Node list</Link>
-        </li>
-      </ul>
-
-      <hr />
-
-      <Route exact={true} path="/" component={Dashboard} />
-      <Route path="/nodelist" component={Nodelist} />
+    <div className="app">
+      <Header />
+      <GlobalNavigationBar />
+      <div className="content-container">
+        <Route exact={true} path="/" component={Dashboard} />
+        <Route path="/nodelist" component={Nodelist} />
+      </div>
     </div>
   </Router>
 );
 
 const Dashboard = () => (
-  <div>
+  <div className="dashboard">
     <h2>Dashboard</h2>
   </div>
 );

@@ -1,0 +1,10 @@
+@import "styles/variables.scss";
+
+.global-navigation-bar {
+  width: $gnb-width;
+  height: calc(100vh - #{$header-height});
+  position: fixed;
+  top: $header-height;
+  left: 0;
+  background-color: $header-background-color;
+}
