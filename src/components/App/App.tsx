@@ -1,7 +1,9 @@
 import * as React from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
+import Dashboard from "../Dashboard/Dashboard";
 import GlobalNavigationBar from "../GlobalNavigationBar/GlobalNavigationBar";
 import Header from "../Header/Header";
+import Nodelist from "../Nodelist/Nodelist";
 import "./App.css";
 
 const App = () => (
@@ -15,18 +17,6 @@ const App = () => (
       </div>
     </div>
   </Router>
-);
-
-const Dashboard = () => (
-  <div className="dashboard">
-    <h2>Dashboard</h2>
-  </div>
-);
-
-const Nodelist = () => (
-  <div>
-    <h2>Node list</h2>
-  </div>
 );
 
 export default App;
