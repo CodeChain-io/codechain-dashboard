@@ -1,48 +1,16 @@
 extern crate ws;
 
+mod handler;
+
 use std::cell::Cell;
 use std::rc::Rc;
 
-use ws::{listen, CloseCode, Error, Handler, Handshake, Message, Result, Sender};
+use ws::listen;
 
-struct Server {
-    out: Sender,
-    count: Rc<Cell<u32>>,
-}
-
-impl Handler for Server {
-    fn on_open(&mut self, _: Handshake) -> Result<()> {
-        // We have a new connection, so we increment the connection counter
-        Ok(self.count.set(self.count.get() + 1))
-    }
-
-    fn on_message(&mut self, msg: Message) -> Result<()> {
-        // Tell the user the current count
-        println!("The number of live connections is {}", self.count.get());
-
-        // Echo the message back
-        self.out.send(msg)
-    }
-
-    fn on_close(&mut self, code: CloseCode, reason: &str) {
-        match code {
-            CloseCode::Normal => println!("The client is done with the connection."),
-            CloseCode::Away => println!("The client is leaving the site."),
-            CloseCode::Abnormal => println!("Closing handshake failed! Unable to obtain closing status from client."),
-            _ => println!("The client encountered an error: {}", reason),
-        }
-
-        // The connection is going down, so we need to decrement the count
-        self.count.set(self.count.get() - 1)
-    }
-
-    fn on_error(&mut self, err: Error) {
-        println!("The server encountered an error: {:?}", err);
-    }
-}
+use handler::WebSocketHandler;
 
 fn main() {
     let count = Rc::new(Cell::new(0));
     println!("Listen on 3012 port");
-    listen("127.0.0.1:3012", |out| { Server { out: out, count: count.clone() }}).unwrap();
+    listen("127.0.0.1:3012", |out| { WebSocketHandler { out: out, count: count.clone() }}).unwrap();
 }
