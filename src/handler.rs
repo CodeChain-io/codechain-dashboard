@@ -7,11 +7,13 @@ use serde_json;
 use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sender};
 
 use super::rpc::router::{Error as RouterError, Router};
+use super::types::HandlerContext;
 
 pub struct WebSocketHandler {
     pub out: Sender,
     pub count: Rc<Cell<u32>>,
     pub routing_table: Arc<Router>,
+    pub context: Arc<HandlerContext>,
 }
 
 impl Handler for WebSocketHandler {
@@ -49,7 +51,7 @@ impl Handler for WebSocketHandler {
                         ..
                     })) => {
                         let value_params = serde_json::to_value(params).expect("Change to value always success");
-                        match self.routing_table.run(&method, value_params) {
+                        match self.routing_table.run(self.context.clone(), &method, value_params) {
                             Ok(Some(value)) => Some(
                                 Success {
                                     jsonrpc: None,
