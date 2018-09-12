@@ -1,8 +1,12 @@
 #[macro_use]
 extern crate log;
 
+extern crate codechain_rpc as crpc;
 extern crate jsonrpc_core;
+extern crate primitives as cprimitives;
 extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate serde_json;
 extern crate ws;
 
