@@ -1,6 +1,6 @@
 import { Component } from "react";
 import * as React from "react";
-import { ConnectChart } from "./ConnectChart/ConnectChart";
+import { ConnectionGraphContainer } from "./ConnectGraphContainer/ConnectionGraphContainer";
 
 export default class Dashboard extends Component {
   constructor(props: {}) {
@@ -8,8 +8,8 @@ export default class Dashboard extends Component {
   }
   public render() {
     return (
-      <div className="dashboard">
-        <ConnectChart className="animated fadeIn" />
+      <div className="dashboard vh-100">
+        <ConnectionGraphContainer className="animated fadeIn" />
       </div>
     );
   }
