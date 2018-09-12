@@ -37,6 +37,10 @@ where
     }
 }
 
+pub enum Error {
+    MethodNotFound,
+}
+
 impl Router {
     pub fn new() -> Self {
         let f: fn() -> String = || "y".to_string();
@@ -51,10 +55,10 @@ impl Router {
         self.table.insert(method, route);
     }
 
-    pub fn run(&self, method: &str, arg: Value) -> Result<Option<Value>, String> {
+    pub fn run(&self, method: &str, arg: Value) -> Result<Option<Value>, Error> {
         let route = self.table.get(method);
         match route {
-            None => Err("Method not found".to_string()),
+            None => Err(Error::MethodNotFound),
             Some(route) => Ok(route.run(arg)),
         }
     }

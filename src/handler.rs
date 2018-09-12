@@ -4,10 +4,9 @@ use std::sync::Arc;
 
 use jsonrpc_core::types::{Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Response, Success};
 use serde_json;
-use serde_json::Value;
 use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sender};
 
-use super::rpc::router::Router;
+use super::rpc::router::{Error as RouterError, Router};
 
 pub struct WebSocketHandler {
     pub out: Sender,
@@ -46,20 +45,27 @@ impl Handler for WebSocketHandler {
                     Ok(Call::MethodCall(MethodCall {
                         id,
                         method,
+                        params,
                         ..
                     })) => {
-                        // FIXME
-                        let ret = match self.routing_table.run(&method, Value::from(0)) {
-                            Ok(Some(value)) => value,
-                            _ => Value::from("not routed"),
-                        };
-                        Some(
-                            Success {
-                                jsonrpc: None,
-                                result: ret,
-                                id,
-                            }.into(),
-                        )
+                        let value_params = serde_json::to_value(params).expect("Change to value always success");
+                        match self.routing_table.run(&method, value_params) {
+                            Ok(Some(value)) => Some(
+                                Success {
+                                    jsonrpc: None,
+                                    result: value,
+                                    id,
+                                }.into(),
+                            ),
+                            Ok(None) => None,
+                            Err(RouterError::MethodNotFound) => Some(
+                                Failure {
+                                    jsonrpc: None,
+                                    id,
+                                    error: JSONRPCError::new(ErrorCode::MethodNotFound),
+                                }.into(),
+                            ),
+                        }
                     }
                     Ok(Call::Notification(_)) => None,
                 }
