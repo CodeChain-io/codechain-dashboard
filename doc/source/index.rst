@@ -467,7 +467,7 @@ Response
 
 ::
 
-  interface DashboardGetNetworkRequest {
+  interface DashboardGetNetworkResponse {
     nodes: {
       address: SocketAddr;
       version: string;
@@ -515,7 +515,7 @@ Response
 
 ::
 
-  interface NodeGetInfoRequest {
+  interface NodeGetInfoResponse {
     version: string;
     commitHash: string;
     bestBlockId: { number: number, hash: H256 };
