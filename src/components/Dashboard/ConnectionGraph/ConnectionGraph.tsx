@@ -43,25 +43,42 @@ export class ConnectionGraph extends React.Component<Props, States> {
       <div ref={this.containerRef} className={className}>
         {drawNodeList ? (
           <InteractiveForceGraph
-            simulationOptions={{ height, width }}
+            simulationOptions={{
+              height,
+              width,
+              animate: true,
+              radiusMargin: 30
+            }}
             labelAttr="label"
             // tslint:disable-next-line:jsx-no-lambda
             onSelectNode={(node: any) => console.log(node)}
             highlightDependencie={true}
           >
             <ForceGraphNode
-              node={{ id: "first-node", label: "10.20.40.2" }}
+              node={{ id: "node1", label: "Node-1", radius: 10 }}
               showLabel={true}
               fill="red"
             />
             <ForceGraphNode
-              node={{ id: "second-node", label: "12.42.13.4" }}
+              node={{ id: "node2", label: "Node-2", radius: 10 }}
               showLabel={true}
               fill="blue"
             />
-            <ForceGraphLink
-              link={{ source: "first-node", target: "second-node" }}
+            <ForceGraphNode
+              node={{ id: "node3", label: "Node-3", radius: 10 }}
+              showLabel={true}
+              fill="red"
             />
+            <ForceGraphNode
+              node={{ id: "node4", label: "Node-4", radius: 10 }}
+              showLabel={true}
+              fill="red"
+            />
+            <ForceGraphLink link={{ source: "node1", target: "node2" }} />
+            <ForceGraphLink link={{ source: "node1", target: "node3" }} />
+            <ForceGraphLink link={{ source: "node1", target: "node4" }} />
+            <ForceGraphLink link={{ source: "node3", target: "node4" }} />
+            <ForceGraphLink link={{ source: "node3", target: "node2" }} />
           </InteractiveForceGraph>
         ) : null}
       </div>
