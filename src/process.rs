@@ -7,6 +7,7 @@ use subprocess::{Exec, Popen, PopenError, Redirection};
 
 pub enum Error {
     EnvParseError,
+    AlreadyRunning,
     SubprocessError(PopenError),
 }
 
@@ -77,6 +78,10 @@ impl Process {
     }
 
     pub fn run(&mut self, env: String, args: String) -> Result<(), Error> {
+        if self.is_running() {
+            return Err(Error::AlreadyRunning)
+        }
+
         let args_iter = args.split_whitespace();
         let args_vec: Vec<String> = args_iter.map(|str| str.to_string()).collect();
 
@@ -86,7 +91,8 @@ impl Process {
             .arg("run")
             .arg("--")
             .cwd(self.option.codechain_dir.clone())
-            .stderr(Redirection::Merge).args(&args_vec);
+            .stderr(Redirection::Merge)
+            .args(&args_vec);
 
         for (k, v) in envs {
             exec = exec.env(k, v);
@@ -96,6 +102,19 @@ impl Process {
         self.child = Some(child);
 
         Ok(())
+    }
+
+    pub fn is_running(&mut self) -> bool {
+        if self.child.is_none() {
+            return false
+        }
+
+        let child = self.child.as_mut().unwrap();
+        if child[0].poll().is_none() {
+            return true
+        } else {
+            return false
+        }
     }
 
     fn parse_env(env: &str) -> Result<Vec<(&str, &str)>, Error> {

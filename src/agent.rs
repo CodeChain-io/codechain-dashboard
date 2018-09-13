@@ -9,7 +9,7 @@ use super::logger::init as logger_init;
 use super::process::{Process, ProcessOption};
 use super::rpc::api::add_routing;
 use super::rpc::router::Router;
-use super::types::{HandlerContext, AgentArgs};
+use super::types::{AgentArgs, HandlerContext};
 
 pub fn run(args: AgentArgs) {
     logger_init().expect("Logger should be initialized");
