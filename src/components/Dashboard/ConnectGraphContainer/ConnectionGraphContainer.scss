@@ -1,9 +1,11 @@
+@import "styles/variables.scss";
+
 .connection-graph-container {
-  border: 1px solid rgb(207, 207, 207);
+  border: 1px solid $container-border-color;
   border-radius: 3px;
   overflow: hidden;
   .connection-graph-header {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: $dark-background-color;
     padding: 9px;
   }
 

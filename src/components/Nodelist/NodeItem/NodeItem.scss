@@ -1,0 +1,27 @@
+@import "styles/variables.scss";
+
+.node-item {
+  border: 1px solid $container-border-color;
+  border-radius: 3px;
+  overflow: hidden;
+
+  .node-item-info-container {
+    background-color: white;
+    flex: 1;
+    padding: 8px;
+    color: $dark-text-color;
+    .node-status {
+      width: 50px;
+    }
+    .node-name {
+      flex: 1;
+    }
+  }
+
+  .setting-btn-container {
+    background-color: $dark-background-color;
+    color: $gray-text-color;
+    width: 80px;
+    border-left: 1px solid $container-border-color;
+  }
+}
