@@ -91,6 +91,7 @@ impl Process {
             .arg("run")
             .arg("--")
             .cwd(self.option.codechain_dir.clone())
+            .stdout(Redirection::Pipe)
             .stderr(Redirection::Merge)
             .args(&args_vec);
 

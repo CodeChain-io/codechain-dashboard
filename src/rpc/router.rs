@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::option::Option;
 use std::sync::Arc;
 
 use serde::de::Deserialize;
@@ -7,41 +8,50 @@ use serde_json;
 use serde_json::Value;
 
 use super::super::types::HandlerContext;
+use super::types::{RPCError, RPCResult};
 
 pub trait Route {
-    fn run(&self, context: Arc<HandlerContext>, value: Value) -> Option<Value>;
+    fn run(&self, context: Arc<HandlerContext>, value: Value) -> RPCResult<Value>;
 }
 
 pub struct Router {
     table: HashMap<&'static str, Box<Route>>,
 }
 
-impl<Arg, Result> Route for fn(Arc<HandlerContext>, Arg) -> Result
+impl<Arg, Res> Route for fn(Arc<HandlerContext>, Arg) -> RPCResult<Res>
 where
-    Result: Serialize,
+    Res: Serialize,
     for<'de> Arg: Deserialize<'de>,
 {
-    fn run(&self, context: Arc<HandlerContext>, value: Value) -> Option<Value> {
-        let arg = serde_json::from_value(value).expect("Should be fixed");
-        let result = self(context, arg);
-        let value_result = serde_json::to_value(result).expect("SHould be fixed");
-        Some(value_result)
+    fn run(&self, context: Arc<HandlerContext>, value: Value) -> RPCResult<Value> {
+        let arg = serde_json::from_value(value)?;
+        let result = self(context, arg)?;
+        if let Some(result) = result {
+            Ok(Some(serde_json::to_value(result)?))
+        } else {
+            Ok(None)
+        }
     }
 }
 
-impl<Result> Route for fn(Arc<HandlerContext>) -> Result
+impl<Res> Route for fn(Arc<HandlerContext>) -> RPCResult<Res>
 where
-    Result: Serialize,
+    Res: Serialize,
 {
-    fn run(&self, context: Arc<HandlerContext>, _value: Value) -> Option<Value> {
-        let result = self(context);
-        let value_result = serde_json::to_value(result).expect("SHould be fixed");
-        Some(value_result)
+    fn run(&self, context: Arc<HandlerContext>, _value: Value) -> RPCResult<Value> {
+        let result = self(context)?;
+        if let Some(result) = result {
+            let value_result = serde_json::to_value(result)?;
+            Ok(Some(value_result))
+        } else {
+            Ok(None)
+        }
     }
 }
 
 pub enum Error {
     MethodNotFound,
+    RPC(RPCError),
 }
 
 impl Router {
@@ -60,7 +70,10 @@ impl Router {
         let route = self.table.get(method);
         match route {
             None => Err(Error::MethodNotFound),
-            Some(route) => Ok(route.run(context, arg)),
+            Some(route) => match route.run(context, arg) {
+                Ok(value) => Ok(value),
+                Err(err) => Err(Error::RPC(err)),
+            },
         }
     }
 }
