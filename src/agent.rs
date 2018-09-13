@@ -2,7 +2,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use ws::listen;
+use ws::connect;
 
 use super::handler::WebSocketHandler;
 use super::logger::init as logger_init;
@@ -18,7 +18,6 @@ pub fn run(args: AgentArgs) {
 
     let mut routing_table = Arc::new(Router::new());
     add_routing(Arc::get_mut(&mut routing_table).unwrap());
-    cinfo!("Listen on 4012 port");
 
     let process = Process::run_thread(ProcessOption {
         codechain_dir: args.codechain_dir.to_string(),
@@ -29,7 +28,8 @@ pub fn run(args: AgentArgs) {
         process,
     });
 
-    listen("127.0.0.1:4012", move |out| WebSocketHandler {
+    cinfo!("Connect to {}", args.hub_url);
+    connect(args.hub_url, move |out| WebSocketHandler {
         out,
         count: count.clone(),
         routing_table: routing_table.clone(),

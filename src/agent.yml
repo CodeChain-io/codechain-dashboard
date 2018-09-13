@@ -14,3 +14,9 @@ args:
         help: log file will be saved to the path
         required: true
         takes_value: true
+    - connect:
+        long: connect
+        short: c
+        help: URL of Agent Hub. ex) "ws://127.0.0.1:3012"
+        required: true
+        takes_value: true
