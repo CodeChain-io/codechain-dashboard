@@ -101,6 +101,15 @@ ISO8601Duration
   type ISO8601Duration = string // "P1YT30M3S"
 
 
+.. _type-NodeStatus:
+
+NodeStatus
+----------
+
+::
+
+  type NodeStatue = "Run" | "Stop" | "Error" | "UFO";
+
 Error
 =======
 
@@ -469,6 +478,7 @@ Response
 
   interface DashboardGetNetworkResponse {
     nodes: {
+      status: NodeStatus;
       address: SocketAddr;
       version: string;
       bestBlockId:  { number: number, hash: H256 };
@@ -477,9 +487,10 @@ Response
     connections: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
   }
 
+links: :ref:`type-NodeStatus`
+
 dashboard_updated ➡️ 
 --------------------
-
 
 Arguments
 """"""""""
@@ -487,7 +498,8 @@ Arguments
 
   type DashboardUpdatedArguments = [{
     nodes?: {
-      address?: SocketAddr;
+      address: SocketAddr;
+      status?: NodeStatus;
       version?: string;
       bestBlockId?:  { number: number, hash: H256 };
       pendingParcelCount?: number;
@@ -496,6 +508,7 @@ Arguments
     connectionsRemoved?: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
   }]
 
+links: :ref:`type-NodeStatus`
 
 Node Page
 ==========
@@ -516,6 +529,8 @@ Response
 ::
 
   interface NodeGetInfoResponse {
+    address: SocketAddr;
+    status: NodeStatus;
     version: string;
     commitHash: string;
     bestBlockId: { number: number, hash: H256 };
@@ -532,6 +547,7 @@ Response
     events: Event[];
   }
 
+links: :ref:`type-NodeStatus`
 
 node_updated ➡️ 
 ----------------
@@ -542,6 +558,8 @@ Arguments
 ::
 
   type NodeUpdatedArguments = [{
+    address: SocketAddr;
+    status?: NodeStatus;
     version?: string;
     commitHash?: string;
     bestBlockId?: { number: number, hash: H256 };
@@ -557,6 +575,7 @@ Arguments
     eventsAdded?: Event[];
   }]
 
+links: :ref:`type-NodeStatus`
 
 node_start ➡️ ⬅️ 
 ----------------
