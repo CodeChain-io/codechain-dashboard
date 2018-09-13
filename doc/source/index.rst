@@ -532,6 +532,7 @@ Response
 
   interface NodeGetInfoResponse {
     address: SocketAddr;
+    agentVersion: String;
     status: NodeStatus;
     version: string;
     commitHash: string;
