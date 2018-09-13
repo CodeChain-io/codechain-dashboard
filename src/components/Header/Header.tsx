@@ -4,13 +4,13 @@ import "./Header.css";
 import * as Logo from "./img/logo.png";
 
 const getTitle = (pathName: string) => {
-  switch (pathName) {
-    case "/":
-      return "CodeChain Dashboard";
-    case "/nodelist":
-      return "CodeChain Node List";
+  if (pathName === "/") {
+    return "CodeChain Dashboard";
+  } else if (/^\/nodelist/.test(pathName)) {
+    return "CodeChain Node List";
+  } else {
+    return "CodeChain";
   }
-  return "CodeChain";
 };
 
 export const Header = withRouter(props => {

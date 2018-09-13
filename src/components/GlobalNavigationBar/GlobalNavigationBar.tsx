@@ -38,7 +38,12 @@ export const GlobalNavigationBar = withRouter(props => {
     <div className="global-navigation-bar">
       <ul className="gnb-list list-unstyled">
         {getGnbMenu("", "Dashboard", faTachometerAlt, pathname === "/")}
-        {getGnbMenu("nodelist", "Node List", faCoins, pathname === "/nodelist")}
+        {getGnbMenu(
+          "nodelist",
+          "Node List",
+          faCoins,
+          /^\/nodelist/.test(pathname)
+        )}
       </ul>
     </div>
   );

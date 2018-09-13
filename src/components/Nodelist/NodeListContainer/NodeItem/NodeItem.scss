@@ -9,12 +9,17 @@
     background-color: white;
     flex: 1;
     padding: 8px;
-    color: $dark-text-color;
+    a {
+      color: $dark-text-color;
+    }
     .node-status {
       width: 50px;
     }
     .node-name {
       flex: 1;
+    }
+    &:hover {
+      background-color: $dark-background-color;
     }
   }
 
