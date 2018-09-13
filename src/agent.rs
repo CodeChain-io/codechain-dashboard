@@ -9,9 +9,9 @@ use super::logger::init as logger_init;
 use super::process::{Process, ProcessOption};
 use super::rpc::api::add_routing;
 use super::rpc::router::Router;
-use super::types::HandlerContext;
+use super::types::{HandlerContext, AgentArgs};
 
-pub fn run() {
+pub fn run(args: AgentArgs) {
     logger_init().expect("Logger should be initialized");
 
     let count = Rc::new(Cell::new(0));
@@ -21,8 +21,8 @@ pub fn run() {
     cinfo!("Listen on 4012 port");
 
     let process = Process::run_thread(ProcessOption {
-        command: "codechain".to_string(),
-        log_file: "codechain.stdout.log".to_string(),
+        codechain_dir: args.codechain_dir.to_string(),
+        log_file_path: args.log_file_path.to_string(),
     });
 
     let context = Arc::new(HandlerContext {

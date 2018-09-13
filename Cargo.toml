@@ -5,6 +5,7 @@ authors = ["CodeChain Team <codechain@kodebox.io>"]
 
 [dependencies]
 atty = "0.2"
+clap = { version = "*", features = ["yaml"] }
 colored = "1.6"
 env_logger = "0.5.7"
 jsonrpc-core = { git = "https://github.com/paritytech/jsonrpc.git", branch = "parity-1.11" }

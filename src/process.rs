@@ -17,8 +17,8 @@ impl From<PopenError> for Error {
 }
 
 pub struct ProcessOption {
-    pub command: String,
-    pub log_file: String,
+    pub codechain_dir: String,
+    pub log_file_path: String,
 }
 
 pub struct Process {
@@ -82,13 +82,17 @@ impl Process {
 
         let envs = Self::parse_env(&env)?;
 
-        let mut exec = Exec::cmd(self.option.command.clone()).stderr(Redirection::Merge).args(&args_vec);
+        let mut exec = Exec::cmd("cargo")
+            .arg("run")
+            .arg("--")
+            .cwd(self.option.codechain_dir.clone())
+            .stderr(Redirection::Merge).args(&args_vec);
 
         for (k, v) in envs {
             exec = exec.env(k, v);
         }
 
-        let child = (exec | Exec::cmd("tee").arg(self.option.log_file.clone())).popen()?;
+        let child = (exec | Exec::cmd("tee").arg(self.option.log_file_path.clone())).popen()?;
         self.child = Some(child);
 
         Ok(())

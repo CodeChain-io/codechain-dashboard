@@ -1,0 +1,16 @@
+name: cagent
+version: "0.1.0"
+version_short: "v"
+author: CodeChain Team <codechain@kodebox.io>
+about: CodeChain Agent
+args:
+    - codechain-dir:
+        long: codechain-dir
+        help: CodeChain's repository
+        required: true
+        takes_value: true
+    - log-file:
+        long: log-file
+        help: log file will be saved to the path
+        required: true
+        takes_value: true

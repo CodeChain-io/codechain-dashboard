@@ -1,7 +1,8 @@
 #[macro_use]
-extern crate log;
-
+extern crate clap;
 extern crate jsonrpc_core;
+#[macro_use]
+extern crate log;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -18,7 +19,16 @@ mod types;
 mod agent;
 
 use self::agent::run;
+use types::AgentArgs;
 
 fn main() {
-    run();
+    let yaml = load_yaml!("agent.yml");
+    let matches = clap::App::from_yaml(yaml).get_matches();
+    let codechain_dir = matches.value_of("codechain-dir").expect("codechain-dir is required option");
+    let log_file_path = matches.value_of("log-file").expect("log-file is required option");
+    let args = AgentArgs {
+        codechain_dir,
+        log_file_path
+    };
+    run(args);
 }
