@@ -521,7 +521,9 @@ Frontend requests information to agent server to render node page.
 Request
 """""""""
 
-No request arguments
+First argument is the address of a node.
+
+``[SocketAddr]``
 
 Response
 """""""""
