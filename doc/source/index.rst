@@ -126,6 +126,8 @@ DashboardNodeInfo
     pendingParcelCount: number;
   }
 
+links: type-NodeStatus_, type-SocketAddr_
+
 .. _type-DashboardUFONodeInfo:
 
 DashboardUFONodeInfo
@@ -348,7 +350,7 @@ Response
 
   type ShellGetUptime = ISO8601Duration | null
 
-links: :ref:`type-ISO8601Duration`
+links: type-ISO8601Duration_
 
 
 shell_updateCodeChain ➡️ ⬅️ 
@@ -398,7 +400,7 @@ Arguments
 Argument is the other node's socket address.
 ``SocketAddr``
 
-links: :ref:`type-SocketAddr`
+links: type-SocketAddr_
 
 
 event_disconnected ➡️ 
@@ -412,7 +414,7 @@ Arguments
 Argument is the other node's socket address.
 ``SocketAddr``
 
-links: :ref:`type-SocketAddr`
+links: type-SocketAddr_
 
 
 event_parcelSent ➡️ 
@@ -428,7 +430,7 @@ Second argument is the content of the parcels.
 
 ``[SocketAddr, Parcel[]]``
 
-links: :ref:`type-SocketAddr`, :ref:`type-Parcel`
+links: type-SocketAddr_, type-Parcel_
 
 
 event_parcelReceived ➡️ 
@@ -441,7 +443,7 @@ Arguments
 
 ``[SocketAddr, Parcel[]]``
 
-links: :ref:`type-SocketAddr`, :ref:`type-Parcel`
+links: type-SocketAddr_, type-Parcel_
 
 
 event_parcelRecevedByRPC ➡️ 
@@ -454,7 +456,7 @@ Arguments
 
 ``[Parcel]``
 
-links: :ref:`type-Parcel`
+links: type-Parcel_
 
 event_blockSent ➡️ 
 -------------------
@@ -466,7 +468,7 @@ Arguments
 
 ``[SocketAddr, Block]``
 
-links: :ref:`type-SocketAddr`, :ref:`type-Block`
+links: type-SocketAddr_, type-Block_
 
 
 event_blockRequested ➡️ 
@@ -479,7 +481,7 @@ Arguments
 
 ``[SocketAddr, Block]``
 
-links: :ref:`type-SocketAddr`, :ref:`type-Block`
+links: type-SocketAddr_, type-Block_
 
 
 event_blockReceived ➡️ 
@@ -492,7 +494,7 @@ Arguments
 
 ``[SocketAddr, Block]``
 
-links: :ref:`type-SocketAddr`, :ref:`type-Block`
+links: type-SocketAddr_, type-Block_
 
 
 event_miningStarted ➡️ 
@@ -549,7 +551,7 @@ Response
     connections: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
   }
 
-links: :ref:`type-NodeStatus`, :ref:`type-DashboardNodeInfo`, :ref:`type-DashboardUFONodeInfo`
+links: type-DashboardNodeInfo_, type-DashboardUFONodeInfo_
 
 dashboard_updated ➡️ 
 --------------------
@@ -564,7 +566,7 @@ Arguments
     connectionsRemoved?: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
   }]
 
-links: :ref:`type-NodeStatus`
+links: type-DashboardNodeInfo_, type-DashboardUFONodeInfo_
 
 Node Page
 ==========
@@ -588,7 +590,7 @@ Response
 
   type NodeGetInfoResponse = NodeInfo | UFONodeInfo
 
-links: :ref:`type-NodeInfo`, :ref:`type-UFONodeInfo`
+links: type-NodeInfo_, type-UFONodeInfo_
 
 node_updated ➡️ 
 ----------------
@@ -616,7 +618,7 @@ Arguments
     eventsAdded?: Event[];
   }]
 
-links: :ref:`type-NodeStatus`
+links: type-NodeStatus_
 
 node_start ➡️ ⬅️ 
 ----------------
@@ -628,7 +630,7 @@ Request
 
   type NodeStartRequest = ShellStartCodeChainRequest
 
-links: :ref:`type-ShellStartCodeChainRequest`
+links: type-ShellStartCodeChainRequest_
 
 Response
 """""""""
@@ -710,7 +712,7 @@ Response
     }[]
   }
 
-links: :ref:`type-ISO8601`
+links: type-ISO8601_
 
 rpc_run ➡️ ⬅️ 
 --------------
@@ -722,7 +724,7 @@ Request
 
   type RPCRunRequest = CodeChainCallRPCRequest
 
-links: :ref:`type-CodeChainCallRPCRequest`
+links: type-CodeChainCallRPCRequest_
 
 Response
 """""""""
@@ -731,7 +733,7 @@ Response
 
   type RPCRunResponse = CodeChainCallRPCResponse
 
-links: :ref:`type-CodeChainCallRPCResponse`
+links: type-CodeChainCallRPCResponse_
 
 
 ..
