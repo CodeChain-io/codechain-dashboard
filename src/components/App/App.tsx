@@ -1,19 +1,24 @@
 import * as React from "react";
+import { connect, DispatchProp } from "react-redux";
 import { BrowserRouter as Router, Route } from "react-router-dom";
-import RequestAgent from "../../requests";
+import RequestAgent from "../../request";
 import Dashboard from "../Dashboard/Dashboard";
 import { GlobalNavigationBar } from "../GlobalNavigationBar/GlobalNavigationBar";
 import { Header } from "../Header/Header";
 import Nodelist from "../Nodelist/Nodelist";
 import "./App.css";
 
-export default class App extends React.Component {
-  private requestAgent: RequestAgent;
-  public componentDidMount() {
-    this.requestAgent = new RequestAgent("localhost:3012");
+class App extends React.Component<DispatchProp> {
+  public componentWillMount() {
+    RequestAgent.getInstance().setDispatch(this.props.dispatch);
+    RequestAgent.getInstance()
+      .call("dashboard_getNetwork", [])
+      .then((result: any) => {
+        console.log(result);
+      });
   }
   public componentWillUnmount() {
-    this.requestAgent.close();
+    RequestAgent.getInstance().close();
   }
   public render() {
     return (
@@ -30,3 +35,4 @@ export default class App extends React.Component {
     );
   }
 }
+export default connect()(App);
