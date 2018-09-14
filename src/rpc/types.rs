@@ -26,6 +26,7 @@ pub fn response<T>(value: T) -> RPCResult<T> {
 const ERR_ALREADY_RUNNING: i64 = 1;
 const ERR_ENV_PARSE: i64 = 2;
 const ERR_PROCESS_INTERNAL: i64 = 2;
+const ERR_CODECHAIN_NOT_RUNNING: i64 = 3;
 
 impl RPCError {
     pub fn to_jsonrpc_error(&self) -> JSONRPCError {
@@ -39,6 +40,12 @@ impl RPCError {
             }
             RPCError::Process(ProcessError::SubprocessError(err)) => {
                 Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("Process error occured {:?}", err))
+            }
+            RPCError::Process(ProcessError::NotRunning) => {
+                Self::create_rpc_error(ERR_CODECHAIN_NOT_RUNNING, "CodeChain is not running now")
+            }
+            RPCError::Process(ProcessError::IO(err)) => {
+                Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("IO error occured {:?}", err))
             }
         }
     }

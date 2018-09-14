@@ -12,6 +12,8 @@ pub fn add_routing(routing_table: &mut Router) {
         "shell_startCodeChain",
         Box::new(shell_start_code_chain as fn(Arc<HandlerContext>, ShellStartCodeChainRequest) -> RPCResult<()>),
     );
+    routing_table
+        .add_route("shell_stopCodeChain", Box::new(shell_stop_code_chain as fn(Arc<HandlerContext>) -> RPCResult<()>));
 }
 
 fn ping(_context: Arc<HandlerContext>) -> RPCResult<String> {
@@ -26,6 +28,16 @@ fn shell_start_code_chain(context: Arc<HandlerContext>, req: ShellStartCodeChain
     context.process.send(ProcessMessage::Run {
         env: req.env,
         args: req.args,
+        callback: tx,
+    })?;
+    let process_result = rx.recv()?;
+    process_result?;
+    response(())
+}
+
+fn shell_stop_code_chain(context: Arc<HandlerContext>) -> RPCResult<()> {
+    let (tx, rx) = channel();
+    context.process.send(ProcessMessage::Stop {
         callback: tx,
     })?;
     let process_result = rx.recv()?;

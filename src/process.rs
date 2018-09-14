@@ -1,19 +1,29 @@
+use std::io::Error as IOError;
 use std::option::Option;
 use std::result::Result;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
+use std::time::Duration;
 use subprocess::{Exec, Popen, PopenError, Redirection};
 
 pub enum Error {
     EnvParseError,
     AlreadyRunning,
+    NotRunning,
     SubprocessError(PopenError),
+    IO(IOError),
 }
 
 impl From<PopenError> for Error {
     fn from(error: PopenError) -> Self {
         Error::SubprocessError(error)
+    }
+}
+
+impl From<IOError> for Error {
+    fn from(error: IOError) -> Self {
+        Error::IO(error)
     }
 }
 
@@ -63,7 +73,8 @@ impl Process {
                     Message::Stop {
                         callback,
                     } => {
-                        callback.send(Ok(())).expect("Callback should be success");
+                        let result = process.stop();
+                        callback.send(result).expect("Callback should be success");
                     }
                     Message::Quit {
                         callback,
@@ -130,5 +141,28 @@ impl Process {
             }
         }
         return Ok(ret)
+    }
+
+    pub fn stop(&mut self) -> Result<(), Error> {
+        if !self.is_running() {
+            return Err(Error::NotRunning)
+        }
+
+        let codechain = &mut self.child.as_mut().expect("Already checked")[0];
+        ctrace!("Send SIGTERM to CodeChain");
+        codechain.terminate();
+
+        let wait_result = codechain.wait_timeout(Duration::new(10, 0))?;
+
+        if let Some(exit_code) = wait_result {
+            ctrace!("CodeChain closed with {:?}", exit_code);
+            return Ok(())
+        }
+
+        cinfo!("CodeChain does not exit after 10 seconds");
+
+        codechain.kill()?;
+
+        Ok(())
     }
 }
