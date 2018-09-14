@@ -110,6 +110,74 @@ NodeStatus
 
   type NodeStatue = "Run" | "Stop" | "Error" | "UFO";
 
+
+.. _type-DashboardNodeInfo:
+
+DashboardNodeInfo
+------------------
+
+::
+
+  interface NodeInfo {
+    status: NodeStatus;
+    address: SocketAddr;
+    version: { version: string, hash: string };
+    bestBlockId:  { number: number, hash: H256 };
+    pendingParcelCount: number;
+  }
+
+.. _type-DashboardUFONodeInfo:
+
+DashboardUFONodeInfo
+--------------------
+
+::
+
+  interface NodeInfo {
+    status: NodeStatus;
+    address: SocketAddr;
+  }
+
+.. _type-NodeInfo:
+
+NodeInfo
+--------
+
+::
+
+  interface NodeInfo {
+    address: SocketAddr;
+    agentVersion: String;
+    status: NodeStatus;
+    version: { version: string, hash: string };
+    commitHash: string;
+    bestBlockId: { number: number, hash: H256 };
+    pendingParcels: Parcel[];
+    peers: SocketAddr[];
+    whitelist: { list: SocketAddr[], enabled: bool };
+    blacklist: { list: SocketAddr[], enabled: bool };
+    hardware: { 
+      cpuUsage: number,
+      diskUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"},
+      memoryUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"}
+    };
+    // events from this node order by created time.
+    events: Event[];
+  }
+
+.. _type-UFONodeInfo:
+
+UFONodeInfo
+-----------
+
+::
+
+  interface UFONodeInfo {
+    address: SocketAddr;
+    agentVersion: String;
+    status: NodeStatus;
+  }
+
 Error
 =======
 
@@ -477,17 +545,11 @@ Response
 ::
 
   interface DashboardGetNetworkResponse {
-    nodes: {
-      status: NodeStatus;
-      address: SocketAddr;
-      version: string;
-      bestBlockId:  { number: number, hash: H256 };
-      pendingParcelCount: number;
-    }[];
+    nodes: (DashboardNodeInfo | DashboardUFONodeInfo)[];
     connections: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
   }
 
-links: :ref:`type-NodeStatus`
+links: :ref:`type-NodeStatus`, :ref:`type-DashboardNodeInfo`, :ref:`type-DashboardUFONodeInfo`
 
 dashboard_updated ➡️ 
 --------------------
@@ -497,13 +559,7 @@ Arguments
 ::
 
   type DashboardUpdatedArguments = [{
-    nodes?: {
-      address: SocketAddr;
-      status?: NodeStatus;
-      version?: string;
-      bestBlockId?:  { number: number, hash: H256 };
-      pendingParcelCount?: number;
-    }[];
+    nodes?: ({ address: SocketAddr; } | Partial<DashboardNodeInfo> | Partial<DashboardUFONodeInfo>)[];
     connectionsAdded?: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
     connectionsRemoved?: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
   }]
@@ -530,27 +586,9 @@ Response
 
 ::
 
-  interface NodeGetInfoResponse {
-    address: SocketAddr;
-    agentVersion: String;
-    status: NodeStatus;
-    version: string;
-    commitHash: string;
-    bestBlockId: { number: number, hash: H256 };
-    pendingParcels: Parcel[];
-    peers: SocketAddr[];
-    whitelist: { list: SocketAddr[], enabled: bool };
-    blacklist: { list: SocketAddr[], enabled: bool };
-    hardware: { 
-      cpuUsage: number,
-      diskUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"},
-      memoryUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"}
-    };
-    // events from this node order by created time.
-    events: Event[];
-  }
+  type NodeGetInfoResponse = NodeInfo | UFONodeInfo
 
-links: :ref:`type-NodeStatus`
+links: :ref:`type-NodeInfo`, :ref:`type-UFONodeInfo`
 
 node_updated ➡️ 
 ----------------
@@ -563,7 +601,7 @@ Arguments
   type NodeUpdatedArguments = [{
     address: SocketAddr;
     status?: NodeStatus;
-    version?: string;
+    version?: { version: string, hash: string };
     commitHash?: string;
     bestBlockId?: { number: number, hash: H256 };
     pendingParcels?: Parcel[];
