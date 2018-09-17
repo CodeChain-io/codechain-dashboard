@@ -59,32 +59,35 @@ impl Process {
             child: None,
         };
         let (tx, rx) = channel();
-        thread::spawn(move || {
-            for message in rx {
-                match message {
-                    Message::Run {
-                        env,
-                        args,
-                        callback,
-                    } => {
-                        let result = process.run(env, args);
-                        callback.send(result).expect("Callback should be success");
-                    }
-                    Message::Stop {
-                        callback,
-                    } => {
-                        let result = process.stop();
-                        callback.send(result).expect("Callback should be success");
-                    }
-                    Message::Quit {
-                        callback,
-                    } => {
-                        callback.send(Ok(())).expect("Callback should be success");
-                        break
+        thread::Builder::new()
+            .name("process".to_string())
+            .spawn(move || {
+                for message in rx {
+                    match message {
+                        Message::Run {
+                            env,
+                            args,
+                            callback,
+                        } => {
+                            let result = process.run(env, args);
+                            callback.send(result).expect("Callback should be success");
+                        }
+                        Message::Stop {
+                            callback,
+                        } => {
+                            let result = process.stop();
+                            callback.send(result).expect("Callback should be success");
+                        }
+                        Message::Quit {
+                            callback,
+                        } => {
+                            callback.send(Ok(())).expect("Callback should be success");
+                            break
+                        }
                     }
                 }
-            }
-        });
+            })
+            .expect("Should success running process thread");
         tx
     }
 
