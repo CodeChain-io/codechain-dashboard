@@ -1,28 +1,24 @@
 use super::router::Router;
 use super::types::{
-    BlockId, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
-    NodeConnection, NodeGetInfoResponse, NodeStatus, NodeVersion,
+    response, BlockId, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
+    NodeConnection, NodeGetInfoResponse, NodeStatus, NodeVersion, RPCResult,
 };
 
 pub fn add_routing(router: &mut Router) {
-    let f: fn() -> String = ping;
-    router.add_route("ping", Box::new(f));
-    router.add_route("ping", Box::new(ping as fn() -> String));
-    router.add_route("add1", Box::new(add1 as fn(i32) -> i32));
-    router.add_route("dashboard_getNetwork", Box::new(dashboard_get_network as fn() -> DashboardGetNetworkResponse));
-    router.add_route("node_getInfo", Box::new(node_get_info as fn() -> NodeGetInfoResponse));
+    router.add_route("ping", Box::new(ping as fn() -> RPCResult<String>));
+    router.add_route(
+        "dashboard_getNetwork",
+        Box::new(dashboard_get_network as fn() -> RPCResult<DashboardGetNetworkResponse>),
+    );
+    router.add_route("node_getInfo", Box::new(node_get_info as fn() -> RPCResult<NodeGetInfoResponse>));
 }
 
-fn ping() -> String {
-    "pong".to_string()
+fn ping() -> RPCResult<String> {
+    response("pong".to_string())
 }
 
-fn add1(x: i32) -> i32 {
-    x + 1
-}
-
-fn dashboard_get_network() -> DashboardGetNetworkResponse {
-    DashboardGetNetworkResponse {
+fn dashboard_get_network() -> RPCResult<DashboardGetNetworkResponse> {
+    response(DashboardGetNetworkResponse {
         nodes: vec![
             DashboardNode::Normal {
                 name: Some("Gilyoung".to_string()),
@@ -85,11 +81,11 @@ fn dashboard_get_network() -> DashboardGetNetworkResponse {
             node_a: "127.0.0.1:3485".parse().unwrap(),
             node_b: "127.0.0.2:3485".parse().unwrap(),
         }],
-    }
+    })
 }
 
-fn node_get_info() -> NodeGetInfoResponse {
-    NodeGetInfoResponse {
+fn node_get_info() -> RPCResult<NodeGetInfoResponse> {
+    response(NodeGetInfoResponse {
         address: "127.0.0.1:3485".parse().unwrap(),
         version: NodeVersion {
             version: "0.1.0".to_string(),
@@ -124,5 +120,5 @@ fn node_get_info() -> NodeGetInfoResponse {
             },
         },
         events: vec!["Network connected".to_string(), "Block received".to_string()],
-    }
+    })
 }

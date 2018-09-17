@@ -57,12 +57,29 @@ impl Handler for WebSocketHandler {
                                     id,
                                 }.into(),
                             ),
-                            Ok(None) => None,
+                            Ok(None) => {
+                                let mut error = JSONRPCError::new(ErrorCode::InternalError);
+                                error.data = Some(serde_json::Value::String("API returns no value".to_string()));
+                                Some(
+                                    Failure {
+                                        jsonrpc: None,
+                                        id,
+                                        error,
+                                    }.into(),
+                                )
+                            }
                             Err(RouterError::MethodNotFound) => Some(
                                 Failure {
                                     jsonrpc: None,
                                     id,
                                     error: JSONRPCError::new(ErrorCode::MethodNotFound),
+                                }.into(),
+                            ),
+                            Err(RouterError::RPC(err)) => Some(
+                                Failure {
+                                    jsonrpc: None,
+                                    id,
+                                    error: err.to_jsonrpc_error(),
                                 }.into(),
                             ),
                         }
