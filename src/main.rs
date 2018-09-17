@@ -13,6 +13,7 @@ extern crate ws;
 #[macro_use]
 mod logger;
 mod frontend_handler;
+mod jsonrpc;
 mod rpc;
 
 use std::cell::Cell;
