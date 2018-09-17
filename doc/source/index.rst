@@ -118,12 +118,12 @@ DashboardNodeInfo
 
 ::
 
-  interface NodeInfo {
+  interface DashboardNodeInfo {
     status: NodeStatus;
     address: SocketAddr;
     version: { version: string, hash: string };
-    bestBlockId:  { number: number, hash: H256 };
-    pendingParcelCount: number;
+    bestBlockId:  { blockNumber: number, hash: H256 };
+    name?: string;
   }
 
 links: type-NodeStatus_, type-SocketAddr_
@@ -135,7 +135,7 @@ DashboardUFONodeInfo
 
 ::
 
-  interface NodeInfo {
+  interface DashboardUFONodeInfo {
     status: NodeStatus;
     address: SocketAddr;
   }
@@ -149,11 +149,12 @@ NodeInfo
 
   interface NodeInfo {
     address: SocketAddr;
+    name?: string;
     agentVersion: String;
     status: NodeStatus;
     version: { version: string, hash: string };
     commitHash: string;
-    bestBlockId: { number: number, hash: H256 };
+    bestBlockId: { blockNumber: number, hash: H256 };
     pendingParcels: Parcel[];
     peers: SocketAddr[];
     whitelist: { list: SocketAddr[], enabled: bool };
@@ -602,10 +603,11 @@ Arguments
 
   type NodeUpdatedArguments = [{
     address: SocketAddr;
+    name?: string;
     status?: NodeStatus;
     version?: { version: string, hash: string };
     commitHash?: string;
-    bestBlockId?: { number: number, hash: H256 };
+    bestBlockId?: { blockNumber: number, hash: H256 };
     pendingParcels?: Parcel[];
     peers?: SocketAddr[];
     whitelist?: { list: SocketAddr[], enabled: bool };
