@@ -9,6 +9,7 @@
     background-color: white;
     flex: 1;
     padding: 8px;
+    height: 66px;
     a {
       color: $dark-text-color;
     }
@@ -18,7 +19,7 @@
     .node-name {
       flex: 1;
     }
-    &:hover {
+    &.active:hover {
       background-color: $dark-background-color;
     }
   }

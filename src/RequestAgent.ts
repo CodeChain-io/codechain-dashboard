@@ -45,10 +45,10 @@ export default class RequestAgent {
   public setDispatch = (dispatch: Dispatch) => {
     this.dispatch = dispatch;
   };
-  public call = async (
+  public call = async <T>(
     method: string,
     params: object | Array<object>
-  ): Promise<any> => {
+  ): Promise<T> => {
     await this.ensureConnection();
     return this.ws.call(method, params);
   };

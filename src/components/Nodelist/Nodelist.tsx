@@ -2,7 +2,7 @@ import { Component } from "react";
 import * as React from "react";
 import { Route } from "react-router-dom";
 import NodeDetail from "./NodeDetail/NodeDetail";
-import { NodeListContainer } from "./NodeListContainer/NodeListContainer";
+import NodeListContainer from "./NodeListContainer/NodeListContainer";
 
 interface Props {
   match: any;

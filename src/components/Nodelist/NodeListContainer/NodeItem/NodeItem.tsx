@@ -2,33 +2,89 @@ import { faCircle, faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Link } from "react-router-dom";
+import { NodeInfo, NodeStatus } from "../../../../requests/types";
 import "./NodeItem.css";
 interface Props {
   className?: string;
+  nodeInfo: NodeInfo;
 }
+
+const getStatusClass = (status: NodeStatus) => {
+  switch (status) {
+    case "Run":
+      return "text-success";
+    case "Stop":
+      return "text-secondary";
+    case "Error":
+      return "text-danger";
+    case "UFO":
+      return "text-warning";
+  }
+  return "text-warning";
+};
+
 const NodeItem = (props: Props) => {
-  const { className } = props;
-  return (
-    <div className={`node-item d-flex ${className}`}>
-      <div className="node-item-info-container">
-        <Link to="/nodelist/nodeId">
-          <div className=" d-flex align-items-center">
-            <div className="node-status text-center text-success">
-              <FontAwesomeIcon icon={faCircle} />
+  const { className, nodeInfo } = props;
+  if (nodeInfo.status === "UFO") {
+    return (
+      <div className={`node-item d-flex ${className}`}>
+        <div className="node-item-info-container">
+          <div className="d-flex align-items-center h-100">
+            <div className="node-status text-center">
+              <FontAwesomeIcon
+                className={getStatusClass(nodeInfo.status)}
+                icon={faCircle}
+              />
             </div>
-            <div className="node-name">Node name</div>
+            <div className="node-name">{nodeInfo.address}</div>
             <div className="node-info text-right">
-              <div>Best block number 20 (asibdb)</div>
-              <div>v0.1.0 (bBsekf)</div>
+              <button type="button" className="btn btn-secondary">
+                Install Agent
+              </button>
             </div>
           </div>
-        </Link>
+        </div>
+        <div className="setting-btn-container d-flex justify-content-center">
+          <FontAwesomeIcon className="align-self-center" icon={faCog} />
+        </div>
       </div>
-      <div className="setting-btn-container d-flex justify-content-center">
-        <FontAwesomeIcon className="align-self-center" icon={faCog} />
+    );
+  } else {
+    return (
+      <div className={`node-item d-flex ${className}`}>
+        <div className="node-item-info-container active">
+          <Link to="/nodelist/nodeId">
+            <div className=" d-flex align-items-center">
+              <div className="node-status text-center">
+                <FontAwesomeIcon
+                  className={getStatusClass(nodeInfo.status)}
+                  icon={faCircle}
+                />
+              </div>
+              <div className="node-name">
+                {nodeInfo.name
+                  ? `${nodeInfo.name} (${nodeInfo.address})`
+                  : nodeInfo.address}
+              </div>
+              <div className="node-info text-right">
+                <div>
+                  Best block number {nodeInfo.bestBlockId!.blockNumber} (
+                  {nodeInfo.bestBlockId!.hash.value})
+                </div>
+                <div>
+                  {nodeInfo.version!.version} (
+                  {nodeInfo.version!.hash.substr(0, 6)})
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+        <div className="setting-btn-container d-flex justify-content-center">
+          <FontAwesomeIcon className="align-self-center" icon={faCog} />
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default NodeItem;
