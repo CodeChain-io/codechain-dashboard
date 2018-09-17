@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sender};
 
-use super::jsonrpc;
-use super::rpc::router::Router;
+use super::super::jsonrpc;
+use super::super::router::Router;
 
 pub struct WebSocketHandler {
     pub out: Sender,

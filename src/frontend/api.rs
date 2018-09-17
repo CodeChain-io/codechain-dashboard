@@ -1,7 +1,8 @@
-use super::router::Router;
+use super::super::router::Router;
+use super::super::rpc::{RPCResult, response};
 use super::types::{
-    response, BlockId, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
-    NodeConnection, NodeGetInfoResponse, NodeStatus, NodeVersion, RPCResult,
+    BlockId, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
+    NodeConnection, NodeGetInfoResponse, NodeStatus, NodeVersion,
 };
 
 pub fn add_routing(router: &mut Router) {

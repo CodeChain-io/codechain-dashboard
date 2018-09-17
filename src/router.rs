@@ -5,7 +5,7 @@ use serde::Serialize;
 use serde_json;
 use serde_json::Value;
 
-use super::types::{RPCError, RPCResult};
+use super::rpc::{RPCError, RPCResult};
 
 pub trait Route {
     fn run(&self, value: Value) -> RPCResult<Value>;

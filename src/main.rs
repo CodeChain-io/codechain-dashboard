@@ -12,20 +12,21 @@ extern crate ws;
 
 #[macro_use]
 mod logger;
-mod frontend_handler;
+mod frontend;
 mod jsonrpc;
+mod router;
 mod rpc;
 
+use std::sync::Arc;
 use std::cell::Cell;
 use std::rc::Rc;
 
 use ws::listen;
 
-use self::frontend_handler::WebSocketHandler;
+use self::frontend::handler::WebSocketHandler;
 use self::logger::init as logger_init;
-use self::rpc::router::Router;
-use rpc::frontend::add_routing;
-use std::sync::Arc;
+use self::router::Router;
+use self::frontend::api::add_routing;
 
 fn main() {
     logger_init().expect("Logger should be initialized");

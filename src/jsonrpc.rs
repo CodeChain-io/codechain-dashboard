@@ -4,7 +4,7 @@ use jsonrpc_core::types::{Call, Error as JSONRPCError, ErrorCode, Failure, Id, M
 use serde_json;
 use serde_json::Value;
 
-use super::rpc::router::{Error as RouterError};
+use super::router::{Error as RouterError};
 
 pub fn handle<F>(router: F, text: String) -> Option<String> where
     F: FnOnce(String, Value) -> Result<Option<Value>, RouterError> {
