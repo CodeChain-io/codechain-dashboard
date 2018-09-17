@@ -12,7 +12,7 @@ extern crate ws;
 
 #[macro_use]
 mod logger;
-mod handler;
+mod frontend_handler;
 mod rpc;
 
 use std::cell::Cell;
@@ -20,7 +20,7 @@ use std::rc::Rc;
 
 use ws::listen;
 
-use self::handler::WebSocketHandler;
+use self::frontend_handler::WebSocketHandler;
 use self::logger::init as logger_init;
 use self::rpc::router::Router;
 use rpc::frontend::add_routing;
