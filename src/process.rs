@@ -153,7 +153,7 @@ impl Process {
 
         let codechain = &mut self.child.as_mut().expect("Already checked")[0];
         ctrace!("Send SIGTERM to CodeChain");
-        codechain.terminate();
+        codechain.terminate()?;
 
         let wait_result = codechain.wait_timeout(Duration::new(10, 0))?;
 
