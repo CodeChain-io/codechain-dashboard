@@ -6,13 +6,13 @@ use super::super::types::HandlerContext;
 use super::router::Router;
 use super::types::{response, RPCResult, ShellStartCodeChainRequest};
 
-pub fn add_routing(routing_table: &mut Router) {
-    routing_table.add_route("ping", Box::new(ping as fn(Arc<HandlerContext>) -> RPCResult<String>));
-    routing_table.add_route(
+pub fn add_routing(router: &mut Router) {
+    router.add_route("ping", Box::new(ping as fn(Arc<HandlerContext>) -> RPCResult<String>));
+    router.add_route(
         "shell_startCodeChain",
         Box::new(shell_start_code_chain as fn(Arc<HandlerContext>, ShellStartCodeChainRequest) -> RPCResult<()>),
     );
-    routing_table
+    router
         .add_route("shell_stopCodeChain", Box::new(shell_stop_code_chain as fn(Arc<HandlerContext>) -> RPCResult<()>));
 }
 
