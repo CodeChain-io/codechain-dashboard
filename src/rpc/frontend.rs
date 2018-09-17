@@ -4,14 +4,14 @@ use super::types::{
     NodeConnection, NodeGetInfoResponse, NodeStatus,
 };
 
-pub fn add_routing(routing_table: &mut Router) {
+pub fn add_routing(router: &mut Router) {
     let f: fn() -> String = ping;
-    routing_table.add_route("ping", Box::new(f));
-    routing_table.add_route("ping", Box::new(ping as fn() -> String));
-    routing_table.add_route("add1", Box::new(add1 as fn(i32) -> i32));
-    routing_table
+    router.add_route("ping", Box::new(f));
+    router.add_route("ping", Box::new(ping as fn() -> String));
+    router.add_route("add1", Box::new(add1 as fn(i32) -> i32));
+    router
         .add_route("dashboard_getNetwork", Box::new(dashboard_get_network as fn() -> DashboardGetNetworkResponse));
-    routing_table.add_route("node_getInfo", Box::new(node_get_info as fn() -> NodeGetInfoResponse));
+    router.add_route("node_getInfo", Box::new(node_get_info as fn() -> NodeGetInfoResponse));
 }
 
 fn ping() -> String {

@@ -11,7 +11,7 @@ use super::rpc::router::{Error as RouterError, Router};
 pub struct WebSocketHandler {
     pub out: Sender,
     pub count: Rc<Cell<u32>>,
-    pub routing_table: Arc<Router>,
+    pub router: Arc<Router>,
 }
 
 impl Handler for WebSocketHandler {
@@ -49,7 +49,7 @@ impl Handler for WebSocketHandler {
                         ..
                     })) => {
                         let value_params = serde_json::to_value(params).expect("Change to value always success");
-                        match self.routing_table.run(&method, value_params) {
+                        match self.router.run(&method, value_params) {
                             Ok(Some(value)) => Some(
                                 Success {
                                     jsonrpc: None,

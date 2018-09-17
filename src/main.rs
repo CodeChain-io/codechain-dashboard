@@ -31,12 +31,12 @@ fn main() {
 
     let count = Rc::new(Cell::new(0));
 
-    let mut routing_table = Arc::new(Router::new());
-    add_routing(Arc::get_mut(&mut routing_table).unwrap());
+    let mut router = Arc::new(Router::new());
+    add_routing(Arc::get_mut(&mut router).unwrap());
     cinfo!("Listen on 3012 port");
     listen("127.0.0.1:3012", |out| WebSocketHandler {
         out,
         count: count.clone(),
-        routing_table: routing_table.clone(),
+        router: router.clone(),
     }).unwrap();
 }
