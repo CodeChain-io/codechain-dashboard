@@ -1,7 +1,7 @@
 use super::router::Router;
 use super::types::{
     BlockId, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
-    NodeConnection, NodeGetInfoResponse, NodeStatus,
+    NodeConnection, NodeGetInfoResponse, NodeStatus, NodeVersion,
 };
 
 pub fn add_routing(router: &mut Router) {
@@ -28,7 +28,10 @@ fn dashboard_get_network() -> DashboardGetNetworkResponse {
                 name: Some("Gilyoung".to_string()),
                 status: NodeStatus::Run,
                 address: "127.0.0.1:3485".parse().unwrap(),
-                version: "0.1.0".to_string(),
+                version: NodeVersion {
+                    version: "0.1.0".to_string(),
+                    hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
+                },
                 best_block_id: BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -38,7 +41,10 @@ fn dashboard_get_network() -> DashboardGetNetworkResponse {
                 name: None,
                 status: NodeStatus::Run,
                 address: "127.0.0.2:3485".parse().unwrap(),
-                version: "0.1.0".to_string(),
+                version: NodeVersion {
+                    version: "0.1.0".to_string(),
+                    hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
+                },
                 best_block_id: BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -48,7 +54,10 @@ fn dashboard_get_network() -> DashboardGetNetworkResponse {
                 name: Some("Hi stopped test node1".to_string()),
                 status: NodeStatus::Stop,
                 address: "42.124.241.2:3485".parse().unwrap(),
-                version: "0.1.0".to_string(),
+                version: NodeVersion {
+                    version: "0.1.0".to_string(),
+                    hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
+                },
                 best_block_id: BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -58,7 +67,10 @@ fn dashboard_get_network() -> DashboardGetNetworkResponse {
                 name: Some("Test Error node".to_string()),
                 status: NodeStatus::Error,
                 address: "127.0.0.3:3485".parse().unwrap(),
-                version: "0.1.0".to_string(),
+                version: NodeVersion {
+                    version: "0.1.0".to_string(),
+                    hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
+                },
                 best_block_id: BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -79,7 +91,10 @@ fn dashboard_get_network() -> DashboardGetNetworkResponse {
 fn node_get_info() -> NodeGetInfoResponse {
     NodeGetInfoResponse {
         address: "127.0.0.1:3485".parse().unwrap(),
-        version: "0.1.0".to_string(),
+        version: NodeVersion {
+            version: "0.1.0".to_string(),
+            hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
+        },
         commit_hash: "84e70586dea8e6b4021d65b8164bbac28cb88ecb".to_string(),
         best_block_id: BlockId {
             block_number: 0,

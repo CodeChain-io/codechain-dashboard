@@ -2,8 +2,6 @@ use std::net::SocketAddr;
 
 use cprimitives::H256;
 
-pub type NodeVersion = String;
-
 pub type Event = String;
 
 #[derive(Debug, Serialize)]
@@ -24,6 +22,13 @@ pub struct NetworkPermission {
 pub struct BlockId {
     pub block_number: i64,
     pub hash: H256,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeVersion {
+    pub version: String,
+    pub hash: String,
 }
 
 #[derive(Debug, Serialize)]
