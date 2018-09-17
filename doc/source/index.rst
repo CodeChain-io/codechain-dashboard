@@ -303,7 +303,8 @@ Request
 
   type ShellStartCodeChainRequest = [
     {
-  // FIXME: get json from setting file
+      env: string; // "RUST_LOG=trace"
+      args: string; // "-c husky"
     }
   ]
 
