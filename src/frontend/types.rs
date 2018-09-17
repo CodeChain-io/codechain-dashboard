@@ -2,6 +2,8 @@ use std::net::SocketAddr;
 
 use cprimitives::H256;
 
+use super::super::common_rpc_types::NodeStatus;
+
 pub type Event = String;
 
 #[derive(Debug, Serialize)]
@@ -45,14 +47,6 @@ pub struct HardwareInfo {
     pub cpu_usage: f64,
     pub disk_usage: HardwareUsage,
     pub memory_usage: HardwareUsage,
-}
-
-#[derive(Debug, Serialize)]
-pub enum NodeStatus {
-    Run,
-    Stop,
-    Error,
-    UFO,
 }
 
 #[derive(Debug, Serialize)]

@@ -1,15 +1,36 @@
+use std::error::Error;
+use std::fmt;
 use std::result::Result;
 
+use jsonrpc;
 use jsonrpc_core::types::{Error as JSONRPCError, ErrorCode};
 use serde_json::{Error as SerdeError, Value};
 
-pub type RPCResult<T> = Result<Option<T>, RPCError>;
+pub type RPCResponse<T> = Result<Option<T>, RPCError>;
+
+pub type RPCResult<T> = Result<T, RPCError>;
 
 pub enum RPCError {
     Internal(String),
 }
 
-pub fn response<T>(value: T) -> RPCResult<T> {
+impl fmt::Display for RPCError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            RPCError::Internal(err) => write!(f, "RPCError {}", err),
+        }
+    }
+}
+
+impl fmt::Debug for RPCError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(self, f)
+    }
+}
+
+impl Error for RPCError {}
+
+pub fn response<T>(value: T) -> RPCResponse<T> {
     Ok(Some(value))
 }
 
@@ -33,3 +54,8 @@ impl From<SerdeError> for RPCError {
     }
 }
 
+impl From<jsonrpc::CallError> for RPCError {
+    fn from(err: jsonrpc::CallError) -> Self {
+        RPCError::Internal(format!("Internal error about jsonrpc call : {:?}", err))
+    }
+}

@@ -1,16 +1,31 @@
 use std::cell::Cell;
 use std::rc::Rc;
-use std::sync::Arc;
 
-use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sender};
+use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sender as WSSender};
 
 use super::super::jsonrpc;
-use super::super::router::Router;
+use super::service::{Message as AgentServiceMessage, ServiceSender as AgentServiceSender};
 
 pub struct WebSocketHandler {
-    pub out: Sender,
+    pub out: WSSender,
     pub count: Rc<Cell<u32>>,
-    pub router: Arc<Router>,
+    pub agent_service: AgentServiceSender,
+    pub jsonrpc_context: jsonrpc::Context,
+}
+
+impl WebSocketHandler {
+    pub fn new(out: WSSender, count: Rc<Cell<u32>>, agent_service: AgentServiceSender) -> Self {
+        let jsonrpc_context = jsonrpc::Context::new(out.clone());
+        agent_service
+            .send(AgentServiceMessage::InitializeAgent(jsonrpc_context.clone()))
+            .expect("Should success send InitializeAgent to service");
+        Self {
+            out,
+            count,
+            agent_service,
+            jsonrpc_context,
+        }
+    }
 }
 
 impl Handler for WebSocketHandler {
@@ -23,16 +38,13 @@ impl Handler for WebSocketHandler {
         // Tell the user the current count
         ctrace!("The number of live connections is {}", self.count.get());
 
-        let response: Option<String> = match msg {
-            Message::Text(text) => jsonrpc::handle(|method, arg| self.router.run(&method, arg), text),
-            _ => Some(jsonrpc::invalid_format()),
+        match msg {
+            Message::Text(text) => jsonrpc::on_receive(self.jsonrpc_context.clone(), text),
+            _ => {
+                cwarn!("Byte data received from agent");
+            }
         };
-
-        if let Some(response) = response {
-            self.out.send(Message::Text(response))
-        } else {
-            Ok(())
-        }
+        Ok(())
     }
 
     fn on_close(&mut self, code: CloseCode, reason: &str) {

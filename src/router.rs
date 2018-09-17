@@ -5,22 +5,22 @@ use serde::Serialize;
 use serde_json;
 use serde_json::Value;
 
-use super::rpc::{RPCError, RPCResult};
+use super::rpc::{RPCError, RPCResponse};
 
 pub trait Route {
-    fn run(&self, value: Value) -> RPCResult<Value>;
+    fn run(&self, value: Value) -> RPCResponse<Value>;
 }
 
 pub struct Router {
     table: HashMap<&'static str, Box<Route>>,
 }
 
-impl<Arg, Result> Route for fn(Arg) -> RPCResult<Result>
+impl<Arg, Result> Route for fn(Arg) -> RPCResponse<Result>
 where
     Result: Serialize,
     for<'de> Arg: Deserialize<'de>,
 {
-    fn run(&self, value: Value) -> RPCResult<Value> {
+    fn run(&self, value: Value) -> RPCResponse<Value> {
         let arg = serde_json::from_value(value)?;
         let result = self(arg)?;
         if let Some(result) = result {
@@ -31,11 +31,11 @@ where
     }
 }
 
-impl<Result> Route for fn() -> RPCResult<Result>
+impl<Result> Route for fn() -> RPCResponse<Result>
 where
     Result: Serialize,
 {
-    fn run(&self, _value: Value) -> RPCResult<Value> {
+    fn run(&self, _value: Value) -> RPCResponse<Value> {
         let result = self()?;
         if let Some(result) = result {
             let value_result = serde_json::to_value(result)?;

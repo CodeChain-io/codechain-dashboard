@@ -1,24 +1,25 @@
+use super::super::common_rpc_types::NodeStatus;
 use super::super::router::Router;
-use super::super::rpc::{RPCResult, response};
+use super::super::rpc::{response, RPCResponse};
 use super::types::{
     BlockId, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
-    NodeConnection, NodeGetInfoResponse, NodeStatus, NodeVersion,
+    NodeConnection, NodeGetInfoResponse, NodeVersion,
 };
 
 pub fn add_routing(router: &mut Router) {
-    router.add_route("ping", Box::new(ping as fn() -> RPCResult<String>));
+    router.add_route("ping", Box::new(ping as fn() -> RPCResponse<String>));
     router.add_route(
         "dashboard_getNetwork",
-        Box::new(dashboard_get_network as fn() -> RPCResult<DashboardGetNetworkResponse>),
+        Box::new(dashboard_get_network as fn() -> RPCResponse<DashboardGetNetworkResponse>),
     );
-    router.add_route("node_getInfo", Box::new(node_get_info as fn() -> RPCResult<NodeGetInfoResponse>));
+    router.add_route("node_getInfo", Box::new(node_get_info as fn() -> RPCResponse<NodeGetInfoResponse>));
 }
 
-fn ping() -> RPCResult<String> {
+fn ping() -> RPCResponse<String> {
     response("pong".to_string())
 }
 
-fn dashboard_get_network() -> RPCResult<DashboardGetNetworkResponse> {
+fn dashboard_get_network() -> RPCResponse<DashboardGetNetworkResponse> {
     response(DashboardGetNetworkResponse {
         nodes: vec![
             DashboardNode::Normal {
@@ -85,7 +86,7 @@ fn dashboard_get_network() -> RPCResult<DashboardGetNetworkResponse> {
     })
 }
 
-fn node_get_info() -> RPCResult<NodeGetInfoResponse> {
+fn node_get_info() -> RPCResponse<NodeGetInfoResponse> {
     response(NodeGetInfoResponse {
         address: "127.0.0.1:3485".parse().unwrap(),
         version: NodeVersion {
