@@ -7,7 +7,7 @@ import NodeListContainer from "./NodeListContainer/NodeListContainer";
 interface Props {
   match: any;
 }
-export default class Nodelist extends Component<Props> {
+export default class NodeList extends Component<Props> {
   constructor(props: Props) {
     super(props);
   }

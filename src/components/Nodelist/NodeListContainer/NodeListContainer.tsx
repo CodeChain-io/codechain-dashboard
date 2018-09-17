@@ -15,7 +15,9 @@ interface OwnProps {
 type Props = DispatchProp & OwnProps;
 class NodeListContainer extends React.Component<Props> {
   public componentDidMount() {
-    this.props.getChainNetworks();
+    if (!this.props.chainNetworks) {
+      this.props.getChainNetworks();
+    }
   }
   public render() {
     const { chainNetworks } = this.props;

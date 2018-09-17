@@ -1,4 +1,6 @@
+import * as _ from "lodash";
 import * as React from "react";
+import { ChainNetworks, NodeStatus } from "../../../requests/types";
 const {
   InteractiveForceGraph,
   ForceGraphLink,
@@ -7,6 +9,7 @@ const {
 
 interface Props {
   className?: string;
+  chainNetworks: ChainNetworks;
 }
 interface States {
   width: number;
@@ -37,7 +40,7 @@ export class ConnectionGraph extends React.Component<Props, States> {
   }
 
   public render() {
-    const { className } = this.props;
+    const { className, chainNetworks } = this.props;
     const { width, height, drawNodeList } = this.state;
     return (
       <div ref={this.containerRef} className={className}>
@@ -54,37 +57,43 @@ export class ConnectionGraph extends React.Component<Props, States> {
             onSelectNode={(node: any) => console.log(node)}
             highlightDependencie={true}
           >
-            <ForceGraphNode
-              node={{ id: "node1", label: "Node-1", radius: 10 }}
-              showLabel={true}
-              fill="red"
-            />
-            <ForceGraphNode
-              node={{ id: "node2", label: "Node-2", radius: 10 }}
-              showLabel={true}
-              fill="blue"
-            />
-            <ForceGraphNode
-              node={{ id: "node3", label: "Node-3", radius: 10 }}
-              showLabel={true}
-              fill="red"
-            />
-            <ForceGraphNode
-              node={{ id: "node4", label: "Node-4", radius: 10 }}
-              showLabel={true}
-              fill="red"
-            />
-            <ForceGraphLink link={{ source: "node1", target: "node2" }} />
-            <ForceGraphLink link={{ source: "node1", target: "node3" }} />
-            <ForceGraphLink link={{ source: "node1", target: "node4" }} />
-            <ForceGraphLink link={{ source: "node3", target: "node4" }} />
-            <ForceGraphLink link={{ source: "node3", target: "node2" }} />
+            {_.map(chainNetworks.nodes, node => (
+              <ForceGraphNode
+                key={`node-${node.address}`}
+                node={{
+                  id: node.address,
+                  label: node.name
+                    ? `${node.name} (${node.address})`
+                    : node.address,
+                  radius: 10
+                }}
+                showLabel={true}
+                fill={this.getNodeColor(node.status)}
+              />
+            ))}
+            {_.map(chainNetworks.connections, connection => (
+              <ForceGraphLink
+                link={{ source: connection.nodeA, target: connection.nodeB }}
+              />
+            ))}
           </InteractiveForceGraph>
         ) : null}
       </div>
     );
   }
-
+  private getNodeColor = (nodeStatus: NodeStatus) => {
+    switch (nodeStatus) {
+      case "Run":
+        return "#28a745";
+      case "Error":
+        return "#dc3545";
+      case "Stop":
+        return "#868e96";
+      case "UFO":
+        return "#ffc107";
+    }
+    return "#868e96";
+  };
   private setWindowDimensions = () => {
     this.setState({
       width: this.containerRef.current

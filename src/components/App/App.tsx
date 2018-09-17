@@ -5,7 +5,7 @@ import RequestAgent from "../../RequestAgent";
 import Dashboard from "../Dashboard/Dashboard";
 import { GlobalNavigationBar } from "../GlobalNavigationBar/GlobalNavigationBar";
 import { Header } from "../Header/Header";
-import Nodelist from "../Nodelist/Nodelist";
+import NodeList from "../Nodelist/NodeList";
 import "./App.css";
 
 class App extends React.Component<DispatchProp> {
@@ -23,7 +23,7 @@ class App extends React.Component<DispatchProp> {
           <GlobalNavigationBar />
           <div className="content-container">
             <Route exact={true} path="/" component={Dashboard} />
-            <Route path="/nodelist" component={Nodelist} />
+            <Route path="/nodelist" component={NodeList} />
           </div>
         </div>
       </Router>

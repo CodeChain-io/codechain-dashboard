@@ -3,10 +3,12 @@ import "./ConnectionGraphContainer.css";
 
 import { faCodeBranch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { ChainNetworks } from "../../../requests/types";
 import { ConnectionGraph } from "../ConnectionGraph/ConnectionGraph";
 
 interface Props {
   className?: string;
+  chainNetworks: ChainNetworks;
 }
 export class ConnectionGraphContainer extends React.Component<Props, {}> {
   constructor(props: Props) {
@@ -14,7 +16,7 @@ export class ConnectionGraphContainer extends React.Component<Props, {}> {
   }
 
   public render() {
-    const { className } = this.props;
+    const { className, chainNetworks } = this.props;
     return (
       <div className={`connection-graph-container ${className}`}>
         <div className="connection-graph-header">
@@ -24,7 +26,10 @@ export class ConnectionGraphContainer extends React.Component<Props, {}> {
           </h5>
         </div>
         <div className="connection-graph-body">
-          <ConnectionGraph className="connection-graph" />
+          <ConnectionGraph
+            chainNetworks={chainNetworks}
+            className="connection-graph"
+          />
         </div>
       </div>
     );
