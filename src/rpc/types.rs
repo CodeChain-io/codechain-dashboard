@@ -22,7 +22,7 @@ pub struct NetworkPermission {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BlockId {
-    pub number: i64,
+    pub block_number: i64,
     pub hash: H256,
 }
 
@@ -43,12 +43,30 @@ pub struct HardwareInfo {
 }
 
 #[derive(Debug, Serialize)]
+pub enum NodeStatus {
+    Run,
+    Stop,
+    Error,
+    UFO,
+}
+
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DashboardNode {
-    pub address: SocketAddr,
-    pub version: NodeVersion,
-    pub best_block_id: BlockId,
-    pub pending_parcel_count: i32,
+#[serde(untagged)]
+pub enum DashboardNode {
+    #[serde(rename_all = "camelCase")]
+    Normal {
+        status: NodeStatus,
+        address: SocketAddr,
+        version: NodeVersion,
+        best_block_id: BlockId,
+        name: Option<String>,
+    },
+    #[serde(rename_all = "camelCase")]
+    UFO {
+        status: NodeStatus,
+        address: SocketAddr,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -68,6 +86,7 @@ pub struct DashboardGetNetworkResponse {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGetInfoResponse {
+    pub address: SocketAddr,
     pub version: NodeVersion,
     pub commit_hash: String,
     pub best_block_id: BlockId,

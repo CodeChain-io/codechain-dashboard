@@ -1,7 +1,7 @@
 use super::router::Router;
 use super::types::{
     BlockId, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
-    NodeGetInfoResponse,
+    NodeConnection, NodeGetInfoResponse, NodeStatus,
 };
 
 pub fn add_routing(routing_table: &mut Router) {
@@ -24,25 +24,66 @@ fn add1(x: i32) -> i32 {
 
 fn dashboard_get_network() -> DashboardGetNetworkResponse {
     DashboardGetNetworkResponse {
-        nodes: vec![DashboardNode {
-            address: "127.0.0.1:3485".parse().unwrap(),
-            version: "0.1.0".to_string(),
-            best_block_id: BlockId {
-                number: 0,
-                hash: Default::default(),
+        nodes: vec![
+            DashboardNode::Normal {
+                name: Some("Gilyoung".to_string()),
+                status: NodeStatus::Run,
+                address: "127.0.0.1:3485".parse().unwrap(),
+                version: "0.1.0".to_string(),
+                best_block_id: BlockId {
+                    block_number: 0,
+                    hash: Default::default(),
+                },
             },
-            pending_parcel_count: 0,
+            DashboardNode::Normal {
+                name: None,
+                status: NodeStatus::Run,
+                address: "127.0.0.2:3485".parse().unwrap(),
+                version: "0.1.0".to_string(),
+                best_block_id: BlockId {
+                    block_number: 0,
+                    hash: Default::default(),
+                },
+            },
+            DashboardNode::Normal {
+                name: Some("Hi stopped test node1".to_string()),
+                status: NodeStatus::Stop,
+                address: "42.124.241.2:3485".parse().unwrap(),
+                version: "0.1.0".to_string(),
+                best_block_id: BlockId {
+                    block_number: 0,
+                    hash: Default::default(),
+                },
+            },
+            DashboardNode::Normal {
+                name: Some("Test Error node".to_string()),
+                status: NodeStatus::Error,
+                address: "127.0.0.3:3485".parse().unwrap(),
+                version: "0.1.0".to_string(),
+                best_block_id: BlockId {
+                    block_number: 0,
+                    hash: Default::default(),
+                },
+            },
+            DashboardNode::UFO {
+                status: NodeStatus::UFO,
+                address: "2.2.2.2:3485".parse().unwrap(),
+            },
+        ],
+        connections: vec![NodeConnection {
+            node_a: "127.0.0.1:3485".parse().unwrap(),
+            node_b: "127.0.0.2:3485".parse().unwrap(),
         }],
-        connections: Vec::new(),
     }
 }
 
 fn node_get_info() -> NodeGetInfoResponse {
     NodeGetInfoResponse {
+        address: "127.0.0.1:3485".parse().unwrap(),
         version: "0.1.0".to_string(),
         commit_hash: "84e70586dea8e6b4021d65b8164bbac28cb88ecb".to_string(),
         best_block_id: BlockId {
-            number: 0,
+            block_number: 0,
             hash: Default::default(),
         },
         pending_parcels: Vec::new(),
