@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::sync::mpsc::{channel, SendError, Sender};
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::thread;
@@ -36,6 +37,19 @@ impl ServiceSender {
 
     pub fn read_state(&self) -> RwLockReadGuard<State> {
         self.state.read().expect("Should success read service state")
+    }
+
+    pub fn get_agent(&self, address: SocketAddr) -> Option<AgentSender> {
+        let state = self.state.read().expect("Should access read service state");
+        let find_result = state.agents.iter().find(|(_, agent)| {
+            let agent_state = agent.read_state();
+            match agent_state.address() {
+                None => false,
+                Some(agent_address) => agent_address == address,
+            }
+        });
+
+        find_result.map(|(_, agent)| agent.clone())
     }
 }
 

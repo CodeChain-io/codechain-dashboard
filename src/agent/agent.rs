@@ -7,11 +7,11 @@ use std::time::Duration;
 
 use ws::CloseCode as WSCloseCode;
 
-use super::super::common_rpc_types::NodeStatus;
+use super::super::common_rpc_types::{NodeStatus, ShellStartCodeChainRequest};
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
-use super::types::{AgentGetInfoResponse, ShellStartCodeChainRequest};
+use super::types::AgentGetInfoResponse;
 
 #[derive(Copy, Clone)]
 pub enum State {
@@ -25,6 +25,16 @@ pub enum State {
 impl State {
     pub fn new() -> Self {
         State::Initializing
+    }
+
+    pub fn address(&self) -> Option<SocketAddr> {
+        match self {
+            State::Initializing => None,
+            State::Normal {
+                address,
+                ..
+            } => Some(*address),
+        }
     }
 }
 
@@ -109,7 +119,7 @@ impl Agent {
     }
 
     fn update(&mut self) -> Result<(), String> {
-        let info = self.agent_get_info().map_err(|err| format!("{}", err))?;
+        let info = self.sender.agent_get_info().map_err(|err| format!("{}", err))?;
 
         let mut state = self.state.write().expect("Should success getting agent state");
         *state = State::Normal {
@@ -164,19 +174,19 @@ impl Drop for Agent {
     }
 }
 
-trait SendAgentRPC {
+pub trait SendAgentRPC {
     fn shell_start_codechain(&self, _req: ShellStartCodeChainRequest) -> RPCResult<()>;
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse>;
 }
 
-impl SendAgentRPC for Agent {
+impl SendAgentRPC for AgentSender {
     fn shell_start_codechain(&self, req: ShellStartCodeChainRequest) -> RPCResult<()> {
-        let _result: Result<(), _> = jsonrpc::call(self.sender.jsonrpc_context.clone(), "shell_startCodeChain", req);
+        jsonrpc::call(self.jsonrpc_context.clone(), "shell_startCodeChain", req)?;
         Ok(())
     }
 
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse> {
-        let result: AgentGetInfoResponse = jsonrpc::call_no_arg(self.sender.jsonrpc_context.clone(), "agent_getInfo")?;
+        let result: AgentGetInfoResponse = jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "agent_getInfo")?;
         Ok(result)
     }
 }

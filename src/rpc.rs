@@ -12,12 +12,15 @@ pub type RPCResult<T> = Result<T, RPCError>;
 
 pub enum RPCError {
     Internal(String),
+
+    AgentNotFound,
 }
 
 impl fmt::Display for RPCError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             RPCError::Internal(err) => write!(f, "RPCError {}", err),
+            RPCError::AgentNotFound => write!(f, "Agent not found"),
         }
     }
 }
@@ -34,16 +37,25 @@ pub fn response<T>(value: T) -> RPCResponse<T> {
     Ok(Some(value))
 }
 
+const ERR_AGENT_NOT_FOUND: i64 = 1;
+
 impl RPCError {
     pub fn to_jsonrpc_error(&self) -> JSONRPCError {
         match self {
             RPCError::Internal(str) => Self::create_internal_rpc_error(str),
+            RPCError::AgentNotFound => Self::create_rpc_error(ERR_AGENT_NOT_FOUND, &format!("{}", self)),
         }
     }
 
     fn create_internal_rpc_error(msg: &str) -> JSONRPCError {
         let mut ret = JSONRPCError::new(ErrorCode::InternalError);
         ret.data = Some(Value::String(msg.to_string()));
+        ret
+    }
+
+    fn create_rpc_error(code: i64, msg: &str) -> JSONRPCError {
+        let mut ret = JSONRPCError::new(ErrorCode::ServerError(code));
+        ret.message = msg.to_string();
         ret
     }
 }
