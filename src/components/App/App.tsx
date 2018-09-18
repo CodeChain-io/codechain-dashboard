@@ -5,7 +5,7 @@ import RequestAgent from "../../RequestAgent";
 import Dashboard from "../Dashboard/Dashboard";
 import { GlobalNavigationBar } from "../GlobalNavigationBar/GlobalNavigationBar";
 import { Header } from "../Header/Header";
-import NodeList from "../Nodelist/NodeList";
+import NodeList from "../NodeList/NodeList";
 import "./App.css";
 
 class App extends React.Component<DispatchProp> {
