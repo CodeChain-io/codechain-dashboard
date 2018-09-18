@@ -7,7 +7,11 @@ const getTitle = (pathName: string) => {
   if (pathName === "/") {
     return "CodeChain Dashboard";
   } else if (/^\/nodelist/.test(pathName)) {
-    return "CodeChain Node List";
+    if (pathName === "/nodelist") {
+      return "CodeChain Node List";
+    } else {
+      return "CodeChain Node Details";
+    }
   } else {
     return "CodeChain";
   }

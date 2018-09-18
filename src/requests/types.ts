@@ -13,12 +13,13 @@ export interface ChainNetworks {
   connections: { nodeA: SocketAddr; nodeB: SocketAddr }[];
 }
 export interface NodeInfo {
+  name?: string;
   address: SocketAddr;
   agentVersion: string;
   status: NodeStatus;
-  version: string;
+  version: { version: string; hash: string };
   commitHash: string;
-  bestBlockId: { number: number; hash: H256 };
+  bestBlockId: { blockNumber: number; hash: H256 };
   pendingParcels: Parcel[];
   peers: SocketAddr[];
   whitelist: { list: SocketAddr[]; enabled: boolean };

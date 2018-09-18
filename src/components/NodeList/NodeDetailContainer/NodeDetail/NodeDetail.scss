@@ -1,0 +1,43 @@
+@import "styles/variables.scss";
+.node-detail {
+  background-color: white;
+  border: $container-border-color;
+  border-radius: 3px;
+  overflow: hidden;
+
+  .left-panel {
+    width: 50%;
+    padding: 16px;
+    border-right: 1px solid $container-border-color;
+  }
+  .status-btn {
+    font-size: 0.8rem;
+  }
+  .right-panel {
+    flex: 1;
+    padding: 16px;
+  }
+  .data-container {
+    height: 50px;
+    padding: 8px;
+    background-color: $dark-background-color;
+    overflow: scroll;
+    border: 1px solid $container-border-color;
+  }
+  .data-row {
+    display: flex;
+    justify-content: space-between !important;
+    align-items: center !important;
+    div:nth-child(1) {
+      width: 50%;
+    }
+    div:nth-child(2) {
+      width: 50%;
+      text-align: right;
+      text-overflow: ellipsis;
+      /* Required for text-overflow to do anything */
+      white-space: nowrap;
+      overflow: hidden;
+    }
+  }
+}

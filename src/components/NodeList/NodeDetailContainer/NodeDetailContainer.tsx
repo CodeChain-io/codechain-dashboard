@@ -4,7 +4,8 @@ import { Dispatch } from "redux";
 import { Actions } from "../../../actions";
 import { RootState } from "../../../reducers";
 import { Apis } from "../../../requests";
-import { NetworkNodeInfo } from "../../../requests/types";
+import { NodeInfo } from "../../../requests/types";
+import NodeDetail from "./NodeDetail/NodeDetail";
 
 interface OwnProps {
   match: {
@@ -15,7 +16,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  nodeInfo: NetworkNodeInfo | undefined;
+  nodeInfo: NodeInfo | undefined;
 }
 
 interface DispatchProps {
@@ -36,14 +37,7 @@ class NodeDetailContainer extends React.Component<Props> {
     }
     return (
       <div>
-        <div>
-          <div>Status : Run</div>
-          <div>
-            <button type="button" className="btn btn-danger">
-              Stop
-            </button>
-          </div>
-        </div>
+        <NodeDetail nodeInfo={nodeInfo} />
       </div>
     );
   }
