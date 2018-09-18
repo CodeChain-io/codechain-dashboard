@@ -43,15 +43,15 @@ pub struct NodeVersion {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HardwareUsage {
-    pub total: String,
-    pub available: String,
-    pub percentage_used: String,
+    pub total: i64,
+    pub available: i64,
+    pub percentage_used: f64,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HardwareInfo {
-    pub cpu_usage: f64,
+    pub cpu_usage: Vec<f64>,
     pub disk_usage: HardwareUsage,
     pub memory_usage: HardwareUsage,
 }

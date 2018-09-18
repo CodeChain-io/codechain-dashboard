@@ -123,16 +123,16 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
             enabled: false,
         },
         hardware: HardwareInfo {
-            cpu_usage: 3.4,
+            cpu_usage: vec![0.34, 0.03, 0.58],
             disk_usage: HardwareUsage {
-                total: "3GB".to_string(),
-                available: "5GB".to_string(),
-                percentage_used: "60%".to_string(),
+                total: 3 * 1000 * 1000 * 1000,
+                available: 5 * 1000 * 1000 * 1000,
+                percentage_used: 0.6,
             },
             memory_usage: HardwareUsage {
-                total: "3GB".to_string(),
-                available: "5GB".to_string(),
-                percentage_used: "60%".to_string(),
+                total: 3 * 1000 * 1000 * 1000,
+                available: 5 * 1000 * 1000 * 1000,
+                percentage_used: 0.6,
             },
         },
         events: vec!["Network connected".to_string(), "Block received".to_string()],
