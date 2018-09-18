@@ -11,7 +11,7 @@ pub fn add_routing(router: &mut Router) {
     router.add_route("ping", Box::new(ping as fn(Arc<HandlerContext>) -> RPCResult<String>));
     router.add_route(
         "shell_startCodeChain",
-        Box::new(shell_start_code_chain as fn(Arc<HandlerContext>, ShellStartCodeChainRequest) -> RPCResult<()>),
+        Box::new(shell_start_code_chain as fn(Arc<HandlerContext>, (ShellStartCodeChainRequest,)) -> RPCResult<()>),
     );
     router
         .add_route("shell_stopCodeChain", Box::new(shell_stop_code_chain as fn(Arc<HandlerContext>) -> RPCResult<()>));
@@ -25,7 +25,8 @@ fn ping(_context: Arc<HandlerContext>) -> RPCResult<String> {
     response("pong".to_string())
 }
 
-fn shell_start_code_chain(context: Arc<HandlerContext>, req: ShellStartCodeChainRequest) -> RPCResult<()> {
+fn shell_start_code_chain(context: Arc<HandlerContext>, req: (ShellStartCodeChainRequest,)) -> RPCResult<()> {
+    let (req,) = req;
     cinfo!("{}", req.env);
     cinfo!("{}", req.args);
 
