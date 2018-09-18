@@ -13,6 +13,10 @@ pub fn add_routing(router: &mut Router<Context>) {
         Box::new(dashboard_get_network as fn(Context) -> RPCResponse<DashboardGetNetworkResponse>),
     );
     router.add_route("node_getInfo", Box::new(node_get_info as fn(Context) -> RPCResponse<NodeGetInfoResponse>));
+    router.add_route(
+        "real_dashboard_getNetwork",
+        Box::new(real_dashboard_get_network as fn(Context) -> RPCResponse<DashboardGetNetworkResponse>),
+    );
 }
 
 fn ping(_: Context) -> RPCResponse<String> {
@@ -83,6 +87,15 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
             node_a: "127.0.0.1:3485".parse().unwrap(),
             node_b: "127.0.0.2:3485".parse().unwrap(),
         }],
+    })
+}
+
+fn real_dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetworkResponse> {
+    let agent_infos = context.agent_service.read_state().get_agent_info();
+    let dashboard_nodes = agent_infos.iter().filter_map(DashboardNode::from_state).collect();
+    response(DashboardGetNetworkResponse {
+        nodes: dashboard_nodes,
+        connections: Vec::new(),
     })
 }
 

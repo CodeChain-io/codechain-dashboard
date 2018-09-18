@@ -13,6 +13,7 @@ use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
 use super::types::{AgentGetInfoResponse, ShellStartCodeChainRequest};
 
+#[derive(Copy, Clone)]
 pub enum State {
     Initializing,
     Normal {
