@@ -2,10 +2,11 @@ use std::error::Error;
 use std::fmt;
 use std::option::Option;
 use std::result::Result::{Err, Ok};
-use std::sync::mpsc::{channel, RecvError, Sender};
+use std::sync::mpsc::{channel, RecvError, RecvTimeoutError, Sender};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::PoisonError;
+use std::time::Duration;
 
 use jsonrpc_core::types::{
     Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Output, Params, Response, Success,
@@ -114,6 +115,7 @@ pub enum CallError {
     InternalSerde(SerdeError),
     InternalSync(String),
     Response(JSONRPCError),
+    Timeout(RecvTimeoutError),
 }
 
 impl From<WSError> for CallError {
@@ -146,6 +148,12 @@ impl From<JSONRPCError> for CallError {
     }
 }
 
+impl From<RecvTimeoutError> for CallError {
+    fn from(error: RecvTimeoutError) -> Self {
+        CallError::Timeout(error)
+    }
+}
+
 pub fn call_no_arg<Res>(context: Context, method: &str) -> Result<Res, CallError>
 where
     Res: DeserializeOwned, {
@@ -170,9 +178,9 @@ where
     *callback_manager = Some(tx);
     drop(callback_manager);
 
-    ctrace!("Send JSONRPC {}", serialized_request);
+    ctrace!("jend JSONRPC {}", serialized_request);
     context.ws_sender.send(Message::Text(serialized_request))?;
-    let received_string = rx.recv()?;
+    let received_string = rx.recv_timeout(Duration::new(10, 0))?;
     ctrace!("Receive JSONRPC {}", received_string);
 
     let mut callback_manager = context.ws_callback.lock()?;
@@ -219,6 +227,7 @@ impl fmt::Display for CallError {
             CallError::InternalSerde(err) => write!(f, "Call Internal Error {}", err),
             CallError::InternalSync(err) => write!(f, "Call Internal Error {}", err),
             CallError::Response(err) => write!(f, "JSONRPC error {:?}", err),
+            CallError::Timeout(err) => write!(f, "Timeout {}", err),
         }
     }
 }
