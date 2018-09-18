@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Doughnut } from "react-chartjs-2";
 import { NodeInfo, NodeStatus } from "../../../../requests/types";
 import "./NodeDetail.css";
 
@@ -41,6 +42,39 @@ const getButtonByStatus = (status: NodeStatus) => {
       );
   }
   return "text-warning";
+};
+
+const getDistUsage = (_: {
+  total: string;
+  available: string;
+  percentageUsed: string;
+}) => {
+  return {
+    datasets: [
+      {
+        data: [50, 500],
+        backgroundColor: ["#CCCCCC", "#54A2E5"]
+      }
+    ],
+    // These labels appear in the legend and in the tooltips when hovering different arcs
+    labels: ["Used Space", "Free Space"]
+  };
+};
+const getMemoryUsage = (_: {
+  total: string;
+  available: string;
+  percentageUsed: string;
+}) => {
+  return {
+    datasets: [
+      {
+        data: [50, 500],
+        backgroundColor: ["#CCCCCC", "#54A2E5"]
+      }
+    ],
+    // These labels appear in the legend and in the tooltips when hovering different arcs
+    labels: ["Used Space", "Free Space"]
+  };
 };
 
 export default (props: Props) => {
@@ -128,8 +162,31 @@ export default (props: Props) => {
         </div>
       </div>
       <div className="right-panel">
-        <div>
-          <div>Hardware info</div>
+        <div className="mb-5 d-flex">
+          <div className="chart-title-container">Disk usage</div>
+          <div className="doughnut-chart">
+            <Doughnut
+              options={{
+                legend: {
+                  position: "bottom"
+                }
+              }}
+              data={getDistUsage(nodeInfo.hardware.diskUsage)}
+            />
+          </div>
+        </div>
+        <div className="d-flex">
+          <div className="chart-title-container">Memory usage</div>
+          <div className="doughnut-chart">
+            <Doughnut
+              options={{
+                legend: {
+                  position: "bottom"
+                }
+              }}
+              data={getMemoryUsage(nodeInfo.hardware.memoryUsage)}
+            />
+          </div>
         </div>
       </div>
     </div>

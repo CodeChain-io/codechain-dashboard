@@ -8,11 +8,13 @@
     "@fortawesome/react-fontawesome": "^0.1.3",
     "animate.css": "^3.7.0",
     "bootstrap": "^4.1.3",
+    "chart.js": "^2.7.2",
     "codechain-sdk": "^0.1.1-alpha.4",
     "lodash": "^4.17.11",
     "node-sass-chokidar": "^1.3.3",
     "npm-run-all": "^4.1.3",
     "react": "^16.5.0",
+    "react-chartjs-2": "^2.7.4",
     "react-dom": "^16.5.0",
     "react-redux": "^5.0.7",
     "react-router-dom": "^4.3.1",
@@ -35,6 +37,7 @@
     "fmt": "tslint -p tsconfig.json --fix && prettier 'src/**/*.{ts,tsx,scss,json,html,js,jsx}' --write"
   },
   "devDependencies": {
+    "@types/chart.js": "^2.7.34",
     "@types/jest": "^23.3.2",
     "@types/lodash": "^4.14.116",
     "@types/node": "^10.9.4",
