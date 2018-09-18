@@ -93,6 +93,7 @@ fn node_get_info() -> RPCResponse<NodeGetInfoResponse> {
             version: "0.1.0".to_string(),
             hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
         },
+        status: NodeStatus::Run,
         commit_hash: "84e70586dea8e6b4021d65b8164bbac28cb88ecb".to_string(),
         best_block_id: BlockId {
             block_number: 0,

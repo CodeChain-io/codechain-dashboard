@@ -86,6 +86,7 @@ pub struct DashboardGetNetworkResponse {
 #[serde(rename_all = "camelCase")]
 pub struct NodeGetInfoResponse {
     pub address: SocketAddr,
+    pub status: NodeStatus,
     pub version: NodeVersion,
     pub commit_hash: String,
     pub best_block_id: BlockId,
