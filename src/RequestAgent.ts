@@ -8,7 +8,9 @@ export default class RequestAgent {
   private static instance: RequestAgent = new RequestAgent();
   private ws: any;
   private dispatch: Dispatch;
-  private serverHost = "localhost:3012";
+  private serverHost = process.env.REACT_APP_SERVER_HOST
+    ? process.env.REACT_APP_SERVER_HOST
+    : "localhost:3012";
   private isConnected: boolean = false;
   constructor() {
     this.ws = new WebSocket(`ws://${this.serverHost}`);
