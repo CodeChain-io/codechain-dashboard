@@ -2,11 +2,11 @@ import { faCircle, faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { NodeInfo, NodeStatus } from "../../../../requests/types";
+import { NetworkNodeInfo, NodeStatus } from "../../../../requests/types";
 import "./NodeItem.css";
 interface Props {
   className?: string;
-  nodeInfo: NodeInfo;
+  nodeInfo: NetworkNodeInfo;
 }
 
 const getStatusClass = (status: NodeStatus) => {
@@ -53,7 +53,7 @@ const NodeItem = (props: Props) => {
     return (
       <div className={`node-item d-flex ${className}`}>
         <div className="node-item-info-container active">
-          <Link to="/nodelist/nodeId">
+          <Link to={`/nodelist/${encodeURI(nodeInfo.address)}`}>
             <div className=" d-flex align-items-center">
               <div className="node-status text-center">
                 <FontAwesomeIcon

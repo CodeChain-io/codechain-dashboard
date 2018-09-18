@@ -1,7 +1,7 @@
 import { H256, Parcel } from "codechain-sdk/lib/core/classes";
 export type NodeStatus = "Run" | "Stop" | "Error" | "UFO";
 export type SocketAddr = string;
-export interface NodeInfo {
+export interface NetworkNodeInfo {
   status: NodeStatus;
   address: SocketAddr;
   version?: { version: string; hash: string };
@@ -9,10 +9,10 @@ export interface NodeInfo {
   name?: string;
 }
 export interface ChainNetworks {
-  nodes: NodeInfo[];
+  nodes: NetworkNodeInfo[];
   connections: { nodeA: SocketAddr; nodeB: SocketAddr }[];
 }
-export interface NodeDetail {
+export interface NodeInfo {
   address: SocketAddr;
   agentVersion: string;
   status: NodeStatus;

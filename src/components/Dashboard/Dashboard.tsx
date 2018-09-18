@@ -21,7 +21,7 @@ class Dashboard extends React.Component<Props> {
   public render() {
     const { chainNetworks } = this.props;
     if (!chainNetworks) {
-      return <div>Loading..</div>;
+      return <div>Loading...</div>;
     }
     return (
       <div className="dashboard vh-100">

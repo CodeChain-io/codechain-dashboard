@@ -1,8 +1,8 @@
 import { Action } from "./actions";
-import { ChainNetworks, NodeDetail } from "./requests/types";
+import { ChainNetworks, NodeInfo } from "./requests/types";
 export interface RootState {
   nodeInfo: {
-    [socketAddr: string]: NodeDetail;
+    [socketAddr: string]: NodeInfo;
   };
   chainNetworks: ChainNetworks | undefined;
 }
@@ -20,7 +20,7 @@ export const appReducer = (state = initialState, action: Action) => {
         ...state,
         chainNetworks
       };
-    case "SetNodeDetail":
+    case "SetNodeInfo":
       const nodeInfo = {
         ...state.nodeInfo,
         [action.socketAddr]: action.data

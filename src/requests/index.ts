@@ -1,5 +1,5 @@
 import RequestAgent from "../RequestAgent";
-import { ChainNetworks, NodeDetail, SocketAddr } from "./types";
+import { ChainNetworks, NodeInfo, SocketAddr } from "./types";
 
 const getChainNetworks = async () => {
   return await RequestAgent.getInstance().call<ChainNetworks>(
@@ -9,7 +9,7 @@ const getChainNetworks = async () => {
 };
 
 const getNodeInfo = async (nodeAddress: SocketAddr) => {
-  return await RequestAgent.getInstance().call<NodeDetail>("node_getInfo", [
+  return await RequestAgent.getInstance().call<NodeInfo>("node_getInfo", [
     nodeAddress
   ]);
 };

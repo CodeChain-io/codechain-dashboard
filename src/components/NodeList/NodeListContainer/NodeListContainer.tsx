@@ -5,7 +5,7 @@ import { Dispatch } from "redux";
 import { Actions } from "../../../actions";
 import { RootState } from "../../../reducers";
 import { Apis } from "../../../requests";
-import { ChainNetworks, NodeInfo } from "../../../requests/types";
+import { ChainNetworks, NetworkNodeInfo } from "../../../requests/types";
 import NodeItem from "./NodeItem/NodeItem";
 
 interface OwnProps {
@@ -22,11 +22,11 @@ class NodeListContainer extends React.Component<Props> {
   public render() {
     const { chainNetworks } = this.props;
     if (!chainNetworks) {
-      return <div>Loading..</div>;
+      return <div>Loading...</div>;
     }
     return (
       <div>
-        {_.map(chainNetworks.nodes, (nodeInfo: NodeInfo) => {
+        {_.map(chainNetworks.nodes, (nodeInfo: NetworkNodeInfo) => {
           return (
             <NodeItem nodeInfo={nodeInfo} className="mb-3 animated fadeIn" />
           );
