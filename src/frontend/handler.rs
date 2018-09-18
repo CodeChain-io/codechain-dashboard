@@ -6,11 +6,13 @@ use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sende
 
 use super::super::jsonrpc;
 use super::super::router::Router;
+use super::types::Context;
 
 pub struct WebSocketHandler {
     pub out: Sender,
     pub count: Rc<Cell<u32>>,
-    pub router: Arc<Router>,
+    pub context: Context,
+    pub router: Arc<Router<Context>>,
 }
 
 impl Handler for WebSocketHandler {
@@ -24,7 +26,9 @@ impl Handler for WebSocketHandler {
         ctrace!("The number of live connections is {}", self.count.get());
 
         let response: Option<String> = match msg {
-            Message::Text(text) => jsonrpc::handle(|method, arg| self.router.run(&method, arg), text),
+            Message::Text(text) => {
+                jsonrpc::handle(|method, arg| self.router.run(self.context.clone(), &method, arg), text)
+            }
             _ => Some(jsonrpc::invalid_format()),
         };
 

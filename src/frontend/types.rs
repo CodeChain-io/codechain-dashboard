@@ -2,7 +2,13 @@ use std::net::SocketAddr;
 
 use cprimitives::H256;
 
+use super::super::agent;
 use super::super::common_rpc_types::NodeStatus;
+
+#[derive(Clone)]
+pub struct Context {
+    pub agent_service: agent::ServiceSender,
+}
 
 pub type Event = String;
 

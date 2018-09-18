@@ -31,6 +31,7 @@ use self::agent::handler::WebSocketHandler as AgentHandler;
 use self::agent::service::Service as AgentService;
 use self::frontend::api::add_routing as add_frontend_routing;
 use self::frontend::handler::WebSocketHandler as FrontendHandler;
+use self::frontend::types::Context as FrontendContext;
 use self::logger::init as logger_init;
 use self::router::Router;
 
@@ -38,16 +39,21 @@ fn main() {
     logger_init().expect("Logger should be initialized");
 
     let agent_service_sender = AgentService::run_thread();
+    let agent_service_for_frontend = agent_service_sender.clone();
 
     let frontend_join = thread::Builder::new()
         .name("frontend listen".to_string())
-        .spawn(|| {
+        .spawn(move || {
             let count = Rc::new(Cell::new(0));
             let mut frontend_router = Arc::new(Router::new());
             add_frontend_routing(Arc::get_mut(&mut frontend_router).unwrap());
-            listen("127.0.0.1:3012", |out| FrontendHandler {
+            let frontend_context = FrontendContext {
+                agent_service: agent_service_for_frontend,
+            };
+            listen("127.0.0.1:3012", move |out| FrontendHandler {
                 out,
                 count: count.clone(),
+                context: frontend_context.clone(),
                 router: frontend_router.clone(),
             }).unwrap();
         })
