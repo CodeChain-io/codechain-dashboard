@@ -5,6 +5,7 @@ use super::super::process::Message as ProcessMessage;
 use super::super::types::HandlerContext;
 use super::router::Router;
 use super::types::{response, RPCResult, ShellStartCodeChainRequest};
+use rpc::types::AgentGetInfoResponse;
 
 pub fn add_routing(router: &mut Router) {
     router.add_route("ping", Box::new(ping as fn(Arc<HandlerContext>) -> RPCResult<String>));
@@ -14,6 +15,10 @@ pub fn add_routing(router: &mut Router) {
     );
     router
         .add_route("shell_stopCodeChain", Box::new(shell_stop_code_chain as fn(Arc<HandlerContext>) -> RPCResult<()>));
+    router.add_route(
+        "agent_getInfo",
+        Box::new(agent_get_info as fn(Arc<HandlerContext>) -> RPCResult<AgentGetInfoResponse>),
+    )
 }
 
 fn ping(_context: Arc<HandlerContext>) -> RPCResult<String> {
@@ -43,4 +48,17 @@ fn shell_stop_code_chain(context: Arc<HandlerContext>) -> RPCResult<()> {
     let process_result = rx.recv()?;
     process_result?;
     response(())
+}
+
+fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoResponse> {
+    let (tx, rx) = channel();
+    context.process.send(ProcessMessage::GetStatus {
+        callback: tx,
+    })?;
+    let process_result = rx.recv()?;
+    let node_status = process_result?;
+    response(AgentGetInfoResponse {
+        status: node_status,
+        address: "127.0.0.1:3485".parse().unwrap(),
+    })
 }

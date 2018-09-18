@@ -4,6 +4,7 @@ use std::result::Result;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
+use super::rpc::types::NodeStatus;
 use std::time::Duration;
 use subprocess::{Exec, Popen, PopenError, Redirection};
 
@@ -50,6 +51,9 @@ pub enum Message {
     Quit {
         callback: Sender<Result<(), Error>>,
     },
+    GetStatus {
+        callback: Sender<Result<NodeStatus, Error>>,
+    },
 }
 
 impl Process {
@@ -83,6 +87,16 @@ impl Process {
                         } => {
                             callback.send(Ok(())).expect("Callback should be success");
                             break
+                        }
+                        Message::GetStatus {
+                            callback,
+                        } => {
+                            let status = if process.is_running() {
+                                NodeStatus::Run
+                            } else {
+                                NodeStatus::Stop
+                            };
+                            callback.send(Ok(status)).expect("Callback should be success");
                         }
                     }
                 }

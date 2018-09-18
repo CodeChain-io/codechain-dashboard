@@ -4,6 +4,7 @@ use jsonrpc_core::types::{Error as JSONRPCError, ErrorCode};
 use serde_json::{Error as SerdeError, Value};
 
 use super::super::process::Error as ProcessError;
+use std::net::SocketAddr;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -85,4 +86,19 @@ impl<T> From<SendError<T>> for RPCError {
     fn from(err: SendError<T>) -> Self {
         RPCError::Internal(format!("Internal error about thread : {:?}", err))
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum NodeStatus {
+    Run,
+    Stop,
+    Error,
+    UFO,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentGetInfoResponse {
+    pub status: NodeStatus,
+    pub address: SocketAddr,
 }
