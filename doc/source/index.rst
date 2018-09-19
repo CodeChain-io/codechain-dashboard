@@ -314,6 +314,23 @@ Response
 ``()``
 
 
+Error
+"""""""
+
+::
+
+  namespace ShellStartCodeChainErrors {
+    /**
+     *  There is a codechain instance already running.
+     */
+    const AlreadyRunning = -10001;
+    /**
+     *  The format of given `env` is wrong.
+     */
+    const EnvParseError = -10002;
+  }
+
+
 shell_stopCodeChain ➡️ ⬅️ 
 --------------------------
 
