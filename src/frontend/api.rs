@@ -125,12 +125,12 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
         hardware: HardwareInfo {
             cpu_usage: vec![0.34, 0.03, 0.58],
             disk_usage: HardwareUsage {
-                total: 3 * 1000 * 1000 * 1000,
+                total: 8 * 1000 * 1000 * 1000,
                 available: 5 * 1000 * 1000 * 1000,
                 percentage_used: 0.6,
             },
             memory_usage: HardwareUsage {
-                total: 3 * 1000 * 1000 * 1000,
+                total: 8 * 1000 * 1000 * 1000,
                 available: 5 * 1000 * 1000 * 1000,
                 percentage_used: 0.6,
             },
