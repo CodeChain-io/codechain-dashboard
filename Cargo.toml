@@ -8,6 +8,7 @@ atty = "0.2"
 codechain-rpc = { git = "https://github.com/CodeChain-io/codechain.git", rev = "7cd80ce55f25513e1b4b60f2e148eb9641c3ee51" }
 colored = "1.6"
 env_logger = "0.5.7"
+iron = "*"
 jsonrpc-core = { git = "https://github.com/paritytech/jsonrpc.git", branch = "parity-1.11" }
 log = "0.4.1"
 primitives = { git = "https://github.com/CodeChain-io/codechain.git", rev = "7cd80ce55f25513e1b4b60f2e148eb9641c3ee51" }
