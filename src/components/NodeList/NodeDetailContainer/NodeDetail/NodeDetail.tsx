@@ -3,6 +3,7 @@ import * as React from "react";
 import { Doughnut, HorizontalBar } from "react-chartjs-2";
 import { NodeInfo, NodeStatus } from "../../../../requests/types";
 import "./NodeDetail.css";
+const { confirmAlert } = require("react-confirm-alert");
 
 interface Props {
   nodeInfo: NodeInfo;
@@ -21,11 +22,32 @@ const getStatusClass = (status: NodeStatus) => {
   return "text-warning";
 };
 
+const onStop = () => {
+  confirmAlert({
+    title: "Are you sure?",
+    message: "The node will be shut down.",
+    buttons: [
+      {
+        label: "Yes",
+        onClick: () => alert("Click Yes")
+      },
+      {
+        label: "No",
+        onClick: () => alert("Click No")
+      }
+    ]
+  });
+};
+
 const getButtonByStatus = (status: NodeStatus) => {
   switch (status) {
     case "Run":
       return (
-        <button type="button" className="btn btn-secondary status-btn">
+        <button
+          type="button"
+          onClick={onStop}
+          className="btn btn-secondary status-btn"
+        >
           Stop
         </button>
       );

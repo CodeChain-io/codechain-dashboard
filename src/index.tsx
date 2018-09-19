@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import * as React from "react";
+import "react-confirm-alert/src/react-confirm-alert.css";
 import * as ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { createStore } from "redux";
