@@ -73,6 +73,6 @@ fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoRespons
     let node_status = process_result?;
     response(AgentGetInfoResponse {
         status: node_status,
-        address: "127.0.0.1:3485".parse().unwrap(),
+        address: context.codechain_address,
     })
 }

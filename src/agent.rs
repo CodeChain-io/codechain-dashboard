@@ -25,6 +25,7 @@ pub fn run(args: AgentArgs) {
     });
 
     let context = Arc::new(HandlerContext {
+        codechain_address: args.codechain_address,
         process,
     });
 

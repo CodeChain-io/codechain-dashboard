@@ -20,3 +20,9 @@ args:
         help: URL of Agent Hub. ex) "ws://127.0.0.1:3012"
         required: true
         takes_value: true
+    - address:
+        long: address
+        short: a
+        help: Codechain node's p2p address. ex) "127.0.0.1:3485"
+        required: true
+        takes_value: true
