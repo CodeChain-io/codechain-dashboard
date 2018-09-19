@@ -8,7 +8,7 @@ The software dependencies required to install and run CodeChain-Dashboard are:
 
 ## Run
 
-Run codechain-dashboard with the development mode.
+Run codechain-dashboard in the development mode.
 
 ```
 yarn install
