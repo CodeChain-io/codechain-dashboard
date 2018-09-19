@@ -24,10 +24,10 @@ pub fn response<T>(value: T) -> RPCResult<T> {
     Ok(Some(value))
 }
 
-const ERR_ALREADY_RUNNING: i64 = 1;
-const ERR_ENV_PARSE: i64 = 2;
-const ERR_PROCESS_INTERNAL: i64 = 2;
-const ERR_CODECHAIN_NOT_RUNNING: i64 = 3;
+const ERR_ALREADY_RUNNING: i64 = -10001;
+const ERR_ENV_PARSE: i64 = -10002;
+const ERR_PROCESS_INTERNAL: i64 = -32603;
+const ERR_CODECHAIN_NOT_RUNNING: i64 = -32603;
 
 impl RPCError {
     pub fn to_jsonrpc_error(&self) -> JSONRPCError {
