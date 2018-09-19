@@ -810,3 +810,11 @@ links: type-CodeChainCallRPCResponse_
   """""""""
 
   ``[]``
+  
+**********************
+Agent Server web
+**********************
+
+Agent server serve codechain's log file using HTTP.
+
+Someone could get Agent(127.0.0.1:3485)'s logfile using ``curl http://agenthub.com:5012/log/127.0.0.1:3485``
