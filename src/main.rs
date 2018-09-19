@@ -29,8 +29,9 @@ fn main() {
     let codechain_dir = matches.value_of("codechain-dir").expect("codechain-dir is required option");
     let log_file_path = matches.value_of("log-file").unwrap_or("agent.log");
     let hub_url = matches.value_of("agent-hub-url").expect("agent-hub-url is required option");
-    let codechain_address = matches.value_of("address").expect("address is required option");
-    let codechain_address = codechain_address.parse().expect("codechain-address field's format is invalid");
+    let codechain_address =
+        matches.value_of("codechain-p2p-address").expect("codechain-p2p-address is required option");
+    let codechain_address = codechain_address.parse().expect("codechain-p2p-address field's format is invalid");
 
     let args = AgentArgs {
         codechain_dir,
