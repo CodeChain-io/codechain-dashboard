@@ -607,7 +607,6 @@ Arguments
     name?: string;
     status?: NodeStatus;
     version?: { version: string, hash: string };
-    commitHash?: string;
     bestBlockId?: { blockNumber: number, hash: H256 };
     pendingParcels?: Parcel[];
     peers?: SocketAddr[];
@@ -631,7 +630,13 @@ Request
 
 ::
 
-  type NodeStartRequest = ShellStartCodeChainRequest
+  type NodeStartRequest = [
+    SocketAddr,
+    {
+      env: string; // "RUST_LOG=trace"
+      args: string; // "-c husky"
+    }
+  ]
 
 links: type-ShellStartCodeChainRequest_
 
