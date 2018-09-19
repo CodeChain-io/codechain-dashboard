@@ -13,8 +13,11 @@ pub fn add_routing(router: &mut Router) {
         "shell_startCodeChain",
         Box::new(shell_start_codechain as fn(Arc<HandlerContext>, (ShellStartCodeChainRequest,)) -> RPCResult<()>),
     );
-    router
-        .add_route("shell_stopCodeChain", Box::new(shell_stop_codechain as fn(Arc<HandlerContext>) -> RPCResult<()>));
+    router.add_route("shell_stopCodeChain", Box::new(shell_stop_codechain as fn(Arc<HandlerContext>) -> RPCResult<()>));
+    router.add_route(
+        "shell_getCodeChainLog",
+        Box::new(shell_get_codechain_log as fn(Arc<HandlerContext>) -> RPCResult<String>),
+    );
     router.add_route(
         "agent_getInfo",
         Box::new(agent_get_info as fn(Arc<HandlerContext>) -> RPCResult<AgentGetInfoResponse>),
@@ -49,6 +52,16 @@ fn shell_stop_codechain(context: Arc<HandlerContext>) -> RPCResult<()> {
     let process_result = rx.recv()?;
     process_result?;
     response(())
+}
+
+fn shell_get_codechain_log(context: Arc<HandlerContext>) -> RPCResult<String> {
+    let (tx, rx) = channel();
+    context.process.send(ProcessMessage::GetLog {
+        callback: tx,
+    })?;
+    let process_result = rx.recv()?;
+    let result = process_result?;
+    response(result)
 }
 
 fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoResponse> {

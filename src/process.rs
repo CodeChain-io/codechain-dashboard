@@ -1,3 +1,4 @@
+use std::fs::File;
 use std::io::Error as IOError;
 use std::option::Option;
 use std::result::Result;
@@ -5,6 +6,7 @@ use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
 use super::rpc::types::NodeStatus;
+use std::io::Read;
 use std::time::Duration;
 use subprocess::{Exec, Popen, PopenError, Redirection};
 
@@ -54,6 +56,9 @@ pub enum Message {
     GetStatus {
         callback: Sender<Result<NodeStatus, Error>>,
     },
+    GetLog {
+        callback: Sender<Result<String, Error>>,
+    },
 }
 
 impl Process {
@@ -97,6 +102,12 @@ impl Process {
                                 NodeStatus::Stop
                             };
                             callback.send(Ok(status)).expect("Callback should be success");
+                        }
+                        Message::GetLog {
+                            callback,
+                        } => {
+                            let result = process.get_log();
+                            callback.send(result).expect("Callback should be success");
                         }
                     }
                 }
@@ -181,5 +192,13 @@ impl Process {
         codechain.kill()?;
 
         Ok(())
+    }
+
+    fn get_log(&mut self) -> Result<String, Error> {
+        let file_name = self.option.log_file_path.clone();
+        let mut file = File::open(file_name)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        Ok(contents)
     }
 }
