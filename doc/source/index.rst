@@ -19,7 +19,7 @@ CodeChain nodes and get managerial information. It can stop/update/run a
 CodeChain program.
 
 
-Agent Server
+Agent Hub
 ============
 
 An agent server queries agents to get information. It saves the collected
@@ -226,7 +226,7 @@ These error codes has different meaning according to which protocol returns.
 
 
 **********************
-Agent Server -> Agent
+Agent Hub -> Agent
 **********************
 
 Requests
@@ -407,7 +407,7 @@ Error
   }
 
 **********************
-Agent -> Agent Server
+Agent -> Agent Hub
 **********************
 
 Notification
@@ -549,7 +549,7 @@ Second argument is the target score.
 
 
 **************************
-Frontend <-> Agent Server
+Frontend <-> Agent Hub
 **************************
 
 Dashboard Page
@@ -812,7 +812,7 @@ links: type-CodeChainCallRPCResponse_
   ``[]``
   
 **********************
-Agent Server web
+Agent Hub web
 **********************
 
 Agent server serve codechain's log file using HTTP.
