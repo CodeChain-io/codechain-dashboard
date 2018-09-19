@@ -21,6 +21,10 @@ pub fn add_routing(router: &mut Router<Context>) {
         Box::new(real_dashboard_get_network as fn(Context) -> RPCResponse<DashboardGetNetworkResponse>),
     );
     router.add_route(
+        "real_node_getInfo",
+        Box::new(real_node_get_info as fn(Context, (SocketAddr,)) -> RPCResponse<NodeGetInfoResponse>),
+    );
+    router.add_route(
         "node_start",
         Box::new(node_start as fn(Context, (SocketAddr, ShellStartCodeChainRequest)) -> RPCResponse<()>),
     );
@@ -109,6 +113,14 @@ fn real_dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetwo
         nodes: dashboard_nodes,
         connections: Vec::new(),
     })
+}
+
+fn real_node_get_info(context: Context, args: (SocketAddr,)) -> RPCResponse<NodeGetInfoResponse> {
+    let (address,) = args;
+    let agent = context.agent_service.get_agent(address).ok_or(RPCError::AgentNotFound)?;
+    let state = agent.read_state();
+    let node_response = NodeGetInfoResponse::from_state(&*state).ok_or(RPCError::AgentNotFound)?;
+    response(node_response)
 }
 
 fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
