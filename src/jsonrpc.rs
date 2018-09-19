@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::option::Option;
@@ -97,15 +98,20 @@ pub fn invalid_format() -> String {
 #[derive(Clone)]
 pub struct Context {
     pub ws_sender: WSSender,
-    pub ws_callback: Arc<Mutex<Option<Sender<String>>>>,
+    pub ws_callback: Arc<Mutex<HashMap<u64, Sender<String>>>>,
 }
 
 impl Context {
     pub fn new(sender: WSSender) -> Self {
         Self {
             ws_sender: sender,
-            ws_callback: Arc::new(Mutex::new(None)),
+            ws_callback: Arc::new(Mutex::new(HashMap::new())),
         }
+    }
+
+    pub fn add_callback(&self, id: u64, callback: Sender<String>) {
+        let mut ws_callback = self.ws_callback.lock().expect("Should success get ws_callback");
+        ws_callback.insert(id, callback);
     }
 }
 
@@ -166,26 +172,19 @@ where
     Res: DeserializeOwned, {
     let (tx, rx) = channel();
     let arg_value = serde_json::to_value(arg)?;
+    let id = rand::random();
     let request = MethodCall {
         jsonrpc: None,
         method: method.to_string(),
         params: Some(Params::Array(vec![arg_value])),
-        id: Id::Num(rand::random()),
+        id: Id::Num(id),
     };
     let serialized_request = serde_json::to_string(&request)?;
-
-    let mut callback_manager = context.ws_callback.lock()?;
-    *callback_manager = Some(tx);
-    drop(callback_manager);
-
+    context.add_callback(id, tx);
     ctrace!("jend JSONRPC {}", serialized_request);
     context.ws_sender.send(Message::Text(serialized_request))?;
     let received_string = rx.recv_timeout(Duration::new(10, 0))?;
     ctrace!("Receive JSONRPC {}", received_string);
-
-    let mut callback_manager = context.ws_callback.lock()?;
-    *callback_manager = None;
-    drop(callback_manager);
 
     let res = serde_json::from_str(&received_string)?;
 
@@ -200,23 +199,29 @@ where
 
 // Called on websocket thread
 pub fn on_receive(context: Context, text: String) {
-    let sender = context.ws_callback.lock();
-    if sender.is_err() {
-        cerror!("Cannot get callback from lock {:?}", sender);
-        return
+    match on_receive_internal(context, text) {
+        Ok(_) => {}
+        Err(err) => cerror!("{}", err),
     }
-    let sender = sender.expect("Error is checked");
-    match *sender {
-        None => {
-            cerror!("Callback is empty {:?}", sender);
-        }
-        Some(ref sender) => {
-            let send_result = sender.send(text);
-            if send_result.is_err() {
-                cerror!("Callback call failed {:?}", send_result);
-            }
-        }
-    }
+}
+
+fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
+    let json_parsed_result: Output = serde_json::from_str(&text)
+        .map_err(|err| format!("Cannot parse response from agent, data is {}\n{}", text.clone(), err))?;
+
+    let id = json_parsed_result.id();
+    let id = match id {
+        Id::Null => Err(id),
+        Id::Str(_) => Err(id),
+        Id::Num(id) => Ok(id),
+    }.map_err(|id| format!("Invalid id {:#?}", id))?;
+
+    let ws_callback = context
+        .ws_callback
+        .lock()
+        .map_err(|err| format!("Cannot acquire ws_callback lock on handling {}\n{}", text.clone(), err))?;
+    let callback = ws_callback.get(&id).ok_or(format!("Invalid id {}", id))?;
+    callback.send(text.clone()).map_err(|err| format!("Callback call failed, response was {}\n{}", text.clone(), err))
 }
 
 impl fmt::Display for CallError {
