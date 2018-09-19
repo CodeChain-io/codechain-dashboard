@@ -695,7 +695,7 @@ No request arguments
 Response
 """""""""
 
-``()``
+``[SocketAddr]``
 
 Error
 """"""
