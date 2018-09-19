@@ -667,6 +667,23 @@ Response
 
 ``()``
 
+Error
+"""""""
+
+::
+
+  namespace NodeStartErrors {
+    /**
+     *  There is a codechain instance already running.
+     */
+    const AlreadyRunning = -10001;
+    /**
+     *  The format of given `env` is wrong.
+     */
+    const EnvParseError = -10002;
+  }
+
+
 node_stop ➡️ ⬅️ 
 ---------------
 
@@ -684,6 +701,8 @@ Error
 """"""
 
 Could return ``CodeChainIsNotRunning``
+
+links: common-error_
 
 node_update ➡️ ⬅️ 
 -----------------
