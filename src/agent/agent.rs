@@ -176,6 +176,8 @@ impl Drop for Agent {
 
 pub trait SendAgentRPC {
     fn shell_start_codechain(&self, _req: ShellStartCodeChainRequest) -> RPCResult<()>;
+    fn shell_stop_codechain(&self) -> RPCResult<()>;
+    fn shell_get_codechain_log(&self) -> RPCResult<String>;
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse>;
 }
 
@@ -183,6 +185,16 @@ impl SendAgentRPC for AgentSender {
     fn shell_start_codechain(&self, req: ShellStartCodeChainRequest) -> RPCResult<()> {
         jsonrpc::call(self.jsonrpc_context.clone(), "shell_startCodeChain", req)?;
         Ok(())
+    }
+
+    fn shell_stop_codechain(&self) -> RPCResult<()> {
+        jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "shell_stopCodeChain")?;
+        Ok(())
+    }
+
+    fn shell_get_codechain_log(&self) -> RPCResult<String> {
+        let message = jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "shell_getCodeChainLog")?;
+        Ok(message)
     }
 
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse> {

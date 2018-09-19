@@ -23,7 +23,15 @@ pub fn add_routing(router: &mut Router<Context>) {
     router.add_route(
         "shell_startCodeChain",
         Box::new(shell_start_codechain as fn(Context, (SocketAddr, ShellStartCodeChainRequest)) -> RPCResponse<()>),
-    )
+    );
+    router.add_route(
+        "shell_stopCodeChain",
+        Box::new(shell_stop_codechain as fn(Context, (SocketAddr,)) -> RPCResponse<()>),
+    );
+    router.add_route(
+        "shell_getCodeChainLog",
+        Box::new(shell_get_codechain_log as fn(Context, (SocketAddr,)) -> RPCResponse<String>),
+    );
 }
 
 fn ping(_: Context) -> RPCResponse<String> {
@@ -157,4 +165,30 @@ fn shell_start_codechain(context: Context, args: (SocketAddr, ShellStartCodeChai
     agent.shell_start_codechain(req)?;
 
     response(())
+}
+
+fn shell_stop_codechain(context: Context, args: (SocketAddr,)) -> RPCResponse<()> {
+    let (address,) = args;
+
+    let agent = context.agent_service.get_agent(address);
+    if agent.is_none() {
+        return Err(RPCError::AgentNotFound)
+    }
+    let agent = agent.expect("Already checked");
+    agent.shell_stop_codechain()?;
+
+    response(())
+}
+
+fn shell_get_codechain_log(context: Context, args: (SocketAddr,)) -> RPCResponse<String> {
+    let (address,) = args;
+
+    let agent = context.agent_service.get_agent(address);
+    if agent.is_none() {
+        return Err(RPCError::AgentNotFound)
+    }
+    let agent = agent.expect("Already checked");
+    let result = agent.shell_get_codechain_log()?;
+
+    response(result)
 }
