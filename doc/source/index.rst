@@ -292,7 +292,28 @@ Response
     diskUsage: { total: "{}GB", available: "{}GB", percentageUsed: "{}%"};
     memoryUsage: { total: "{}GB", available: "{}GB", percentageUsed: "{}%"};
   }
+  
+agent_getInfo ➡️ ⬅️ 
+------------------
 
+Get agent's status and CodeChain's address
+
+Request
+""""""""
+
+No request arguments
+
+Response
+"""""""""
+
+::
+
+  interface AgentGetInfoResponse { 
+    status: NodeStatus;
+    address: SocketAddr;
+  }
+
+links: type-NodeStatus_, type-SocketAddr_
 
 shell_startCodeChain ➡️ ⬅️ 
 --------------------------
