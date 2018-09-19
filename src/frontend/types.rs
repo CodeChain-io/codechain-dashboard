@@ -119,7 +119,6 @@ pub struct NodeGetInfoResponse {
     pub address: SocketAddr,
     pub status: NodeStatus,
     pub version: NodeVersion,
-    pub commit_hash: String,
     pub best_block_id: BlockId,
     pub pending_parcels: Vec<Parcel>,
     pub peers: Vec<SocketAddr>,

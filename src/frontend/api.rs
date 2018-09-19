@@ -21,13 +21,10 @@ pub fn add_routing(router: &mut Router<Context>) {
         Box::new(real_dashboard_get_network as fn(Context) -> RPCResponse<DashboardGetNetworkResponse>),
     );
     router.add_route(
-        "shell_startCodeChain",
-        Box::new(shell_start_codechain as fn(Context, (SocketAddr, ShellStartCodeChainRequest)) -> RPCResponse<()>),
+        "node_start",
+        Box::new(node_start as fn(Context, (SocketAddr, ShellStartCodeChainRequest)) -> RPCResponse<()>),
     );
-    router.add_route(
-        "shell_stopCodeChain",
-        Box::new(shell_stop_codechain as fn(Context, (SocketAddr,)) -> RPCResponse<()>),
-    );
+    router.add_route("node_stop", Box::new(node_stop as fn(Context, (SocketAddr,)) -> RPCResponse<()>));
     router.add_route(
         "shell_getCodeChainLog",
         Box::new(shell_get_codechain_log as fn(Context, (SocketAddr,)) -> RPCResponse<String>),
@@ -122,7 +119,6 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
             hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
         },
         status: NodeStatus::Run,
-        commit_hash: "84e70586dea8e6b4021d65b8164bbac28cb88ecb".to_string(),
         best_block_id: BlockId {
             block_number: 0,
             hash: Default::default(),
@@ -154,7 +150,7 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
     })
 }
 
-fn shell_start_codechain(context: Context, args: (SocketAddr, ShellStartCodeChainRequest)) -> RPCResponse<()> {
+fn node_start(context: Context, args: (SocketAddr, ShellStartCodeChainRequest)) -> RPCResponse<()> {
     let (address, req) = args;
 
     let agent = context.agent_service.get_agent(address);
@@ -167,7 +163,7 @@ fn shell_start_codechain(context: Context, args: (SocketAddr, ShellStartCodeChai
     response(())
 }
 
-fn shell_stop_codechain(context: Context, args: (SocketAddr,)) -> RPCResponse<()> {
+fn node_stop(context: Context, args: (SocketAddr,)) -> RPCResponse<()> {
     let (address,) = args;
 
     let agent = context.agent_service.get_agent(address);
