@@ -212,6 +212,7 @@ Common error space
 
   namespace CommonErrors {
     const CodeChainIsNotRunning = 0;
+    const AgentNotFound = -1;
   }
 
 
