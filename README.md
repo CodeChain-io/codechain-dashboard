@@ -1,4 +1,4 @@
-# CodeCahin Dashboard
+# CodeChain Dashboard
 
 ## Requirements
 
