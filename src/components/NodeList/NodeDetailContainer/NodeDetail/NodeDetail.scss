@@ -17,11 +17,17 @@
     flex: 1;
     padding: 16px;
   }
-  .doughnut-chart {
-    flex: 1;
+  .chart-container {
+    width: 50%;
+    .doughnut-chart {
+      width: 300px;
+    }
   }
-  .chart-title-container {
-    width: 200px;
+  .chart-data-container {
+    width: 50%;
+    .chart-data {
+      width: 200px;
+    }
   }
   .data-container {
     height: 50px;

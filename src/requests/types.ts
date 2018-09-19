@@ -25,9 +25,9 @@ export interface NodeInfo {
   whitelist: { list: SocketAddr[]; enabled: boolean };
   blacklist: { list: SocketAddr[]; enabled: boolean };
   hardware: {
-    cpuUsage: number;
-    diskUsage: { total: string; available: string; percentageUsed: string };
-    memoryUsage: { total: string; available: string; percentageUsed: string };
+    cpuUsage: number[];
+    diskUsage: { total: number; available: number; percentageUsed: number };
+    memoryUsage: { total: number; available: number; percentageUsed: number };
   };
   events: string[];
 }

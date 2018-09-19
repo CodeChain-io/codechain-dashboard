@@ -1,5 +1,6 @@
+import * as _ from "lodash";
 import * as React from "react";
-import { Doughnut } from "react-chartjs-2";
+import { Doughnut, HorizontalBar } from "react-chartjs-2";
 import { NodeInfo, NodeStatus } from "../../../../requests/types";
 import "./NodeDetail.css";
 
@@ -44,36 +45,75 @@ const getButtonByStatus = (status: NodeStatus) => {
   return "text-warning";
 };
 
-const getDistUsage = (_: {
-  total: string;
-  available: string;
-  percentageUsed: string;
+const getGBNumber = (byte: number) => {
+  return Math.floor((byte / 1000 / 1000 / 1000) * 100) / 100;
+};
+
+const getDistUsage = (diskUsage: {
+  total: number;
+  available: number;
+  percentageUsed: number;
 }) => {
+  const availableGB = getGBNumber(diskUsage.available);
+  const usedGB = getGBNumber(diskUsage.total - diskUsage.available);
+
   return {
     datasets: [
       {
-        data: [50, 500],
-        backgroundColor: ["#CCCCCC", "#54A2E5"]
+        data: [usedGB, availableGB],
+        backgroundColor: [
+          "#CCCCCC",
+          `${availableGB < 0.5 ? "#dc3545" : "#54A2E5"}`
+        ]
       }
     ],
     // These labels appear in the legend and in the tooltips when hovering different arcs
     labels: ["Used Space", "Free Space"]
   };
 };
-const getMemoryUsage = (_: {
-  total: string;
-  available: string;
-  percentageUsed: string;
+
+const getMemoryUsage = (memoryUsage: {
+  total: number;
+  available: number;
+  percentageUsed: number;
 }) => {
+  const availableGB =
+    Math.floor((memoryUsage.available / 1000 / 1000 / 1000) * 100) / 100;
+  const usedGB =
+    Math.floor(
+      ((memoryUsage.total - memoryUsage.available) / 1000 / 1000 / 1000) * 100
+    ) / 100;
   return {
     datasets: [
       {
-        data: [50, 500],
-        backgroundColor: ["#CCCCCC", "#54A2E5"]
+        data: [usedGB, availableGB],
+        backgroundColor: [
+          "#CCCCCC",
+          `${availableGB < 1 ? "#dc3545" : "#54A2E5"}`
+        ]
       }
     ],
     // These labels appear in the legend and in the tooltips when hovering different arcs
     labels: ["Used Space", "Free Space"]
+  };
+};
+
+const getCpuUsage = (cpuUsage: number[]) => {
+  const dataSet = _.map(cpuUsage, usage => Math.floor(usage * 100 * 100) / 100);
+  const labels = _.map(cpuUsage, (usage, index) => `CPU-${index}`);
+  const colors = _.map(
+    cpuUsage,
+    (usage, index) => (usage < 0.9 ? "#54A2E5" : "#dc3545")
+  );
+  return {
+    datasets: [
+      {
+        data: dataSet,
+        backgroundColor: colors
+      }
+    ],
+    // These labels appear in the legend and in the tooltips when hovering different arcs
+    labels
   };
 };
 
@@ -162,30 +202,111 @@ export default (props: Props) => {
         </div>
       </div>
       <div className="right-panel">
-        <div className="mb-5 d-flex">
-          <div className="chart-title-container">Disk usage</div>
-          <div className="doughnut-chart">
-            <Doughnut
-              options={{
-                legend: {
-                  position: "bottom"
-                }
-              }}
-              data={getDistUsage(nodeInfo.hardware.diskUsage)}
-            />
+        <div className="mt-5 mb-5 d-flex align-items-center">
+          <div className="chart-data-container d-flex justify-content-center">
+            <div className="chart-data">
+              <h5>CPU usage</h5>
+              {_.map(nodeInfo.hardware.cpuUsage, (usage, index) => (
+                <p className="mb-0">
+                  {`CPU-${index} : ${Math.floor(usage * 100 * 100) / 100}`}
+                  (%)
+                </p>
+              ))}
+            </div>
+          </div>
+          <div className="chart-container d-flex justify-content-center">
+            <div className="doughnut-chart">
+              <HorizontalBar
+                options={{
+                  legend: {
+                    display: false
+                  },
+                  scales: {
+                    xAxes: [
+                      {
+                        ticks: {
+                          max: 100,
+                          min: 0
+                        }
+                      }
+                    ]
+                  }
+                }}
+                data={getCpuUsage(nodeInfo.hardware.cpuUsage)}
+              />
+            </div>
           </div>
         </div>
-        <div className="d-flex">
-          <div className="chart-title-container">Memory usage</div>
-          <div className="doughnut-chart">
-            <Doughnut
-              options={{
-                legend: {
-                  position: "bottom"
-                }
-              }}
-              data={getMemoryUsage(nodeInfo.hardware.memoryUsage)}
-            />
+        <div className="mt-5 mb-5 d-flex align-items-center">
+          <div className="chart-data-container d-flex justify-content-center">
+            <div className="chart-data">
+              <h5>Disk usage</h5>
+              <p className="mb-0">
+                Total pace : {getGBNumber(nodeInfo.hardware.diskUsage.total)}
+                (GB)
+              </p>
+              <p className="mb-0">
+                Used space :{" "}
+                {getGBNumber(
+                  nodeInfo.hardware.diskUsage.total -
+                    nodeInfo.hardware.diskUsage.available
+                )}
+                (GB)
+              </p>
+              <p className="mb-0">
+                Free space :{" "}
+                {getGBNumber(nodeInfo.hardware.diskUsage.available)}
+                (GB)
+              </p>
+            </div>
+          </div>
+          <div className="chart-container d-flex justify-content-center">
+            <div className="doughnut-chart">
+              <Doughnut
+                options={{
+                  legend: {
+                    position: "bottom"
+                  }
+                }}
+                data={getDistUsage(nodeInfo.hardware.diskUsage)}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="d-flex align-items-center mb-5">
+          <div className="chart-data-container d-flex justify-content-center">
+            <div className="chart-data">
+              <h5>Memory usage</h5>
+              <p className="mb-0">
+                Total space : {getGBNumber(nodeInfo.hardware.memoryUsage.total)}
+                (GB)
+              </p>
+              <p className="mb-0">
+                Used space :{" "}
+                {getGBNumber(
+                  nodeInfo.hardware.memoryUsage.total -
+                    nodeInfo.hardware.memoryUsage.available
+                )}
+                (GB)
+              </p>
+              <p className="mb-0">
+                Free space :{" "}
+                {getGBNumber(nodeInfo.hardware.memoryUsage.available)}
+                (GB)
+              </p>
+            </div>
+          </div>
+          <div className="chart-container d-flex justify-content-center">
+            <div className="doughnut-chart">
+              <Doughnut
+                options={{
+                  legend: {
+                    position: "bottom"
+                  }
+                }}
+                data={getMemoryUsage(nodeInfo.hardware.memoryUsage)}
+              />
+            </div>
           </div>
         </div>
       </div>
