@@ -203,6 +203,8 @@ JSON RPC uses -32768 to -32000 as reserved pre-defined errors.
     const UnknownErrorCode: number = -32001;
   }
 
+.. _common-error:
+
 Common error space
 --------------------
 
@@ -351,6 +353,8 @@ Error
 """"""
 
 Could return ``CodeChainIsNotRunning``
+
+links: common-error_
 
 
 shell_getUptime ➡️ ⬅️ 
