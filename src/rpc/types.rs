@@ -18,6 +18,9 @@ pub type RPCResult<T> = Result<Option<T>, RPCError>;
 pub enum RPCError {
     Process(ProcessError),
     Internal(String),
+
+    // Will be returned as error response
+    ErrorResponse(i64, String, Option<Value>),
 }
 
 pub fn response<T>(value: T) -> RPCResult<T> {
@@ -28,6 +31,8 @@ const ERR_ALREADY_RUNNING: i64 = -10001;
 const ERR_ENV_PARSE: i64 = -10002;
 const ERR_PROCESS_INTERNAL: i64 = -32603;
 const ERR_CODECHAIN_NOT_RUNNING: i64 = 0;
+
+pub const ERR_NETWORK_ERROR: i64 = -10001;
 
 impl RPCError {
     pub fn to_jsonrpc_error(&self) -> JSONRPCError {
@@ -48,12 +53,25 @@ impl RPCError {
             RPCError::Process(ProcessError::IO(err)) => {
                 Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("IO error occured {:?}", err))
             }
+            RPCError::Process(ProcessError::CodeChainRPC(err)) => {
+                Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("Sending RPC to ChdeChain failed {}", err))
+            }
+            RPCError::ErrorResponse(code, message, value) => {
+                Self::create_rpc_error_with_value(*code, message.clone(), value.clone())
+            }
         }
     }
 
     fn create_rpc_error(code: i64, msg: &str) -> JSONRPCError {
         let mut ret = JSONRPCError::new(ErrorCode::ServerError(code));
         ret.message = msg.to_string();
+        ret
+    }
+
+    fn create_rpc_error_with_value(code: i64, msg: String, value: Option<Value>) -> JSONRPCError {
+        let mut ret = JSONRPCError::new(ErrorCode::ServerError(code));
+        ret.message = msg;
+        ret.data = value;
         ret
     }
 
@@ -101,4 +119,10 @@ pub enum NodeStatus {
 pub struct AgentGetInfoResponse {
     pub status: NodeStatus,
     pub address: SocketAddr,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodeChainCallRPCResponse {
+    pub inner_response: Value,
 }

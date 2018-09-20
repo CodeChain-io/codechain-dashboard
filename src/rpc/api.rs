@@ -1,11 +1,14 @@
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 
-use super::super::process::Message as ProcessMessage;
+use serde_json::Value;
+
+use super::super::process::{Error as ProcessError, Message as ProcessMessage};
 use super::super::types::HandlerContext;
 use super::router::Router;
-use super::types::{response, RPCResult, ShellStartCodeChainRequest};
-use rpc::types::AgentGetInfoResponse;
+use super::types::{response, AgentGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellStartCodeChainRequest};
+use rpc::types::RPCError;
+use rpc::types::ERR_NETWORK_ERROR;
 
 pub fn add_routing(router: &mut Router) {
     router.add_route("ping", Box::new(ping as fn(Arc<HandlerContext>) -> RPCResult<String>));
@@ -21,6 +24,12 @@ pub fn add_routing(router: &mut Router) {
     router.add_route(
         "agent_getInfo",
         Box::new(agent_get_info as fn(Arc<HandlerContext>) -> RPCResult<AgentGetInfoResponse>),
+    );
+    router.add_route(
+        "codechain_callRPC",
+        Box::new(
+            codechain_call_rpc as fn(Arc<HandlerContext>, (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>,
+        ),
     )
 }
 
@@ -74,5 +83,26 @@ fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoRespons
     response(AgentGetInfoResponse {
         status: node_status,
         address: context.codechain_address,
+    })
+}
+
+fn codechain_call_rpc(context: Arc<HandlerContext>, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse> {
+    let (method, arguments) = args;
+    let (tx, rx) = channel();
+    context.process.send(ProcessMessage::CallRPC {
+        method,
+        arguments,
+        callback: tx,
+    })?;
+    let process_result = rx.recv()?;
+    let value = match process_result {
+        Ok(value) => value,
+        Err(ProcessError::CodeChainRPC(_)) => {
+            return Err(RPCError::ErrorResponse(ERR_NETWORK_ERROR, "Network Error".to_string(), None))
+        }
+        Err(err) => return Err(err.into()),
+    };
+    response(CodeChainCallRPCResponse {
+        inner_response: value,
     })
 }

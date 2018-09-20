@@ -1,14 +1,19 @@
 use std::fs::File;
 use std::io::Error as IOError;
+use std::io::Read;
 use std::option::Option;
 use std::result::Result;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
+use std::time::Duration;
+
+use jsonrpc_core;
+use reqwest;
+use serde_json;
+use serde_json::Value;
+use subprocess::{Exec, Popen, PopenError, Redirection};
 
 use super::rpc::types::NodeStatus;
-use std::io::Read;
-use std::time::Duration;
-use subprocess::{Exec, Popen, PopenError, Redirection};
 
 pub enum Error {
     EnvParseError,
@@ -16,6 +21,8 @@ pub enum Error {
     NotRunning,
     SubprocessError(PopenError),
     IO(IOError),
+    // This error caused when sending HTTP request to the codechain
+    CodeChainRPC(String),
 }
 
 impl From<PopenError> for Error {
@@ -58,6 +65,11 @@ pub enum Message {
     },
     GetLog {
         callback: Sender<Result<String, Error>>,
+    },
+    CallRPC {
+        method: String,
+        arguments: Vec<Value>,
+        callback: Sender<Result<Value, Error>>,
     },
 }
 
@@ -108,6 +120,14 @@ impl Process {
                         } => {
                             let result = process.get_log();
                             callback.send(result).expect("Callback should be success");
+                        }
+                        Message::CallRPC {
+                            method,
+                            arguments,
+                            callback,
+                        } => {
+                            let result = process.call_rpc(method, arguments);
+                            callback.send(result).expect("Callback should be success")
                         }
                     }
                 }
@@ -200,5 +220,30 @@ impl Process {
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         Ok(contents)
+    }
+
+    fn call_rpc(&mut self, method: String, arguments: Vec<Value>) -> Result<Value, Error> {
+        // FIXME: Get port number from args
+        let port = 8080;
+
+        let params = jsonrpc_core::Params::Array(arguments);
+
+        let jsonrpc_request = jsonrpc_core::MethodCall {
+            jsonrpc: None,
+            method,
+            params: Some(params),
+            id: jsonrpc_core::Id::Num(1),
+        };
+
+        let url = format!("http://127.0.0.1:{}/", port);
+        let client = reqwest::Client::new();
+        let mut response =
+            client.get(&url).json(&jsonrpc_request).send().map_err(|err| Error::CodeChainRPC(format!("{}", err)))?;
+
+        let response: jsonrpc_core::Response =
+            response.json().map_err(|err| Error::CodeChainRPC(format!("JSON parse failed {}", err)))?;
+        let value = serde_json::to_value(response).expect("Should success jsonrpc type to Value");
+
+        Ok(value)
     }
 }

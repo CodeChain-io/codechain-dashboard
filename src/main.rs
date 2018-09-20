@@ -1,12 +1,14 @@
 #[macro_use]
 extern crate clap;
-extern crate jsonrpc_core;
 #[macro_use]
 extern crate log;
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+
 extern crate core;
+extern crate jsonrpc_core;
+extern crate reqwest;
+extern crate serde;
 extern crate serde_json;
 extern crate subprocess;
 extern crate ws;
