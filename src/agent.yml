@@ -20,8 +20,8 @@ args:
         required: true
         takes_value: true
     - codechain-p2p-address:
-        long: codechain-address
+        long: codechain-p2p-address
         short: a
-        help: Codechain node's address. ex) "127.0.0.1"
+        help: Codechain node's p2p address. ex) "127.0.0.1:3486"
         required: true
         takes_value: true
