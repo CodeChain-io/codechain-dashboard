@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactModal from "react-modal";
 import { connect, DispatchProp } from "react-redux";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import RequestAgent from "../../RequestAgent";
@@ -9,6 +10,9 @@ import NodeList from "../NodeList/NodeList";
 import "./App.css";
 
 class App extends React.Component<DispatchProp> {
+  public componentDidMount() {
+    ReactModal.setAppElement("#app");
+  }
   public componentWillMount() {
     RequestAgent.getInstance().setDispatch(this.props.dispatch);
   }
@@ -18,7 +22,7 @@ class App extends React.Component<DispatchProp> {
   public render() {
     return (
       <Router>
-        <div className="app">
+        <div id="app" className="app">
           <Header />
           <GlobalNavigationBar />
           <div className="content-container">

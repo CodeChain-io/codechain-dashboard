@@ -1,6 +1,10 @@
 import { H256, Parcel } from "codechain-sdk/lib/core/classes";
-export type NodeStatus = "Run" | "Stop" | "Error" | "UFO";
+export type NodeStatus = "Run" | "Starting" | "Stop" | "Error" | "UFO";
 export type SocketAddr = string;
+export enum CommonError {
+  CodeChainIsNotRunning = 0,
+  AgentNotFound = -1
+}
 export interface NetworkNodeInfo {
   status: NodeStatus;
   address: SocketAddr;

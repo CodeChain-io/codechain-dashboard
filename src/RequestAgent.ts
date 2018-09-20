@@ -1,5 +1,11 @@
 import { Dispatch } from "redux";
+import { CommonError } from "./requests/types";
 const WebSocket = require("rpc-websockets").Client;
+
+export interface JsonRPCError {
+  code: number;
+  message: string;
+}
 
 export default class RequestAgent {
   public static getInstance = () => {
@@ -52,13 +58,32 @@ export default class RequestAgent {
     params: object | Array<object>
   ): Promise<T> => {
     await this.ensureConnection();
-    return this.ws.call(method, params);
+    let response;
+    try {
+      response = await this.ws.call(method, params);
+    } catch (e) {
+      if (!this.handleCommonError(e)) {
+        throw e;
+      }
+    }
+    return response;
   };
   public close = () => {
     this.ws.close();
   };
+  private handleCommonError = (e: JsonRPCError) => {
+    switch (e.code) {
+      case CommonError.AgentNotFound:
+        console.log("Agent not found");
+        return true;
+      case CommonError.CodeChainIsNotRunning:
+        console.log("CodeChain Not running");
+        return true;
+    }
+    return false;
+  };
   // Set timeout to 5 sec
-  private ensureConnection() {
+  private ensureConnection = () => {
     let requestCount = 0;
     return new Promise((resolve, reject) => {
       (function waitForConnection() {
@@ -73,5 +98,5 @@ export default class RequestAgent {
         }
       })();
     });
-  }
+  };
 }

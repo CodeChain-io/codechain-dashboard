@@ -36,7 +36,7 @@ class NodeDetailContainer extends React.Component<Props> {
       return <div>Loading...</div>;
     }
     return (
-      <div>
+      <div className="animated fadeIn">
         <NodeDetail nodeInfo={nodeInfo} />
       </div>
     );
