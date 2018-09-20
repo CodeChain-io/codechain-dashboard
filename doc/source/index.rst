@@ -235,7 +235,7 @@ Requests
 codechain_callRPC ➡️ ⬅️ 
 ------------------------
 
-Run codechain RPC through agent.
+Run codechain RPC through agent. JSONRPC result will be included in innerResponse field.
 
 .. _type-CodeChainCallRPCRequest:
 
@@ -267,13 +267,9 @@ Error
 
   interface CodeChainCallRPCErrors {
     /**
-     *  RPC to the CodeChain has an error. Error object will be in the error's data field.
-     */
-    const InnerError = -10001
-    /**
      *  Some network error occured while sending RPC to CodeChain
      */
-    const NetworkError = -10002
+    const NetworkError = -10001
   }
 
 hardware_get ➡️ ⬅️ 
