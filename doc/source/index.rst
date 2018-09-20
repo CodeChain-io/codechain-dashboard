@@ -270,6 +270,10 @@ Error
      *  RPC to the CodeChain has an error. Error object will be in the error's data field.
      */
     const InnerError = -10001
+    /**
+     *  Some network error occured while sending RPC to CodeChain
+     */
+    const NetworkError = -10002
   }
 
 hardware_get ➡️ ⬅️ 
