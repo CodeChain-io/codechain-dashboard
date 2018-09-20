@@ -13,6 +13,14 @@
   .status-btn {
     font-size: 0.8rem;
   }
+  .show-log-text {
+    text-decoration: underline !important;
+    color: black;
+    font-style: italic;
+    &:hover {
+      color: rgb(97, 97, 97);
+    }
+  }
   .right-panel {
     flex: 1;
     padding: 16px;

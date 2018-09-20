@@ -107,6 +107,11 @@ const getCpuUsage = (cpuUsage: number[]) => {
 };
 
 export default class NodeDetail extends React.Component<Props, State> {
+  private logFileHost = `${
+    process.env.REACT_APP_LOG_HOST
+      ? process.env.REACT_APP_LOG_HOST
+      : "http://localhost:5012"
+  }`;
   public constructor(props: Props) {
     super(props);
     this.state = {
@@ -143,13 +148,22 @@ export default class NodeDetail extends React.Component<Props, State> {
               </h4>
             </div>
           </div>
-          <div className="data-container mb-3">
+          <div className="data-container mb-2">
             Dummy - RUST_LOG="info,network=trace,miner=trace,sync=trace" cargo
             run -- --port 3485 --jsonrpc-port 8081 -c husky --author
             tccqplm67eps3yaryxu7fajdl9q7r3pgn8f0vcguptc --notify-work
             "http://127.0.0.1:3333" --whitelist-path whitelist.txt
             --bootstrap-addresses 13.124.101.76:3485 --force-sealing
             --reseal-min-period 4000
+          </div>
+          <div className="text-right">
+            <a
+              target="_blank"
+              className="show-log-text"
+              href={`${this.logFileHost}/log/${nodeInfo.address}`}
+            >
+              Show logs
+            </a>
           </div>
           <hr />
           <div className="data-row">
