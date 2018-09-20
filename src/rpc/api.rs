@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::sync::mpsc::channel;
 use std::sync::Arc;
 
@@ -79,10 +80,10 @@ fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoRespons
         callback: tx,
     })?;
     let process_result = rx.recv()?;
-    let node_status = process_result?;
+    let (node_status, port) = process_result?;
     response(AgentGetInfoResponse {
         status: node_status,
-        address: context.codechain_address,
+        address: SocketAddr::new(context.codechain_address, port),
     })
 }
 

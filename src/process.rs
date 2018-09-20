@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Error as IOError;
 use std::io::Read;
+use std::net::SocketAddr;
 use std::option::Option;
 use std::result::Result;
 use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
@@ -43,11 +44,63 @@ pub struct ProcessOption {
     pub log_file_path: String,
 }
 
+#[derive(Debug, PartialEq, Clone)]
+enum CodeChainStatus {
+    Starting {
+        p2p_port: u16,
+        rpc_port: u16,
+    },
+    Run {
+        p2p_port: u16,
+        rpc_port: u16,
+    },
+    Stop,
+    Error {
+        p2p_port: u16,
+        rpc_port: u16,
+    },
+}
+
+impl CodeChainStatus {
+    fn to_node_status(&self) -> NodeStatus {
+        match self {
+            CodeChainStatus::Starting {
+                ..
+            } => NodeStatus::Starting,
+            CodeChainStatus::Run {
+                ..
+            } => NodeStatus::Run,
+            CodeChainStatus::Stop => NodeStatus::Stop,
+            CodeChainStatus::Error {
+                ..
+            } => NodeStatus::Error,
+        }
+    }
+
+    fn p2p_port(&self) -> u16 {
+        match self {
+            CodeChainStatus::Starting {
+                p2p_port,
+                ..
+            } => *p2p_port,
+            CodeChainStatus::Run {
+                p2p_port,
+                ..
+            } => *p2p_port,
+            CodeChainStatus::Stop => 0,
+            CodeChainStatus::Error {
+                p2p_port,
+                ..
+            } => *p2p_port,
+        }
+    }
+}
+
 pub struct Process {
     option: ProcessOption,
     // first element is CodeChain second element is `tee` command
     child: Option<Vec<Popen>>,
-    codechain_status: NodeStatus,
+    codechain_status: CodeChainStatus,
 }
 
 pub enum Message {
@@ -63,7 +116,7 @@ pub enum Message {
         callback: Sender<Result<(), Error>>,
     },
     GetStatus {
-        callback: Sender<Result<NodeStatus, Error>>,
+        callback: Sender<Result<(NodeStatus, u16), Error>>,
     },
     GetLog {
         callback: Sender<Result<String, Error>>,
@@ -80,7 +133,7 @@ impl Process {
         let mut process = Self {
             option,
             child: None,
-            codechain_status: NodeStatus::Stop,
+            codechain_status: CodeChainStatus::Stop,
         };
         let (tx, rx) = channel();
         thread::Builder::new()
@@ -128,8 +181,10 @@ impl Process {
             Message::GetStatus {
                 callback,
             } => {
-                let status = self.codechain_status.clone();
-                callback.send(Ok(status)).expect("Callback should be success");
+                let codechain_status = &self.codechain_status;
+                let status = codechain_status.to_node_status();
+                let p2p_port = codechain_status.p2p_port();
+                callback.send(Ok((status, p2p_port))).expect("Callback should be success");
             }
             Message::GetLog {
                 callback,
@@ -149,7 +204,7 @@ impl Process {
     }
 
     pub fn ping_to_codechain(&mut self) {
-        if self.codechain_status == NodeStatus::Stop {
+        if self.codechain_status == CodeChainStatus::Stop {
             return
         }
 
@@ -159,27 +214,42 @@ impl Process {
         cinfo!("{:?}", result);
 
         match self.codechain_status {
-            NodeStatus::Run => {
+            CodeChainStatus::Run {
+                p2p_port,
+                rpc_port,
+            } => {
                 if let Err(err) = result {
                     cinfo!("Codechain ping error {:#?}", err);
-                    self.codechain_status = NodeStatus::Error;
+                    self.codechain_status = CodeChainStatus::Error {
+                        p2p_port,
+                        rpc_port,
+                    };
                 }
             }
-            NodeStatus::Starting => {
+            CodeChainStatus::Starting {
+                p2p_port,
+                rpc_port,
+            } => {
                 if result.is_ok() {
                     cinfo!("CodeChain is running now");
-                    self.codechain_status = NodeStatus::Run;
+                    self.codechain_status = CodeChainStatus::Run {
+                        p2p_port,
+                        rpc_port,
+                    };
                 }
             }
-            NodeStatus::Stop => {
+            CodeChainStatus::Stop => {
                 cerror!("Should not reach here");
             }
-            NodeStatus::Error => {
+            CodeChainStatus::Error {
+                p2p_port,
+                rpc_port,
+            } => {
                 cinfo!("CodeChain comabck to normal");
-                self.codechain_status = NodeStatus::Run;
-            }
-            NodeStatus::UFO => {
-                cerror!("Should not reach here");
+                self.codechain_status = CodeChainStatus::Run {
+                    p2p_port,
+                    rpc_port,
+                };
             }
         }
     }
@@ -191,6 +261,8 @@ impl Process {
 
         let args_iter = args.split_whitespace();
         let args_vec: Vec<String> = args_iter.map(|str| str.to_string()).collect();
+
+        let (p2p_port, rpc_port) = parse_ports(&args_vec);
 
         let envs = Self::parse_env(&env)?;
 
@@ -209,7 +281,10 @@ impl Process {
         let child = (exec | Exec::cmd("tee").arg(self.option.log_file_path.clone())).popen()?;
         self.child = Some(child);
 
-        self.codechain_status = NodeStatus::Starting;
+        self.codechain_status = CodeChainStatus::Starting {
+            p2p_port,
+            rpc_port,
+        };
 
         Ok(())
     }
@@ -254,7 +329,7 @@ impl Process {
 
         if let Some(exit_code) = wait_result {
             ctrace!("CodeChain closed with {:?}", exit_code);
-            self.codechain_status = NodeStatus::Stop;
+            self.codechain_status = CodeChainStatus::Stop;
             return Ok(())
         }
 
@@ -262,7 +337,7 @@ impl Process {
 
         codechain.kill()?;
 
-        self.codechain_status = NodeStatus::Stop;
+        self.codechain_status = CodeChainStatus::Stop;
 
         Ok(())
     }
@@ -299,4 +374,19 @@ impl Process {
 
         Ok(value)
     }
+}
+
+fn parse_ports(args: &Vec<String>) -> (u16, u16) {
+    let p2p_port = parse_port(args, "interface", 3485);
+    let rpc_port = parse_port(args, "jsonrpc-interface", 8080);
+
+    (p2p_port, rpc_port)
+}
+
+fn parse_port(args: &Vec<String>, option_name: &str, default_port: u16) -> u16 {
+    let option_position = args.iter().position(|arg| arg == option_name);
+    let interface_pos = option_position.map(|pos| pos + 1);
+    let interface_string = interface_pos.and_then(|pos| args.get(pos));
+    let interface: Option<SocketAddr> = interface_string.and_then(|port| port.parse().ok());
+    interface.map(|interface| interface.port()).unwrap_or(default_port)
 }
