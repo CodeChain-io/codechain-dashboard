@@ -306,7 +306,7 @@ impl Process {
         let env_kvs = env.split_whitespace();
         let mut ret = Vec::new();
         for env_kv in env_kvs {
-            let kv_array: Vec<&str> = env_kv.split("=").collect();
+            let kv_array: Vec<&str> = env_kv.splitn(2, "=").collect();
             if kv_array.len() != 2 {
                 return Err(Error::EnvParseError)
             } else {
