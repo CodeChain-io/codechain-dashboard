@@ -5,13 +5,14 @@ use std::sync::{RwLock, RwLockReadGuard};
 use std::thread;
 use std::time::Duration;
 
+use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
 use super::super::common_rpc_types::{NodeStatus, ShellStartCodeChainRequest};
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
-use super::types::AgentGetInfoResponse;
+use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
 
 #[derive(Copy, Clone)]
 pub enum State {
@@ -179,6 +180,7 @@ pub trait SendAgentRPC {
     fn shell_stop_codechain(&self) -> RPCResult<()>;
     fn shell_get_codechain_log(&self) -> RPCResult<String>;
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse>;
+    fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>;
 }
 
 impl SendAgentRPC for AgentSender {
@@ -199,6 +201,11 @@ impl SendAgentRPC for AgentSender {
 
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse> {
         let result: AgentGetInfoResponse = jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "agent_getInfo")?;
+        Ok(result)
+    }
+
+    fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse> {
+        let result = jsonrpc::call(self.jsonrpc_context.clone(), "codechain_callRPC", args)?;
         Ok(result)
     }
 }
