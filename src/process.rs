@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::Error as IOError;
 use std::io::Read;
-use std::net::SocketAddr;
 use std::option::Option;
 use std::result::Result;
 use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
@@ -92,6 +91,24 @@ impl CodeChainStatus {
                 p2p_port,
                 ..
             } => *p2p_port,
+        }
+    }
+
+    fn rpc_port(&self) -> u16 {
+        match self {
+            CodeChainStatus::Starting {
+                rpc_port,
+                ..
+            } => *rpc_port,
+            CodeChainStatus::Run {
+                rpc_port,
+                ..
+            } => *rpc_port,
+            CodeChainStatus::Stop => 0,
+            CodeChainStatus::Error {
+                rpc_port,
+                ..
+            } => *rpc_port,
         }
     }
 }
@@ -351,9 +368,6 @@ impl Process {
     }
 
     fn call_rpc(&mut self, method: String, arguments: Vec<Value>) -> Result<Value, Error> {
-        // FIXME: Get port number from args
-        let port = 8080;
-
         let params = jsonrpc_core::Params::Array(arguments);
 
         let jsonrpc_request = jsonrpc_core::MethodCall {
@@ -363,7 +377,7 @@ impl Process {
             id: jsonrpc_core::Id::Num(1),
         };
 
-        let url = format!("http://127.0.0.1:{}/", port);
+        let url = format!("http://127.0.0.1:{}/", self.codechain_status.rpc_port());
         let client = reqwest::Client::new();
         let mut response =
             client.post(&url).json(&jsonrpc_request).send().map_err(|err| Error::CodeChainRPC(format!("{}", err)))?;
@@ -377,16 +391,15 @@ impl Process {
 }
 
 fn parse_ports(args: &Vec<String>) -> (u16, u16) {
-    let p2p_port = parse_port(args, "interface", 3485);
-    let rpc_port = parse_port(args, "jsonrpc-interface", 8080);
+    let p2p_port = parse_port(args, "--port");
+    let rpc_port = parse_port(args, "--jsonrpc-port");
 
-    (p2p_port, rpc_port)
+    (p2p_port.unwrap_or(3485), rpc_port.unwrap_or(8080))
 }
 
-fn parse_port(args: &Vec<String>, option_name: &str, default_port: u16) -> u16 {
+fn parse_port(args: &Vec<String>, option_name: &str) -> Option<u16> {
     let option_position = args.iter().position(|arg| arg == option_name);
     let interface_pos = option_position.map(|pos| pos + 1);
     let interface_string = interface_pos.and_then(|pos| args.get(pos));
-    let interface: Option<SocketAddr> = interface_string.and_then(|port| port.parse().ok());
-    interface.map(|interface| interface.port()).unwrap_or(default_port)
+    interface_string.and_then(|port| port.parse().ok())
 }
