@@ -1,5 +1,6 @@
 #[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 pub enum NodeStatus {
+    Starting,
     Run,
     Stop,
     Error,
