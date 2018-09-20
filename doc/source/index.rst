@@ -265,7 +265,7 @@ Error
 
 ::
 
-  interface RunCodeChainRPCErrors {
+  interface CodeChainCallRPCErrors {
     /**
      *  RPC to the CodeChain has an error. Error object will be in the error's data field.
      */
