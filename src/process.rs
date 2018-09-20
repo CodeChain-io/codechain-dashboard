@@ -3,7 +3,7 @@ use std::io::Error as IOError;
 use std::io::Read;
 use std::option::Option;
 use std::result::Result;
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
 use std::thread;
 use std::time::Duration;
 
@@ -15,6 +15,7 @@ use subprocess::{Exec, Popen, PopenError, Redirection};
 
 use super::rpc::types::NodeStatus;
 
+#[derive(Debug)]
 pub enum Error {
     EnvParseError,
     AlreadyRunning,
@@ -46,6 +47,7 @@ pub struct Process {
     option: ProcessOption,
     // first element is CodeChain second element is `tee` command
     child: Option<Vec<Popen>>,
+    codechain_status: NodeStatus,
 }
 
 pub enum Message {
@@ -78,62 +80,108 @@ impl Process {
         let mut process = Self {
             option,
             child: None,
+            codechain_status: NodeStatus::Stop,
         };
         let (tx, rx) = channel();
         thread::Builder::new()
             .name("process".to_string())
-            .spawn(move || {
-                for message in rx {
-                    match message {
-                        Message::Run {
-                            env,
-                            args,
-                            callback,
-                        } => {
-                            let result = process.run(env, args);
-                            callback.send(result).expect("Callback should be success");
-                        }
-                        Message::Stop {
-                            callback,
-                        } => {
-                            let result = process.stop();
-                            callback.send(result).expect("Callback should be success");
-                        }
-                        Message::Quit {
-                            callback,
-                        } => {
-                            callback.send(Ok(())).expect("Callback should be success");
-                            break
-                        }
-                        Message::GetStatus {
-                            callback,
-                        } => {
-                            let status = if process.is_running() {
-                                NodeStatus::Run
-                            } else {
-                                NodeStatus::Stop
-                            };
-                            callback.send(Ok(status)).expect("Callback should be success");
-                        }
-                        Message::GetLog {
-                            callback,
-                        } => {
-                            let result = process.get_log();
-                            callback.send(result).expect("Callback should be success");
-                        }
-                        Message::CallRPC {
-                            method,
-                            arguments,
-                            callback,
-                        } => {
-                            let result = process.call_rpc(method, arguments);
-                            callback.send(result).expect("Callback should be success")
-                        }
+            .spawn(move || loop {
+                let message = match rx.recv_timeout(Duration::new(1, 0)) {
+                    Ok(message) => Some(message),
+                    Err(RecvTimeoutError::Timeout) => None,
+                    Err(RecvTimeoutError::Disconnected) => {
+                        cwarn!("Process's sender has disconnected");
+                        None
                     }
+                };
+                if let Some(message) = message {
+                    process.handle_message(message);
                 }
+                process.ping_to_codechain();
             })
             .expect("Should success running process thread");
         tx
+    }
+
+    pub fn handle_message(&mut self, message: Message) {
+        match message {
+            Message::Run {
+                env,
+                args,
+                callback,
+            } => {
+                let result = self.run(env, args);
+                callback.send(result).expect("Callback should be success");
+            }
+            Message::Stop {
+                callback,
+            } => {
+                let result = self.stop();
+                callback.send(result).expect("Callback should be success");
+            }
+            Message::Quit {
+                callback,
+            } => {
+                callback.send(Ok(())).expect("Callback should be success");
+                return
+            }
+            Message::GetStatus {
+                callback,
+            } => {
+                let status = self.codechain_status.clone();
+                callback.send(Ok(status)).expect("Callback should be success");
+            }
+            Message::GetLog {
+                callback,
+            } => {
+                let result = self.get_log();
+                callback.send(result).expect("Callback should be success");
+            }
+            Message::CallRPC {
+                method,
+                arguments,
+                callback,
+            } => {
+                let result = self.call_rpc(method, arguments);
+                callback.send(result).expect("Callback should be success")
+            }
+        }
+    }
+
+    pub fn ping_to_codechain(&mut self) {
+        if self.codechain_status == NodeStatus::Stop {
+            return
+        }
+
+        ctrace!("Ping to CodeChain");
+
+        let result = self.call_rpc("ping".to_string(), Vec::new());
+        cinfo!("{:?}", result);
+
+        match self.codechain_status {
+            NodeStatus::Run => {
+                if let Err(err) = result {
+                    cinfo!("Codechain ping error {:#?}", err);
+                    self.codechain_status = NodeStatus::Error;
+                }
+            }
+            NodeStatus::Starting => {
+                if result.is_ok() {
+                    cinfo!("CodeChain is running now");
+                    self.codechain_status = NodeStatus::Run;
+                }
+            }
+            NodeStatus::Stop => {
+                cerror!("Should not reach here");
+            }
+            NodeStatus::Error => {
+                cinfo!("CodeChain comabck to normal");
+                self.codechain_status = NodeStatus::Run;
+            }
+            NodeStatus::UFO => {
+                cerror!("Should not reach here");
+            }
+        }
     }
 
     pub fn run(&mut self, env: String, args: String) -> Result<(), Error> {
@@ -160,6 +208,8 @@ impl Process {
 
         let child = (exec | Exec::cmd("tee").arg(self.option.log_file_path.clone())).popen()?;
         self.child = Some(child);
+
+        self.codechain_status = NodeStatus::Starting;
 
         Ok(())
     }
@@ -204,12 +254,15 @@ impl Process {
 
         if let Some(exit_code) = wait_result {
             ctrace!("CodeChain closed with {:?}", exit_code);
+            self.codechain_status = NodeStatus::Stop;
             return Ok(())
         }
 
         cinfo!("CodeChain does not exit after 10 seconds");
 
         codechain.kill()?;
+
+        self.codechain_status = NodeStatus::Stop;
 
         Ok(())
     }
@@ -238,7 +291,7 @@ impl Process {
         let url = format!("http://127.0.0.1:{}/", port);
         let client = reqwest::Client::new();
         let mut response =
-            client.get(&url).json(&jsonrpc_request).send().map_err(|err| Error::CodeChainRPC(format!("{}", err)))?;
+            client.post(&url).json(&jsonrpc_request).send().map_err(|err| Error::CodeChainRPC(format!("{}", err)))?;
 
         let response: jsonrpc_core::Response =
             response.json().map_err(|err| Error::CodeChainRPC(format!("JSON parse failed {}", err)))?;

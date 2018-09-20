@@ -106,8 +106,9 @@ impl<T> From<SendError<T>> for RPCError {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum NodeStatus {
+    Starting,
     Run,
     Stop,
     Error,
