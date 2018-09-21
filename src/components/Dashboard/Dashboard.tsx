@@ -180,7 +180,10 @@ class Dashboard extends React.Component<Props, State> {
                 </h5>
               </div>
               <div className="dashboard-item-body">
-                <ul className="list-unstyled">
+                <ul
+                  className={`list-unstyled ${selectedNode.status === "UFO" &&
+                    "mb-0"}`}
+                >
                   <li>
                     <div>
                       Status :{" "}
@@ -227,14 +230,16 @@ class Dashboard extends React.Component<Props, State> {
                     </li>
                   )}
                 </ul>
-                <div>
-                  <Link
-                    className="view-details"
-                    to={`/nodelist/${selectedNode.address}`}
-                  >
-                    View details
-                  </Link>
-                </div>
+                {selectedNode.status !== "UFO" && (
+                  <div>
+                    <Link
+                      className="view-details"
+                      to={`/nodelist/${selectedNode.address}`}
+                    >
+                      View details
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           )}
