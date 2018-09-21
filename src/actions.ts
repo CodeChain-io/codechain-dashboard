@@ -1,5 +1,14 @@
-import { ChainNetworks, NodeInfo } from "./requests/types";
-export type Action = SetChainNetworks | SetNodeInfo;
+import {
+  ChainNetworks,
+  ChainNetworksUpdate,
+  NodeInfo,
+  NodeUpdateInfo
+} from "./requests/types";
+export type Action =
+  | SetChainNetworks
+  | SetNodeInfo
+  | UpdateNodeInfo
+  | UpdateChainNetworks;
 
 export interface SetChainNetworks {
   type: "SetChainNetworks";
@@ -12,7 +21,18 @@ export interface SetNodeInfo {
   data: NodeInfo;
 }
 
-const setChainNetworks = (data: ChainNetworks) => ({
+export interface UpdateNodeInfo {
+  type: "UpdateNodeInfo";
+  socketAddr: string;
+  data: NodeInfo;
+}
+
+export interface UpdateChainNetworks {
+  type: "UpdateChainNetworks";
+  data: ChainNetworks;
+}
+
+export const setChainNetworks = (data: ChainNetworks) => ({
   type: "SetChainNetworks",
   data
 });
@@ -23,7 +43,20 @@ const setNodeInfo = (socketAddr: string, data: NodeInfo) => ({
   data
 });
 
+const updateNodeInfo = (socketAddr: string, data: NodeUpdateInfo) => ({
+  type: "UpdateNodeInfo",
+  socketAddr,
+  data
+});
+
+const updateChainNetworks = (data: ChainNetworksUpdate) => ({
+  type: "UpdateChainNetworks",
+  data
+});
+
 export const Actions = {
   setNodeInfo,
-  setChainNetworks
+  setChainNetworks,
+  updateNodeInfo,
+  updateChainNetworks
 };

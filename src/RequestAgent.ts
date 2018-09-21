@@ -1,5 +1,10 @@
 import { Dispatch } from "redux";
-import { CommonError } from "./requests/types";
+import { Actions } from "./actions";
+import {
+  ChainNetworksUpdate,
+  CommonError,
+  NodeUpdateInfo
+} from "./requests/types";
 const WebSocket = require("rpc-websockets").Client;
 
 export interface JsonRPCError {
@@ -29,18 +34,14 @@ export default class RequestAgent {
           console.log(e);
         });
 
-      this.ws.on("dashboard_updated", (e: any) => {
+      this.ws.on("dashboard_updated", (e: ChainNetworksUpdate) => {
         console.log(e);
-        this.dispatch({
-          type: "DashboardUpdated"
-        });
+        this.dispatch(Actions.updateChainNetworks(e));
       });
 
-      this.ws.on("node_updated", (e: any) => {
+      this.ws.on("node_updated", (e: NodeUpdateInfo) => {
         console.log(e);
-        this.dispatch({
-          type: "NodeUpdated"
-        });
+        this.dispatch(Actions.updateNodeInfo(e.address, e));
       });
     });
     this.ws.on("error", (e: any) => {
