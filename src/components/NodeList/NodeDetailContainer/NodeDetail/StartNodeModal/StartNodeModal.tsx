@@ -46,7 +46,7 @@ export default class StartNodeModal extends React.Component<Props, State> {
           onAfterOpen={onAfterOpen}
           onRequestClose={onClose}
           style={customStyles}
-          contentLabel="Example Modal"
+          contentLabel="Start node popup"
         >
           <Form className="start-node-modal-form animated fadeIn">
             <div className="form-group">

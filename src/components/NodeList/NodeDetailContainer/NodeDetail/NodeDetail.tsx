@@ -9,6 +9,7 @@ import StartNodeModal from "./StartNodeModal/StartNodeModal";
 const { confirmAlert } = require("react-confirm-alert");
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import UpgradeNodeModal from "./UpgradeNodeModal/UpgradeNodeModal";
 
 interface Props {
   nodeInfo: NodeInfo;
@@ -17,6 +18,7 @@ interface Props {
 
 interface State {
   isStartNodeModalOpen: boolean;
+  isUpgradeNodeModalOpen: boolean;
 }
 
 enum NodeStartErrors {
@@ -121,12 +123,13 @@ export default class NodeDetail extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      isStartNodeModalOpen: false
+      isStartNodeModalOpen: false,
+      isUpgradeNodeModalOpen: false
     };
   }
   public render() {
     const { className, nodeInfo } = this.props;
-    const { isStartNodeModalOpen } = this.state;
+    const { isStartNodeModalOpen, isUpgradeNodeModalOpen } = this.state;
     return (
       <div className={`node-detail d-flex ${className}`}>
         <StartNodeModal
@@ -135,6 +138,11 @@ export default class NodeDetail extends React.Component<Props, State> {
           onAfterOpen={this.handleOnAfterOpen}
           onStartNode={this.handleOnStartNode}
           startOption={nodeInfo.startOption}
+        />
+        <UpgradeNodeModal
+          isOpen={isUpgradeNodeModalOpen}
+          currentCommitHash={nodeInfo.version.hash}
+          onClose={this.handleOnCloseUpgradeModal}
         />
         <div className="left-panel">
           <div className="data-row mb-1">
@@ -173,7 +181,7 @@ export default class NodeDetail extends React.Component<Props, State> {
           <div className="text-right">
             <a
               target="_blank"
-              className="show-log-text"
+              className="link-text"
               href={`${this.logFileHost}/log/${nodeInfo.address}`}
             >
               Show logs
@@ -186,7 +194,11 @@ export default class NodeDetail extends React.Component<Props, State> {
           </div>
           <div className="data-row mb-3">
             <div>Hash</div>
-            <div>{nodeInfo.version.hash}</div>
+            <div>
+              <span className="link-text" onClick={this.openUpgradeNodeModal}>
+                {nodeInfo.version.hash.slice(0, 6)}
+              </span>
+            </div>
           </div>
           <hr />
           <div className="data-row">
@@ -365,8 +377,14 @@ export default class NodeDetail extends React.Component<Props, State> {
   private handleOnClose = () => {
     this.setState({ isStartNodeModalOpen: false });
   };
+  private handleOnCloseUpgradeModal = () => {
+    this.setState({ isUpgradeNodeModalOpen: false });
+  };
   private openStartNodeModal = () => {
     this.setState({ isStartNodeModalOpen: true });
+  };
+  private openUpgradeNodeModal = () => {
+    this.setState({ isUpgradeNodeModalOpen: true });
   };
   private getButtonByStatus = (status: NodeStatus) => {
     switch (status) {
