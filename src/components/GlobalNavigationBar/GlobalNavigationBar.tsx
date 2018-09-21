@@ -1,5 +1,6 @@
 import {
   faCoins,
+  faRetweet,
   faTachometerAlt,
   IconDefinition
 } from "@fortawesome/free-solid-svg-icons";
@@ -44,6 +45,7 @@ export const GlobalNavigationBar = withRouter(props => {
           faCoins,
           /^\/nodelist/.test(pathname)
         )}
+        {getGnbMenu("rpc", "RPC", faRetweet, pathname === "/rpc")}
       </ul>
     </div>
   );

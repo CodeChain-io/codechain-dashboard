@@ -7,6 +7,7 @@ import Dashboard from "../Dashboard/Dashboard";
 import { GlobalNavigationBar } from "../GlobalNavigationBar/GlobalNavigationBar";
 import { Header } from "../Header/Header";
 import NodeList from "../NodeList/NodeList";
+import RPC from "../RPC/RPC";
 import "./App.css";
 
 class App extends React.Component<DispatchProp> {
@@ -28,6 +29,7 @@ class App extends React.Component<DispatchProp> {
           <div className="content-container">
             <Route exact={true} path="/" component={Dashboard} />
             <Route path="/nodelist" component={NodeList} />
+            <Route path="/rpc" component={RPC} />
           </div>
         </div>
       </Router>
