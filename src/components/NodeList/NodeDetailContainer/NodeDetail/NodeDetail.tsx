@@ -132,6 +132,7 @@ export default class NodeDetail extends React.Component<Props, State> {
           onClose={this.handleOnClose}
           onAfterOpen={this.handleOnAfterOpen}
           onStartNode={this.handleOnStartNode}
+          startOption={nodeInfo.startOption}
         />
         <div className="left-panel">
           <div className="data-row mb-1">
@@ -155,14 +156,18 @@ export default class NodeDetail extends React.Component<Props, State> {
               </h4>
             </div>
           </div>
-          <div className="data-container mb-2">
-            Dummy - RUST_LOG="info,network=trace,miner=trace,sync=trace" cargo
-            run -- --port 3485 --jsonrpc-port 8081 -c husky --author
-            tccqplm67eps3yaryxu7fajdl9q7r3pgn8f0vcguptc --notify-work
-            "http://127.0.0.1:3333" --whitelist-path whitelist.txt
-            --bootstrap-addresses 13.124.101.76:3485 --force-sealing
-            --reseal-min-period 4000
-          </div>
+          {nodeInfo.startOption && (
+            <div>
+              <span>Environment variables</span>
+              <div className="data-container mb-2">
+                {nodeInfo.startOption.env}
+              </div>
+              <span>Arguments</span>
+              <div className="data-container mb-2">
+                {nodeInfo.startOption.args}
+              </div>
+            </div>
+          )}
           <div className="text-right">
             <a
               target="_blank"

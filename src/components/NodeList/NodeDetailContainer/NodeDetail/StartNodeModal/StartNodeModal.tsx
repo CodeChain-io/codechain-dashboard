@@ -16,6 +16,10 @@ interface Props {
   onClose: () => void;
   onStartNode: (env: string, args: string) => void;
   onAfterOpen: () => void;
+  startOption?: {
+    env: string;
+    args: string;
+  };
   isOpen: boolean;
 }
 interface State {
@@ -26,13 +30,14 @@ interface State {
 export default class StartNodeModal extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
+    const startOption = props.startOption;
     this.state = {
-      env: "",
-      args: ""
+      env: startOption ? startOption.env : "",
+      args: startOption ? startOption.args : ""
     };
   }
   public render() {
-    const { isOpen, onAfterOpen, onClose } = this.props;
+    const { isOpen, onAfterOpen, onClose, startOption } = this.props;
     const { env, args } = this.state;
     return (
       <div>
@@ -54,11 +59,12 @@ export default class StartNodeModal extends React.Component<Props, State> {
                 id="environment-variable-input"
                 aria-describedby="evnHelp"
                 placeholder="Enter ENV"
+                autoComplete="off"
                 onChange={this.handleEnvChange}
                 value={env}
               />
               <small id="evnHelp" className="form-text text-muted">
-                ex) RUST_LOG=trace
+                {startOption ? startOption.env : ""}
               </small>
             </div>
             <div className="form-group">
@@ -69,11 +75,12 @@ export default class StartNodeModal extends React.Component<Props, State> {
                 id="argument-input"
                 aria-describedby="argHelp"
                 placeholder="Enter Args"
+                autoComplete="off"
                 value={args}
                 onChange={this.handleArgsChange}
               />
               <small id="argHelp" className="form-text text-muted">
-                ex) -c husky
+                {startOption ? startOption.args : ""}
               </small>
             </div>
             <div className="d-flex justify-content-end">

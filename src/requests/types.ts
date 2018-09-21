@@ -29,6 +29,7 @@ export interface ChainNetworksUpdate {
 }
 export interface NodeInfo {
   name?: string;
+  startOption?: { env: string; args: string };
   address: SocketAddr;
   agentVersion: string;
   status: NodeStatus;
@@ -48,6 +49,7 @@ export interface NodeInfo {
 }
 export interface NodeUpdateInfo {
   name?: string;
+  startOption?: { env: string; args: string };
   address: SocketAddr;
   agentVersion?: string;
   status?: NodeStatus;
