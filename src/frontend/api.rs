@@ -6,7 +6,7 @@ use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
     BlockId, Context, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
-    NodeConnection, NodeGetInfoResponse, NodeVersion,
+    NodeConnection, NodeGetInfoResponse, NodeVersion, StartOption,
 };
 
 pub fn add_routing(router: &mut Router<Context>) {
@@ -58,7 +58,7 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
             DashboardNode::Normal {
                 name: None,
                 status: NodeStatus::Run,
-                address: "127.0.0.2:3485".parse().unwrap(),
+                address: "127.0.0.2:3486".parse().unwrap(),
                 version: NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -71,7 +71,20 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
             DashboardNode::Normal {
                 name: Some("Hi stopped test node1".to_string()),
                 status: NodeStatus::Stop,
-                address: "42.124.241.2:3485".parse().unwrap(),
+                address: "42.124.241.2:3487".parse().unwrap(),
+                version: NodeVersion {
+                    version: "0.1.0".to_string(),
+                    hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
+                },
+                best_block_id: BlockId {
+                    block_number: 0,
+                    hash: Default::default(),
+                },
+            },
+            DashboardNode::Normal {
+                name: Some("Starting node".to_string()),
+                status: NodeStatus::Starting,
+                address: "127.0.0.3:3488".parse().unwrap(),
                 version: NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -84,7 +97,7 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
             DashboardNode::Normal {
                 name: Some("Test Error node".to_string()),
                 status: NodeStatus::Error,
-                address: "127.0.0.3:3485".parse().unwrap(),
+                address: "127.0.0.3:3489".parse().unwrap(),
                 version: NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -96,12 +109,12 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
             },
             DashboardNode::UFO {
                 status: NodeStatus::UFO,
-                address: "2.2.2.2:3485".parse().unwrap(),
+                address: "2.2.2.2:3410".parse().unwrap(),
             },
         ],
         connections: vec![NodeConnection {
             node_a: "127.0.0.1:3485".parse().unwrap(),
-            node_b: "127.0.0.2:3485".parse().unwrap(),
+            node_b: "127.0.0.2:3486".parse().unwrap(),
         }],
     })
 }
@@ -130,7 +143,11 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
             version: "0.1.0".to_string(),
             hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
         },
-        status: NodeStatus::Run,
+        status: NodeStatus::Stop,
+        start_option: Some(StartOption {
+            env: "RUST_LOG=trace".to_string(),
+            args: "-c husky".to_string(),
+        }),
         best_block_id: BlockId {
             block_number: 0,
             hash: Default::default(),

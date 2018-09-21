@@ -115,9 +115,17 @@ pub struct DashboardGetNetworkResponse {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct StartOption {
+    pub env: String,
+    pub args: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NodeGetInfoResponse {
     pub address: SocketAddr,
     pub status: NodeStatus,
+    pub start_option: Option<StartOption>,
     pub version: NodeVersion,
     pub best_block_id: BlockId,
     pub pending_parcels: Vec<Parcel>,
@@ -137,6 +145,7 @@ impl NodeGetInfoResponse {
                 hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
             },
             status: NodeStatus::Run,
+            start_option: None,
             best_block_id: BlockId {
                 block_number: 0,
                 hash: Default::default(),
