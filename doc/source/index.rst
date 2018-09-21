@@ -108,7 +108,7 @@ NodeStatus
 
 ::
 
-  type NodeStatue = "Run" | "Stop" | "Error" | "UFO";
+  type NodeStatus = "Run" | "Stop" | "Error" | "UFO";
 
 
 .. _type-DashboardNodeInfo:
