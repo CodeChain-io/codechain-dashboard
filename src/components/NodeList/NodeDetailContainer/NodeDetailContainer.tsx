@@ -6,6 +6,7 @@ import { RootState } from "../../../reducers";
 import { Apis } from "../../../requests";
 import { NodeInfo } from "../../../requests/types";
 import NodeDetail from "./NodeDetail/NodeDetail";
+import "./NodeDetailContainer.css";
 
 interface OwnProps {
   match: {
@@ -36,7 +37,7 @@ class NodeDetailContainer extends React.Component<Props> {
       return <div>Loading...</div>;
     }
     return (
-      <div className="animated fadeIn">
+      <div className="node-detail-container animated fadeIn">
         <NodeDetail nodeInfo={nodeInfo} />
       </div>
     );

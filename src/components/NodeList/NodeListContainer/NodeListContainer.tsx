@@ -7,6 +7,7 @@ import { RootState } from "../../../reducers";
 import { Apis } from "../../../requests";
 import { ChainNetworks, NetworkNodeInfo } from "../../../requests/types";
 import NodeItem from "./NodeItem/NodeItem";
+import "./NodeListContainer.css";
 
 interface OwnProps {
   chainNetworks: ChainNetworks | undefined;
@@ -25,7 +26,7 @@ class NodeListContainer extends React.Component<Props> {
       return <div>Loading...</div>;
     }
     return (
-      <div>
+      <div className="node-list-container">
         {_.map(chainNetworks.nodes, (nodeInfo: NetworkNodeInfo) => {
           return (
             <NodeItem
