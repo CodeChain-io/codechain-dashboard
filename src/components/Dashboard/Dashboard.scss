@@ -17,6 +17,18 @@
       color: $dark-text-color;
       padding: 9px;
     }
+    .node-item-info-panel {
+      height: 180px;
+    }
+    .node-info-element {
+      position: relative;
+      height: 100%;
+
+      .bottom-container {
+        position: absolute;
+        bottom: 0px;
+      }
+    }
     .dashboard-item-body {
       background-color: white;
       padding: 9px;

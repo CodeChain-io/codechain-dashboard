@@ -179,67 +179,8 @@ class Dashboard extends React.Component<Props, State> {
                   Node info
                 </h5>
               </div>
-              <div className="dashboard-item-body">
-                <ul
-                  className={`list-unstyled ${selectedNode.status === "UFO" &&
-                    "mb-0"}`}
-                >
-                  <li>
-                    <div>
-                      Status :{" "}
-                      <span className={getStatusClass(selectedNode.status)}>
-                        {selectedNode.status}
-                      </span>
-                    </div>
-                  </li>
-                  <li>
-                    <div>
-                      Address : <span>{selectedNode.address}</span>
-                    </div>
-                  </li>
-                  {selectedNode.name && (
-                    <li>
-                      <div>
-                        Name : <span>{selectedNode.name}</span>
-                      </div>
-                    </li>
-                  )}
-                  {selectedNode.bestBlockId && (
-                    <li>
-                      <div>
-                        Best block :{" "}
-                        <span>
-                          {selectedNode.bestBlockId.blockNumber} (
-                          {selectedNode.bestBlockId.hash.value
-                            ? selectedNode.bestBlockId.hash.value.slice(0, 6)
-                            : "Invalid hash"}
-                          )
-                        </span>
-                      </div>
-                    </li>
-                  )}
-                  {selectedNode.version && (
-                    <li>
-                      <div>
-                        Version :{" "}
-                        <span>
-                          {selectedNode.version.version} (
-                          {selectedNode.version.hash.slice(0, 6)})
-                        </span>
-                      </div>
-                    </li>
-                  )}
-                </ul>
-                {selectedNode.status !== "UFO" && (
-                  <div>
-                    <Link
-                      className="view-details"
-                      to={`/nodelist/${selectedNode.address}`}
-                    >
-                      View details
-                    </Link>
-                  </div>
-                )}
+              <div className="dashboard-item-body node-item-info-panel">
+                {this.getNodeInfoElem(selectedNode)}
               </div>
             </div>
           )}
@@ -254,9 +195,74 @@ class Dashboard extends React.Component<Props, State> {
     );
     this.setState({ selectedNode });
   };
-
   private onDeselect = () => {
     this.setState({ selectedNode: undefined });
+  };
+
+  private getNodeInfoElem = (node: NetworkNodeInfo) => {
+    return (
+      <div className="node-info-element">
+        <ul
+          className={`node-info-element-data list-unstyled ${node.status ===
+            "UFO" && "mb-0"}`}
+        >
+          <li>
+            <div>
+              Status :{" "}
+              <span className={getStatusClass(node.status)}>{node.status}</span>
+            </div>
+          </li>
+          <li>
+            <div>
+              Address : <span>{node.address}</span>
+            </div>
+          </li>
+          {node.name && (
+            <li>
+              <div>
+                Name : <span>{node.name}</span>
+              </div>
+            </li>
+          )}
+          {node.bestBlockId && (
+            <li>
+              <div>
+                Best block :{" "}
+                <span>
+                  {node.bestBlockId.blockNumber} (
+                  {node.bestBlockId.hash.value
+                    ? node.bestBlockId.hash.value.slice(0, 6)
+                    : "Invalid hash"}
+                  )
+                </span>
+              </div>
+            </li>
+          )}
+          {node.version && (
+            <li>
+              <div>
+                Version :{" "}
+                <span>
+                  {node.version.version} ({node.version.hash.slice(0, 6)})
+                </span>
+              </div>
+            </li>
+          )}
+        </ul>
+        {node.status !== "UFO" && (
+          <div className="bottom-container">
+            <Link className="view-details" to={`/nodelist/${node.address}`}>
+              View details
+            </Link>
+          </div>
+        )}
+        {node.status === "UFO" && (
+          <div className="bottom-container">
+            <span className="view-details">Install agent</span>
+          </div>
+        )}
+      </div>
+    );
   };
 }
 
