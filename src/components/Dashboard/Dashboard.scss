@@ -1,0 +1,28 @@
+@import "styles/variables.scss";
+
+.dashboard {
+  min-width: 800px;
+  .left-panel {
+    flex-grow: 1;
+  }
+  .right-panel {
+    width: 300px;
+
+    .connection-graph-help {
+      border: 1px solid $container-border-color;
+      border-radius: 3px;
+      overflow: hidden;
+
+      .connection-graph-help-header {
+        background-color: $dark-background-color;
+        color: $dark-text-color;
+        padding: 9px;
+      }
+
+      .connection-graph-help-body {
+        background-color: white;
+        padding: 9px;
+      }
+    }
+  }
+}
