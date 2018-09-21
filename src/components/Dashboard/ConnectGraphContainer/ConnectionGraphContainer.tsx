@@ -9,6 +9,8 @@ import { ConnectionGraph } from "../ConnectionGraph/ConnectionGraph";
 interface Props {
   className?: string;
   chainNetworks: ChainNetworks;
+  onSelectNode: (node: { id: string; label: string }) => void;
+  onDeselect: () => void;
 }
 export class ConnectionGraphContainer extends React.Component<Props, {}> {
   constructor(props: Props) {
@@ -16,7 +18,7 @@ export class ConnectionGraphContainer extends React.Component<Props, {}> {
   }
 
   public render() {
-    const { className, chainNetworks } = this.props;
+    const { className, chainNetworks, onSelectNode, onDeselect } = this.props;
     return (
       <div className={`connection-graph-container ${className}`}>
         <div className="connection-graph-header">
@@ -27,6 +29,8 @@ export class ConnectionGraphContainer extends React.Component<Props, {}> {
         </div>
         <div className="connection-graph-body">
           <ConnectionGraph
+            onDeselect={onDeselect}
+            onSelectNode={onSelectNode}
             chainNetworks={chainNetworks}
             className="connection-graph"
           />

@@ -7,21 +7,26 @@
   }
   .right-panel {
     width: 300px;
-
-    .connection-graph-help {
+    .dashboard-item {
       border: 1px solid $container-border-color;
       border-radius: 3px;
       overflow: hidden;
-
-      .connection-graph-help-header {
-        background-color: $dark-background-color;
-        color: $dark-text-color;
-        padding: 9px;
-      }
-
-      .connection-graph-help-body {
-        background-color: white;
-        padding: 9px;
+    }
+    .dashboard-item-header {
+      background-color: $dark-background-color;
+      color: $dark-text-color;
+      padding: 9px;
+    }
+    .dashboard-item-body {
+      background-color: white;
+      padding: 9px;
+    }
+    .view-details {
+      text-decoration: underline !important;
+      color: black;
+      font-style: italic;
+      &:hover {
+        color: rgb(97, 97, 97);
       }
     }
   }

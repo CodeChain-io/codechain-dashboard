@@ -34,8 +34,10 @@ const getStatusClass = (status: NodeStatus) => {
       return "text-danger";
     case "Starting":
       return "text-warning";
+    case "UFO":
+      return "text-info";
   }
-  return "text-warning";
+  throw new Error("Invalid status");
 };
 
 const getGBNumber = (byte: number) => {

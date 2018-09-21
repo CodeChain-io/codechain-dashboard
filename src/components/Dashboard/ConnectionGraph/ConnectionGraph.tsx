@@ -10,6 +10,8 @@ const {
 interface Props {
   className?: string;
   chainNetworks: ChainNetworks;
+  onSelectNode: (node: { id: string; label: string }) => void;
+  onDeselect: () => void;
 }
 interface States {
   width: number;
@@ -40,7 +42,7 @@ export class ConnectionGraph extends React.Component<Props, States> {
   }
 
   public render() {
-    const { className, chainNetworks } = this.props;
+    const { className, chainNetworks, onSelectNode, onDeselect } = this.props;
     const { width, height, drawNodeList } = this.state;
     return (
       <div ref={this.containerRef} className={className}>
@@ -54,7 +56,9 @@ export class ConnectionGraph extends React.Component<Props, States> {
             }}
             labelAttr="label"
             // tslint:disable-next-line:jsx-no-lambda
-            onSelectNode={(node: any) => console.log(node)}
+            onSelectNode={(event: any, node: any) => onSelectNode(node)}
+            // tslint:disable-next-line:jsx-no-lambda
+            onDeselectNode={(event: any, node: any) => onDeselect()}
             highlightDependencie={true}
           >
             {_.map(chainNetworks.nodes, node => (
@@ -62,9 +66,7 @@ export class ConnectionGraph extends React.Component<Props, States> {
                 key={`node-${node.address}`}
                 node={{
                   id: node.address,
-                  label: node.name
-                    ? `${node.name} (${node.address})`
-                    : node.address,
+                  label: node.name ? node.name : node.address,
                   radius: 10
                 }}
                 showLabel={true}

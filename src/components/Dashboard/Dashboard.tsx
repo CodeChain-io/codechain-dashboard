@@ -1,13 +1,22 @@
-import { faCircle, faInfo } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBroadcastTower,
+  faCircle,
+  faInfo
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as _ from "lodash";
 import * as React from "react";
 import { connect, DispatchProp } from "react-redux";
+import { Link } from "react-router-dom";
 import { Dispatch } from "redux";
 import { Actions } from "../../actions";
 import { RootState } from "../../reducers";
 import { Apis } from "../../requests";
-import { ChainNetworks } from "../../requests/types";
+import {
+  ChainNetworks,
+  NetworkNodeInfo,
+  NodeStatus
+} from "../../requests/types";
 import { ConnectionGraphContainer } from "./ConnectGraphContainer/ConnectionGraphContainer";
 import "./Dashboard.css";
 
@@ -15,8 +24,34 @@ interface OwnProps {
   chainNetworks: ChainNetworks | undefined;
   getChainNetworks: () => void;
 }
+interface State {
+  selectedNode?: NetworkNodeInfo;
+}
+
+const getStatusClass = (status: NodeStatus) => {
+  switch (status) {
+    case "Run":
+      return "text-success";
+    case "Stop":
+      return "text-secondary";
+    case "Error":
+      return "text-danger";
+    case "Starting":
+      return "text-warning";
+    case "UFO":
+      return "text-info";
+  }
+  throw new Error("Invalid status");
+};
+
 type Props = DispatchProp & OwnProps;
-class Dashboard extends React.Component<Props> {
+class Dashboard extends React.Component<Props, State> {
+  public constructor(props: Props) {
+    super(props);
+    this.state = {
+      selectedNode: undefined
+    };
+  }
   public componentDidMount() {
     if (!this.props.chainNetworks) {
       this.props.getChainNetworks();
@@ -24,6 +59,7 @@ class Dashboard extends React.Component<Props> {
   }
   public render() {
     const { chainNetworks } = this.props;
+    const { selectedNode } = this.state;
     if (!chainNetworks) {
       return <div>Loading...</div>;
     }
@@ -33,17 +69,19 @@ class Dashboard extends React.Component<Props> {
           <ConnectionGraphContainer
             chainNetworks={chainNetworks}
             className="animated fadeIn"
+            onSelectNode={this.onSelectNode}
+            onDeselect={this.onDeselect}
           />
         </div>
         <div className="right-panel">
-          <div className="connection-graph-help animated fadeIn">
-            <div className="connection-graph-help-header">
+          <div className="dashboard-item animated fadeIn">
+            <div className="dashboard-item-header">
               <h5 className="mb-0">
-                <FontAwesomeIcon className="mr-2" icon={faInfo} />
+                <FontAwesomeIcon className="mr-2" icon={faBroadcastTower} />
                 Status
               </h5>
             </div>
-            <div className="connection-graph-help-body">
+            <div className="dashboard-item-body ">
               <ul className="list-unstyled mb-0">
                 <li>
                   <div className="d-flex align-items-center mb-1">
@@ -133,10 +171,88 @@ class Dashboard extends React.Component<Props> {
               </ul>
             </div>
           </div>
+          {selectedNode && (
+            <div className="dashboard-item mt-3">
+              <div className="dashboard-item-header">
+                <h5 className="mb-0">
+                  <FontAwesomeIcon className="mr-2" icon={faInfo} />
+                  Node info
+                </h5>
+              </div>
+              <div className="dashboard-item-body">
+                <ul className="list-unstyled">
+                  <li>
+                    <div>
+                      Status :{" "}
+                      <span className={getStatusClass(selectedNode.status)}>
+                        {selectedNode.status}
+                      </span>
+                    </div>
+                  </li>
+                  <li>
+                    <div>
+                      Address : <span>{selectedNode.address}</span>
+                    </div>
+                  </li>
+                  {selectedNode.name && (
+                    <li>
+                      <div>
+                        Name : <span>{selectedNode.name}</span>
+                      </div>
+                    </li>
+                  )}
+                  {selectedNode.bestBlockId && (
+                    <li>
+                      <div>
+                        Best block :{" "}
+                        <span>
+                          {selectedNode.bestBlockId.blockNumber} (
+                          {selectedNode.bestBlockId.hash.value
+                            ? selectedNode.bestBlockId.hash.value.slice(0, 6)
+                            : "Invalid hash"}
+                          )
+                        </span>
+                      </div>
+                    </li>
+                  )}
+                  {selectedNode.version && (
+                    <li>
+                      <div>
+                        Version :{" "}
+                        <span>
+                          {selectedNode.version.version} (
+                          {selectedNode.version.hash.slice(0, 6)})
+                        </span>
+                      </div>
+                    </li>
+                  )}
+                </ul>
+                <div>
+                  <Link
+                    className="view-details"
+                    to={`/nodelist/${selectedNode.address}`}
+                  >
+                    View details
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
+  private onSelectNode = (node: { id: string; label: string }) => {
+    const selectedNode = _.find(
+      this.props.chainNetworks!.nodes,
+      networkNodeInfo => networkNodeInfo.address === node.id
+    );
+    this.setState({ selectedNode });
+  };
+
+  private onDeselect = () => {
+    this.setState({ selectedNode: undefined });
+  };
 }
 
 const mapStateToProps = (state: RootState) => ({
