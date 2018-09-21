@@ -17,8 +17,10 @@ const getStatusClass = (status: NodeStatus) => {
       return "text-secondary";
     case "Error":
       return "text-danger";
-    case "UFO":
+    case "Starting":
       return "text-warning";
+    case "UFO":
+      return "text-info";
   }
   return "text-warning";
 };

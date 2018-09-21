@@ -7,6 +7,8 @@ import { NodeInfo, NodeStatus } from "../../../../requests/types";
 import "./NodeDetail.css";
 import StartNodeModal from "./StartNodeModal/StartNodeModal";
 const { confirmAlert } = require("react-confirm-alert");
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Props {
   nodeInfo: NodeInfo;
@@ -30,6 +32,8 @@ const getStatusClass = (status: NodeStatus) => {
       return "text-secondary";
     case "Error":
       return "text-danger";
+    case "Starting":
+      return "text-warning";
   }
   return "text-warning";
 };
@@ -135,6 +139,9 @@ export default class NodeDetail extends React.Component<Props, State> {
               <h4>
                 Status:{" "}
                 <span className={`mr-3 ${getStatusClass(nodeInfo.status)}`}>
+                  {nodeInfo.status === "Starting" && (
+                    <FontAwesomeIcon className="mr-1 spin" icon={faSpinner} />
+                  )}
                   {nodeInfo.status}
                 </span>
                 {this.getButtonByStatus(nodeInfo.status)}
@@ -357,6 +364,7 @@ export default class NodeDetail extends React.Component<Props, State> {
   private getButtonByStatus = (status: NodeStatus) => {
     switch (status) {
       case "Run":
+      case "Starting":
         return (
           <button
             type="button"
@@ -366,7 +374,8 @@ export default class NodeDetail extends React.Component<Props, State> {
             Stop
           </button>
         );
-      case "Stop" || "Error":
+      case "Stop":
+      case "Error":
         return (
           <button
             type="button"
@@ -377,7 +386,7 @@ export default class NodeDetail extends React.Component<Props, State> {
           </button>
         );
     }
-    return "text-warning";
+    throw Error("Invalid status");
   };
 
   private onStop = () => {
