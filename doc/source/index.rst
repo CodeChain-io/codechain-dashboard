@@ -152,6 +152,7 @@ NodeInfo
     name?: string;
     agentVersion: String;
     status: NodeStatus;
+    startOptions?: { env: string, args: string };
     version: { version: string, hash: string };
     commitHash: string;
     bestBlockId: { blockNumber: number, hash: H256 };
