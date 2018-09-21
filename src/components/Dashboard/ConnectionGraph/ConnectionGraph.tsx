@@ -59,7 +59,7 @@ export class ConnectionGraph extends React.Component<Props, States> {
             onSelectNode={(event: any, node: any) => onSelectNode(node)}
             // tslint:disable-next-line:jsx-no-lambda
             onDeselectNode={(event: any, node: any) => onDeselect()}
-            highlightDependencie={true}
+            highlightDependencies={true}
           >
             {_.map(chainNetworks.nodes, node => (
               <ForceGraphNode
@@ -75,7 +75,12 @@ export class ConnectionGraph extends React.Component<Props, States> {
             ))}
             {_.map(chainNetworks.connections, connection => (
               <ForceGraphLink
-                link={{ source: connection.nodeA, target: connection.nodeB }}
+                key={`connection-${connection.nodeA}-${connection.nodeB}`}
+                link={{
+                  source: connection.nodeA,
+                  target: connection.nodeB,
+                  value: 5
+                }}
               />
             ))}
           </InteractiveForceGraph>
