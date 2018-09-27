@@ -63,15 +63,16 @@ pub enum DashboardNode {
     #[serde(rename_all = "camelCase")]
     Normal {
         status: NodeStatus,
-        address: SocketAddr,
+        address: Option<SocketAddr>,
         version: NodeVersion,
         best_block_id: BlockId,
-        name: Option<String>,
+        name: String,
     },
     #[serde(rename_all = "camelCase")]
     UFO {
         status: NodeStatus,
-        address: SocketAddr,
+        name: String,
+        address: Option<SocketAddr>,
     },
 }
 
@@ -80,10 +81,12 @@ impl DashboardNode {
         match state {
             AgentState::Initializing => None,
             AgentState::Normal {
+                name,
                 status,
                 address,
             } => Some(DashboardNode::Normal {
                 status: *status,
+                name: name.clone(),
                 address: *address,
                 version: NodeVersion {
                     version: String::new(),
@@ -93,7 +96,6 @@ impl DashboardNode {
                     block_number: 0,
                     hash: H256::new(),
                 },
-                name: None,
             }),
         }
     }
@@ -102,8 +104,8 @@ impl DashboardNode {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeConnection {
-    pub node_a: SocketAddr,
-    pub node_b: SocketAddr,
+    pub node_a: String,
+    pub node_b: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -123,9 +125,10 @@ pub struct StartOption {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGetInfoResponse {
-    pub address: SocketAddr,
+    pub name: String,
     pub status: NodeStatus,
     pub start_option: Option<StartOption>,
+    pub address: Option<SocketAddr>,
     pub version: NodeVersion,
     pub best_block_id: BlockId,
     pub pending_parcels: Vec<Parcel>,
@@ -139,7 +142,8 @@ pub struct NodeGetInfoResponse {
 impl NodeGetInfoResponse {
     fn dummy() -> Self {
         NodeGetInfoResponse {
-            address: "127.0.0.1:3485".parse().unwrap(),
+            name: "Dummy".to_string(),
+            address: Some("127.0.0.1:3485".parse().unwrap()),
             version: NodeVersion {
                 version: "0.1.0".to_string(),
                 hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -183,10 +187,12 @@ impl NodeGetInfoResponse {
             AgentState::Normal {
                 status,
                 address,
+                name,
             } => {
                 let mut dummy = Self::dummy();
                 dummy.address = *address;
                 dummy.status = *status;
+                dummy.name = name.clone();
                 Some(dummy)
             }
         }

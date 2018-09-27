@@ -14,11 +14,12 @@ use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
 use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub enum State {
     Initializing,
     Normal {
-        address: SocketAddr,
+        name: String,
+        address: Option<SocketAddr>,
         status: NodeStatus,
     },
 }
@@ -28,13 +29,13 @@ impl State {
         State::Initializing
     }
 
-    pub fn address(&self) -> Option<SocketAddr> {
+    pub fn name(&self) -> Option<String> {
         match self {
             State::Initializing => None,
             State::Normal {
-                address,
+                name,
                 ..
-            } => Some(*address),
+            } => Some(name.clone()),
         }
     }
 }
@@ -124,6 +125,7 @@ impl Agent {
 
         let mut state = self.state.write().expect("Should success getting agent state");
         *state = State::Normal {
+            name: info.name,
             address: info.address,
             status: info.status,
         };

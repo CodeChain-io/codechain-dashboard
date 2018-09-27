@@ -1,4 +1,3 @@
-use std::net::SocketAddr;
 use std::sync::mpsc::{channel, SendError, Sender};
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::thread;
@@ -19,7 +18,7 @@ impl State {
     }
 
     pub fn get_agent_info(&self) -> Vec<AgentState> {
-        let agent_states = self.agents.iter().map(|(_, agent)| *agent.read_state()).collect();
+        let agent_states = self.agents.iter().map(|(_, agent)| agent.read_state().clone()).collect();
         agent_states
     }
 }
@@ -39,13 +38,13 @@ impl ServiceSender {
         self.state.read().expect("Should success read service state")
     }
 
-    pub fn get_agent(&self, address: SocketAddr) -> Option<AgentSender> {
+    pub fn get_agent(&self, name: String) -> Option<AgentSender> {
         let state = self.state.read().expect("Should access read service state");
         let find_result = state.agents.iter().find(|(_, agent)| {
             let agent_state = agent.read_state();
-            match agent_state.address() {
+            match agent_state.name() {
                 None => false,
-                Some(agent_address) => agent_address == address,
+                Some(agent_name) => agent_name == name,
             }
         });
 

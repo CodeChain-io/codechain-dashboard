@@ -1,5 +1,3 @@
-use std::net::SocketAddr;
-
 use super::super::agent::agent::SendAgentRPC;
 use super::super::common_rpc_types::{NodeStatus, ShellStartCodeChainRequest};
 use super::super::router::Router;
@@ -22,16 +20,16 @@ pub fn add_routing(router: &mut Router<Context>) {
     );
     router.add_route(
         "real_node_getInfo",
-        Box::new(real_node_get_info as fn(Context, (SocketAddr,)) -> RPCResponse<NodeGetInfoResponse>),
+        Box::new(real_node_get_info as fn(Context, (String,)) -> RPCResponse<NodeGetInfoResponse>),
     );
     router.add_route(
         "node_start",
-        Box::new(node_start as fn(Context, (SocketAddr, ShellStartCodeChainRequest)) -> RPCResponse<()>),
+        Box::new(node_start as fn(Context, (String, ShellStartCodeChainRequest)) -> RPCResponse<()>),
     );
-    router.add_route("node_stop", Box::new(node_stop as fn(Context, (SocketAddr,)) -> RPCResponse<()>));
+    router.add_route("node_stop", Box::new(node_stop as fn(Context, (String,)) -> RPCResponse<()>));
     router.add_route(
         "shell_getCodeChainLog",
-        Box::new(shell_get_codechain_log as fn(Context, (SocketAddr,)) -> RPCResponse<String>),
+        Box::new(shell_get_codechain_log as fn(Context, (String,)) -> RPCResponse<String>),
     );
 }
 
@@ -43,9 +41,9 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
     response(DashboardGetNetworkResponse {
         nodes: vec![
             DashboardNode::Normal {
-                name: Some("Gilyoung".to_string()),
+                name: "Gilyoung".to_string(),
                 status: NodeStatus::Run,
-                address: "127.0.0.1:3485".parse().unwrap(),
+                address: Some("127.0.0.1:3485".parse().unwrap()),
                 version: NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -56,9 +54,9 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 },
             },
             DashboardNode::Normal {
-                name: None,
+                name: "Juhyung".to_string(),
                 status: NodeStatus::Run,
-                address: "127.0.0.2:3486".parse().unwrap(),
+                address: Some("127.0.0.2:3486".parse().unwrap()),
                 version: NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -69,9 +67,9 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 },
             },
             DashboardNode::Normal {
-                name: Some("Hi stopped test node1".to_string()),
+                name: "Hi stopped test node1".to_string(),
                 status: NodeStatus::Stop,
-                address: "42.124.241.2:3487".parse().unwrap(),
+                address: Some("42.124.241.2:3487".parse().unwrap()),
                 version: NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -82,9 +80,9 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 },
             },
             DashboardNode::Normal {
-                name: Some("Starting node".to_string()),
+                name: "Starting node".to_string(),
                 status: NodeStatus::Starting,
-                address: "127.0.0.3:3488".parse().unwrap(),
+                address: Some("127.0.0.3:3488".parse().unwrap()),
                 version: NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -95,9 +93,9 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 },
             },
             DashboardNode::Normal {
-                name: Some("Test Error node".to_string()),
+                name: "Test Error node".to_string(),
                 status: NodeStatus::Error,
-                address: "127.0.0.3:3489".parse().unwrap(),
+                address: Some("127.0.0.3:3489".parse().unwrap()),
                 version: NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -109,12 +107,13 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
             },
             DashboardNode::UFO {
                 status: NodeStatus::UFO,
-                address: "2.2.2.2:3410".parse().unwrap(),
+                name: "UTF-1".to_string(),
+                address: Some("2.2.2.2:3410".parse().unwrap()),
             },
         ],
         connections: vec![NodeConnection {
-            node_a: "127.0.0.1:3485".parse().unwrap(),
-            node_b: "127.0.0.2:3486".parse().unwrap(),
+            node_a: "Gilyoung".to_string(),
+            node_b: "Juhyung".to_string(),
         }],
     })
 }
@@ -128,9 +127,9 @@ fn real_dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetwo
     })
 }
 
-fn real_node_get_info(context: Context, args: (SocketAddr,)) -> RPCResponse<NodeGetInfoResponse> {
-    let (address,) = args;
-    let agent = context.agent_service.get_agent(address).ok_or(RPCError::AgentNotFound)?;
+fn real_node_get_info(context: Context, args: (String,)) -> RPCResponse<NodeGetInfoResponse> {
+    let (name,) = args;
+    let agent = context.agent_service.get_agent(name).ok_or(RPCError::AgentNotFound)?;
     let state = agent.read_state();
     let node_response = NodeGetInfoResponse::from_state(&*state).ok_or(RPCError::AgentNotFound)?;
     response(node_response)
@@ -138,7 +137,8 @@ fn real_node_get_info(context: Context, args: (SocketAddr,)) -> RPCResponse<Node
 
 fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
     response(NodeGetInfoResponse {
-        address: "127.0.0.1:3485".parse().unwrap(),
+        address: Some("127.0.0.1:3485".parse().unwrap()),
+        name: "Dummy".to_string(),
         version: NodeVersion {
             version: "0.1.0".to_string(),
             hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
@@ -179,10 +179,10 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
     })
 }
 
-fn node_start(context: Context, args: (SocketAddr, ShellStartCodeChainRequest)) -> RPCResponse<()> {
-    let (address, req) = args;
+fn node_start(context: Context, args: (String, ShellStartCodeChainRequest)) -> RPCResponse<()> {
+    let (name, req) = args;
 
-    let agent = context.agent_service.get_agent(address);
+    let agent = context.agent_service.get_agent(name);
     if agent.is_none() {
         return Err(RPCError::AgentNotFound)
     }
@@ -192,10 +192,10 @@ fn node_start(context: Context, args: (SocketAddr, ShellStartCodeChainRequest)) 
     response(())
 }
 
-fn node_stop(context: Context, args: (SocketAddr,)) -> RPCResponse<()> {
-    let (address,) = args;
+fn node_stop(context: Context, args: (String,)) -> RPCResponse<()> {
+    let (name,) = args;
 
-    let agent = context.agent_service.get_agent(address);
+    let agent = context.agent_service.get_agent(name);
     if agent.is_none() {
         return Err(RPCError::AgentNotFound)
     }
@@ -205,10 +205,10 @@ fn node_stop(context: Context, args: (SocketAddr,)) -> RPCResponse<()> {
     response(())
 }
 
-fn shell_get_codechain_log(context: Context, args: (SocketAddr,)) -> RPCResponse<String> {
-    let (address,) = args;
+fn shell_get_codechain_log(context: Context, args: (String,)) -> RPCResponse<String> {
+    let (name,) = args;
 
-    let agent = context.agent_service.get_agent(address);
+    let agent = context.agent_service.get_agent(name);
     if agent.is_none() {
         return Err(RPCError::AgentNotFound)
     }
