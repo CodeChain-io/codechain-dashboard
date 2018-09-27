@@ -178,7 +178,8 @@ impl Agent {
             match *state {
                 State::Initializing => {
                     let dashboard_node = DashboardNode::from_state(&new_state);
-                    let message = jsonrpc::serialize_notification("node_added", json!({ "nodes": [dashboard_node] }));
+                    let message =
+                        jsonrpc::serialize_notification("dashboard_updated", json!({ "nodes": [dashboard_node] }));
                     self.frontend_service
                         .send(FrontendServiceMessage::SendEvent(message))
                         .expect("Should success send event");
