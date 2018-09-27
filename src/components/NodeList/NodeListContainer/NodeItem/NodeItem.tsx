@@ -23,7 +23,11 @@ const NodeItem = (props: Props) => {
                 icon={faCircle}
               />
             </div>
-            <div className="node-name">{nodeInfo.address}</div>
+            <div className="node-name">
+              {nodeInfo.address
+                ? `${nodeInfo.name} (${nodeInfo.address})`
+                : nodeInfo.name}
+            </div>
             <div className="node-info text-right">
               <button type="button" className="btn btn-secondary">
                 Install Agent
@@ -49,9 +53,9 @@ const NodeItem = (props: Props) => {
                 />
               </div>
               <div className="node-name">
-                {nodeInfo.name
+                {nodeInfo.address
                   ? `${nodeInfo.name} (${nodeInfo.address})`
-                  : nodeInfo.address}
+                  : nodeInfo.name}
               </div>
               <div className="node-info text-right">
                 <div>
