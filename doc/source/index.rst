@@ -313,7 +313,8 @@ Response
 
   interface AgentGetInfoResponse { 
     status: NodeStatus;
-    address: SocketAddr;
+    name: string;
+    address?: SocketAddr;
   }
 
 links: type-NodeStatus_, type-SocketAddr_
@@ -445,10 +446,8 @@ This event fires when a node is connected to another node.
 Arguments
 """""""""
 
-Argument is the other node's socket address.
-``SocketAddr``
-
-links: type-SocketAddr_
+Argument is the other node's name.
+``string``
 
 
 event_disconnected ➡️ 
@@ -459,10 +458,8 @@ This event fires when a node is disconnected from another node.
 Arguments
 """""""""
 
-Argument is the other node's socket address.
-``SocketAddr``
-
-links: type-SocketAddr_
+Argument is the other node's name.
+``string``
 
 
 event_parcelSent ➡️ 
@@ -473,12 +470,12 @@ This event fires when a node propagate parcels to another node.
 Arguments
 """"""""""
 
-First argument is the node's socket address which received the parcels.
+First argument is the node's name which received the parcels.
 Second argument is the content of the parcels.
 
-``[SocketAddr, Parcel[]]``
+``[string, Parcel[]]``
 
-links: type-SocketAddr_, type-Parcel_
+links: type-Parcel_
 
 
 event_parcelReceived ➡️ 
@@ -489,9 +486,11 @@ This event fires when a node receives parcels from another node.
 Arguments
 """""""""
 
-``[SocketAddr, Parcel[]]``
+First argument is the node's name which sent a parcel.
 
-links: type-SocketAddr_, type-Parcel_
+``[string, Parcel[]]``
+
+links: type-Parcel_
 
 
 event_parcelRecevedByRPC ➡️ 
@@ -514,7 +513,9 @@ This event fires when a node sent a block to another node.
 Arguments
 """""""""
 
-``[SocketAddr, Block]``
+The first argument is the node's name which received a block.
+
+``[string, Block]``
 
 links: type-SocketAddr_, type-Block_
 
@@ -527,7 +528,9 @@ This event fires when a node requests a block to another node.
 Arguments
 """""""""
 
-``[SocketAddr, Block]``
+The first argument is the node's name which received 'block request'.
+
+``[string, Block]``
 
 links: type-SocketAddr_, type-Block_
 
@@ -540,7 +543,9 @@ This event fires when a node received a block from another node.
 Arguments
 """""""""
 
-``[SocketAddr, Block]``
+The first argument is the name of a node which sent a block.
+
+``[string, Block]``
 
 links: type-SocketAddr_, type-Block_
 
@@ -596,7 +601,7 @@ Response
 
   interface DashboardGetNetworkResponse {
     nodes: (DashboardNodeInfo | DashboardUFONodeInfo)[];
-    connections: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
+    connections: { nodeA: string; nodeB: string; }[] // nodeA and nodeB is the name of the nodes.
   }
 
 links: type-DashboardNodeInfo_, type-DashboardUFONodeInfo_
@@ -610,8 +615,8 @@ Arguments
 
   type DashboardUpdatedArguments = [{
     nodes?: ({ address: SocketAddr; } | Partial<DashboardNodeInfo> | Partial<DashboardUFONodeInfo>)[];
-    connectionsAdded?: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
-    connectionsRemoved?: { nodeA: SocketAddr; nodeB: SocketAddr; }[]
+    connectionsAdded?: { nodeA: string; nodeB: string; }[]
+    connectionsRemoved?: { nodeA: string; nodeB: string; }[]
   }]
 
 links: type-DashboardNodeInfo_, type-DashboardUFONodeInfo_
@@ -627,9 +632,9 @@ Frontend requests information to agent server to render node page.
 Request
 """""""""
 
-First argument is the address of a node.
+First argument is the name of a node.
 
-``[SocketAddr]``
+``[string]``
 
 Response
 """""""""
@@ -649,8 +654,8 @@ Arguments
 ::
 
   type NodeUpdatedArguments = [{
-    address: SocketAddr;
-    name?: string;
+    name: string;
+    address?: SocketAddr;
     status?: NodeStatus;
     version?: { version: string, hash: string };
     bestBlockId?: { blockNumber: number, hash: H256 };
@@ -658,15 +663,11 @@ Arguments
     peers?: SocketAddr[];
     whitelist?: { list: SocketAddr[], enabled: bool };
     blacklist?: { list: SocketAddr[], enabled: bool };
-    hardware?: { 
-      cpuUsage: number,
-      diskUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"},
-      memoryUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"}
-    };
+    hardware?: HardwareGetResponse;
     eventsAdded?: Event[];
   }]
 
-links: type-NodeStatus_
+links: type-NodeStatus_, type-HardwareGetResponse_
 
 node_start ➡️ ⬅️ 
 ----------------
@@ -674,10 +675,12 @@ node_start ➡️ ⬅️
 Request
 """""""""
 
+First argument is the name of the node.
+
 ::
 
   type NodeStartRequest = [
-    SocketAddr,
+    string,
     {
       env: string; // "RUST_LOG=trace"
       args: string; // "-c husky"
@@ -714,12 +717,17 @@ node_stop ➡️ ⬅️
 Request
 """""""""
 
-No request arguments
+First argument is the name of the node.
+
+::
+
+  type NodeStopRequest = [string]
+
 
 Response
 """""""""
 
-``[SocketAddr]``
+``()``
 
 Error
 """"""
@@ -734,9 +742,11 @@ node_update ➡️ ⬅️
 Request
 """""""""
 
-Commit hash of the CodeChain repository.
+First argument is the name of the node.
 
-``string``
+Second argument is commit hash of the CodeChain repository.
+
+``[string, string]``
 
 Response
 """""""""
