@@ -41,7 +41,7 @@ export default class RequestAgent {
 
       this.ws.on("node_updated", (e: NodeUpdateInfo) => {
         console.log(e);
-        this.dispatch(Actions.updateNodeInfo(e.address, e));
+        this.dispatch(Actions.updateNodeInfo(e.name, e));
       });
     });
     this.ws.on("error", (e: any) => {

@@ -145,9 +145,9 @@ export default class NodeDetail extends React.Component<Props, State> {
             </div>
             <div>
               <h4>
-                {nodeInfo.name
+                {nodeInfo.address
                   ? `${nodeInfo.name}(${nodeInfo.address})`
-                  : nodeInfo.address}
+                  : nodeInfo.name}
               </h4>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default class NodeDetail extends React.Component<Props, State> {
             <a
               target="_blank"
               className="link-text"
-              href={`${this.logFileHost}/log/${nodeInfo.address}`}
+              href={`${this.logFileHost}/log/${nodeInfo.name}`}
             >
               Show logs
             </a>
@@ -343,9 +343,9 @@ export default class NodeDetail extends React.Component<Props, State> {
     );
   }
   private handleOnStartNode = async (env: string, args: string) => {
-    const address = this.props.nodeInfo.address;
+    const name = this.props.nodeInfo.name;
     try {
-      await Apis.startNode(address, env, args);
+      await Apis.startNode(name, env, args);
     } catch (e) {
       const error = e as JsonRPCError;
       if (error.code === NodeStartErrors.AlreadyRunning) {
@@ -407,7 +407,7 @@ export default class NodeDetail extends React.Component<Props, State> {
         {
           label: "Yes",
           onClick: async () => {
-            await Apis.stopNode(this.props.nodeInfo.address);
+            await Apis.stopNode(this.props.nodeInfo.name);
           }
         },
         {

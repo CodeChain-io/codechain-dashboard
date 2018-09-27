@@ -4,7 +4,7 @@ const merge = require("deepmerge").default;
 
 export interface RootState {
   nodeInfo: {
-    [socketAddr: string]: NodeInfo;
+    [name: string]: NodeInfo;
   };
   chainNetworks: ChainNetworks | undefined;
 }
@@ -26,7 +26,7 @@ export const appReducer = (state = initialState, action: Action) => {
     case "SetNodeInfo": {
       const nodeInfo = {
         ...state.nodeInfo,
-        [action.socketAddr]: action.data
+        [action.name]: action.data
       };
       return {
         ...state,
@@ -43,10 +43,7 @@ export const appReducer = (state = initialState, action: Action) => {
     case "UpdateNodeInfo":
       const updatedNodeInfo = {
         ...state.nodeInfo,
-        [action.socketAddr]: merge(
-          state.nodeInfo[action.socketAddr],
-          action.data
-        )
+        [action.name]: merge(state.nodeInfo[action.name], action.data)
       };
       return {
         ...state,

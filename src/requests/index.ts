@@ -1,5 +1,5 @@
 import RequestAgent from "../RequestAgent";
-import { ChainNetworks, NodeInfo, SocketAddr } from "./types";
+import { ChainNetworks, NodeInfo } from "./types";
 
 const getChainNetworks = async () => {
   return await RequestAgent.getInstance().call<ChainNetworks>(
@@ -8,19 +8,15 @@ const getChainNetworks = async () => {
   );
 };
 
-const getNodeInfo = async (nodeAddress: SocketAddr) => {
+const getNodeInfo = async (nodeName: string) => {
   return await RequestAgent.getInstance().call<NodeInfo>("node_getInfo", [
-    nodeAddress
+    nodeName
   ]);
 };
 
-const startNode = async (
-  nodeAddress: SocketAddr,
-  env: string,
-  args: string
-) => {
+const startNode = async (nodeName: string, env: string, args: string) => {
   return await RequestAgent.getInstance().call<NodeInfo>("node_start", [
-    nodeAddress,
+    nodeName,
     {
       env,
       args
@@ -28,9 +24,9 @@ const startNode = async (
   ]);
 };
 
-const stopNode = async (nodeAddress: SocketAddr) => {
+const stopNode = async (nodeName: string) => {
   return await RequestAgent.getInstance().call<NodeInfo>("node_stop", [
-    nodeAddress
+    nodeName
   ]);
 };
 

@@ -7,30 +7,30 @@ export enum CommonError {
 }
 export interface NetworkNodeInfo {
   status: NodeStatus;
-  address: SocketAddr;
+  address?: SocketAddr;
   version?: { version: string; hash: string };
   bestBlockId?: { blockNumber: number; hash: H256 };
-  name?: string;
+  name: string;
 }
 export interface ChainNetworks {
   nodes: NetworkNodeInfo[];
-  connections: { nodeA: SocketAddr; nodeB: SocketAddr }[];
+  connections: { nodeA: string; nodeB: string }[];
 }
 export interface ChainNetworksUpdate {
   nodes?: {
     status?: NodeStatus;
-    address: SocketAddr;
+    address?: SocketAddr;
     version?: { version: string; hash: string };
     bestBlockId?: { blockNumber: number; hash: H256 };
-    name?: string;
+    name: string;
   }[];
-  connectionsAdded?: { nodeA: SocketAddr; nodeB: SocketAddr }[];
-  connectionsRemoved?: { nodeA: SocketAddr; nodeB: SocketAddr }[];
+  connectionsAdded?: { nodeA: string; nodeB: string }[];
+  connectionsRemoved?: { nodeA: string; nodeB: string }[];
 }
 export interface NodeInfo {
-  name?: string;
+  name: string;
   startOption?: { env: string; args: string };
-  address: SocketAddr;
+  address?: SocketAddr;
   agentVersion: string;
   status: NodeStatus;
   version: { version: string; hash: string };
@@ -48,9 +48,9 @@ export interface NodeInfo {
   events: string[];
 }
 export interface NodeUpdateInfo {
-  name?: string;
+  name: string;
   startOption?: { env: string; args: string };
-  address: SocketAddr;
+  address?: SocketAddr;
   agentVersion?: string;
   status?: NodeStatus;
   version?: { version: string; hash: string };

@@ -40,7 +40,7 @@ const NodeItem = (props: Props) => {
     return (
       <div className={`node-item d-flex ${className}`}>
         <div className="node-item-info-container active">
-          <Link to={`/nodelist/${encodeURI(nodeInfo.address)}`}>
+          <Link to={`/nodelist/${encodeURI(nodeInfo.name)}`}>
             <div className=" d-flex align-items-center">
               <div className="node-status text-center">
                 <FontAwesomeIcon

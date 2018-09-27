@@ -174,7 +174,7 @@ class Dashboard extends React.Component<Props, State> {
           <div className="selected-network-node-list-container">
             {_.map(selectedNetworkNodeList, node => {
               return (
-                <div key={node.address} className="network-node-info">
+                <div key={node.name} className="network-node-info">
                   {this.getNodeInfoElem(node)}
                 </div>
               );
@@ -187,7 +187,7 @@ class Dashboard extends React.Component<Props, State> {
   private onSelectNode = (node: { id: string; label: string }) => {
     const selectedNode = _.find(
       this.props.chainNetworks!.nodes,
-      networkNodeInfo => networkNodeInfo.address === node.id
+      networkNodeInfo => networkNodeInfo.name === node.id
     );
     setTimeout(() => {
       let selectedNetworkNodeList = [node.id];
@@ -215,8 +215,8 @@ class Dashboard extends React.Component<Props, State> {
       const selectedNetworkNodeInfoList = _.filter(
         this.props.chainNetworks!.nodes,
         (netowrkNode: NetworkNodeInfo) =>
-          _.includes(selectedNetworkNodeList, netowrkNode.address) &&
-          netowrkNode.address !== node.id
+          _.includes(selectedNetworkNodeList, netowrkNode.name) &&
+          netowrkNode.name !== node.id
       );
       this.setState({ selectedNetworkNodeList: selectedNetworkNodeInfoList });
     });
@@ -239,15 +239,17 @@ class Dashboard extends React.Component<Props, State> {
               <span className={getStatusClass(node.status)}>{node.status}</span>
             </div>
           </li>
-          <li>
-            <div>
-              Address : <span>{node.address}</span>
-            </div>
-          </li>
           {node.name && (
             <li>
               <div>
                 Name : <span>{node.name}</span>
+              </div>
+            </li>
+          )}
+          {node.address && (
+            <li>
+              <div>
+                Address : <span>{node.address}</span>
               </div>
             </li>
           )}
@@ -278,7 +280,7 @@ class Dashboard extends React.Component<Props, State> {
         </ul>
         {node.status !== "UFO" && (
           <div className="bottom-container">
-            <Link className="view-details" to={`/nodelist/${node.address}`}>
+            <Link className="view-details" to={`/nodelist/${node.name}`}>
               View details
             </Link>
           </div>

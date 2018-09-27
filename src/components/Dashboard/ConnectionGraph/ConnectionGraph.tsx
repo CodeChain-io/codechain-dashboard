@@ -63,10 +63,10 @@ export class ConnectionGraph extends React.Component<Props, States> {
           >
             {_.map(chainNetworks.nodes, node => (
               <ForceGraphNode
-                key={`node-${node.address}`}
+                key={`node-${node.name}`}
                 node={{
-                  id: node.address,
-                  label: node.name ? node.name : node.address,
+                  id: node.name,
+                  label: node.name,
                   radius: 10
                 }}
                 showLabel={true}

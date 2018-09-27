@@ -30,7 +30,7 @@ class NodeListContainer extends React.Component<Props> {
         {_.map(chainNetworks.nodes, (nodeInfo: NetworkNodeInfo) => {
           return (
             <NodeItem
-              key={nodeInfo.address}
+              key={nodeInfo.name}
               nodeInfo={nodeInfo}
               className="mb-3 animated fadeIn"
             />

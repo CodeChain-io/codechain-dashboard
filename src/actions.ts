@@ -17,13 +17,13 @@ export interface SetChainNetworks {
 
 export interface SetNodeInfo {
   type: "SetNodeInfo";
-  socketAddr: string;
+  name: string;
   data: NodeInfo;
 }
 
 export interface UpdateNodeInfo {
   type: "UpdateNodeInfo";
-  socketAddr: string;
+  name: string;
   data: NodeInfo;
 }
 
@@ -37,15 +37,15 @@ export const setChainNetworks = (data: ChainNetworks) => ({
   data
 });
 
-const setNodeInfo = (socketAddr: string, data: NodeInfo) => ({
+const setNodeInfo = (name: string, data: NodeInfo) => ({
   type: "SetNodeInfo",
-  socketAddr,
+  name,
   data
 });
 
-const updateNodeInfo = (socketAddr: string, data: NodeUpdateInfo) => ({
+const updateNodeInfo = (name: string, data: NodeUpdateInfo) => ({
   type: "UpdateNodeInfo",
-  socketAddr,
+  name,
   data
 });
 
