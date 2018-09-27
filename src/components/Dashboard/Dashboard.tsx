@@ -160,7 +160,7 @@ class Dashboard extends React.Component<Props, State> {
                 <div className="dashboard-item-header">
                   <h5 className="mb-0">
                     <FontAwesomeIcon className="mr-2" icon={faInfo} />
-                    Node info
+                    Selected node info
                   </h5>
                 </div>
                 <div className="dashboard-item-body node-item-info-panel">
