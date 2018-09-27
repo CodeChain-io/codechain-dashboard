@@ -34,12 +34,14 @@ fn main() {
     let codechain_address =
         matches.value_of("codechain-p2p-address").expect("codechain-p2p-address is required option");
     let codechain_address = codechain_address.parse().expect("codechain-p2p-address field's format is invalid");
+    let name = matches.value_of("name").expect("name is required option");
 
     let args = AgentArgs {
         codechain_dir,
         log_file_path,
         hub_url,
         codechain_address,
+        name,
     };
     run(args);
 }

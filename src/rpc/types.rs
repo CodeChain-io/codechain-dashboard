@@ -119,7 +119,8 @@ pub enum NodeStatus {
 #[serde(rename_all = "camelCase")]
 pub struct AgentGetInfoResponse {
     pub status: NodeStatus,
-    pub address: SocketAddr,
+    pub name: String,
+    pub address: Option<SocketAddr>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

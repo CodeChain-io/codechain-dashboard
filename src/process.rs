@@ -76,21 +76,21 @@ impl CodeChainStatus {
         }
     }
 
-    fn p2p_port(&self) -> u16 {
+    fn p2p_port(&self) -> Option<u16> {
         match self {
             CodeChainStatus::Starting {
                 p2p_port,
                 ..
-            } => *p2p_port,
+            } => Some(*p2p_port),
             CodeChainStatus::Run {
                 p2p_port,
                 ..
-            } => *p2p_port,
-            CodeChainStatus::Stop => 0,
+            } => Some(*p2p_port),
+            CodeChainStatus::Stop => None,
             CodeChainStatus::Error {
                 p2p_port,
                 ..
-            } => *p2p_port,
+            } => Some(*p2p_port),
         }
     }
 
@@ -133,7 +133,7 @@ pub enum Message {
         callback: Sender<Result<(), Error>>,
     },
     GetStatus {
-        callback: Sender<Result<(NodeStatus, u16), Error>>,
+        callback: Sender<Result<(NodeStatus, Option<u16>), Error>>,
     },
     GetLog {
         callback: Sender<Result<String, Error>>,

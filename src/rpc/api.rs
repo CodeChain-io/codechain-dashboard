@@ -81,18 +81,10 @@ fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoRespons
     })?;
     let process_result = rx.recv()?;
     let (node_status, port) = process_result?;
-    let ip_address = context.codechain_address.ip();
-    let default_port = context.codechain_address.port();
     response(AgentGetInfoResponse {
+        name: context.name.clone(),
         status: node_status,
-        address: SocketAddr::new(
-            ip_address,
-            if port == 0 {
-                default_port
-            } else {
-                port
-            },
-        ),
+        address: port.map(|port| SocketAddr::new(context.codechain_address, port)),
     })
 }
 

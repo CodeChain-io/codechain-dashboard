@@ -22,6 +22,12 @@ args:
     - codechain-p2p-address:
         long: codechain-p2p-address
         short: a
-        help: Codechain node's p2p address. ex) "127.0.0.1:3486"
+        help: Codechain node's p2p address. ex) "127.0.0.1"
+        required: true
+        takes_value: true
+    - name:
+        long: name
+        short: n
+        help: Agent's name. This will be present in the Dashboard.
         required: true
         takes_value: true
