@@ -283,11 +283,13 @@ impl Process {
 
         let envs = Self::parse_env(&env)?;
 
+        let file = File::create(self.option.log_file_path.clone())?;
+
         let mut exec = Exec::cmd("cargo")
             .arg("run")
             .arg("--")
             .cwd(self.option.codechain_dir.clone())
-            .stdout(Redirection::Pipe)
+            .stdout(Redirection::File(file))
             .stderr(Redirection::Merge)
             .args(&args_vec);
 
@@ -295,8 +297,8 @@ impl Process {
             exec = exec.env(k, v);
         }
 
-        let child = (exec | Exec::cmd("tee").arg(self.option.log_file_path.clone())).popen()?;
-        self.child = Some(child);
+        let child = exec.popen()?;
+        self.child = Some(vec![child]);
 
         self.codechain_status = CodeChainStatus::Starting {
             p2p_port,
