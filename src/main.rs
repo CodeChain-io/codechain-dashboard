@@ -9,6 +9,7 @@ extern crate rand;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
 extern crate serde_json;
 extern crate ws;
 
@@ -37,6 +38,7 @@ use self::agent::handler::WebSocketHandler as AgentHandler;
 use self::agent::service::{Service as AgentService, ServiceSender as AgentServiceSender};
 use self::frontend::api::add_routing as add_frontend_routing;
 use self::frontend::handler::WebSocketHandler as FrontendHandler;
+use self::frontend::service::Service as FrontendService;
 use self::frontend::types::Context as FrontendContext;
 use self::logger::init as logger_init;
 use self::router::Router;
@@ -44,7 +46,8 @@ use self::router::Router;
 fn main() {
     logger_init().expect("Logger should be initialized");
 
-    let agent_service_sender = AgentService::run_thread();
+    let frontend_service_sender = FrontendService::run_thread();
+    let agent_service_sender = AgentService::run_thread(frontend_service_sender.clone());
     let agent_service_for_frontend = agent_service_sender.clone();
     let web_handler = WebHandler::new(agent_service_sender.clone());
 
@@ -62,6 +65,7 @@ fn main() {
                 count: count.clone(),
                 context: frontend_context.clone(),
                 router: frontend_router.clone(),
+                frontend_service: frontend_service_sender.clone(),
             }).unwrap();
         })
         .expect("Should success listening frontend");

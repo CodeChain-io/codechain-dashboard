@@ -1,4 +1,4 @@
-#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
 pub enum NodeStatus {
     Starting,
     Run,

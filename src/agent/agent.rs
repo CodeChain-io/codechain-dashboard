@@ -5,16 +5,18 @@ use std::sync::{RwLock, RwLockReadGuard};
 use std::thread;
 use std::time::Duration;
 
+use serde_json;
 use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
 use super::super::common_rpc_types::{NodeStatus, ShellStartCodeChainRequest};
+use super::super::frontend::service::{Message as FrontendServiceMessage, ServiceSender as FrontendServiceSender};
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
 use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum State {
     Initializing,
     Normal {
@@ -27,6 +29,26 @@ pub enum State {
 impl State {
     pub fn new() -> Self {
         State::Initializing
+    }
+
+    pub fn status(&self) -> Option<NodeStatus> {
+        match self {
+            State::Initializing => None,
+            State::Normal {
+                status,
+                ..
+            } => Some(*status),
+        }
+    }
+
+    pub fn address(&self) -> Option<SocketAddr> {
+        match self {
+            State::Initializing => None,
+            State::Normal {
+                address,
+                ..
+            } => *address,
+        }
     }
 
     pub fn name(&self) -> Option<String> {
@@ -65,6 +87,7 @@ pub struct Agent {
     state: Arc<RwLock<State>>,
     service_sender: ServiceSender,
     closed: bool,
+    frontend_service: FrontendServiceSender,
 }
 
 pub enum AgentCleanupReason {
@@ -74,7 +97,12 @@ pub enum AgentCleanupReason {
 }
 
 impl Agent {
-    fn new(id: i32, jsonrpc_context: jsonrpc::Context, service_sender: ServiceSender) -> Self {
+    fn new(
+        id: i32,
+        jsonrpc_context: jsonrpc::Context,
+        service_sender: ServiceSender,
+        frontend_service: FrontendServiceSender,
+    ) -> Self {
         let state = Arc::new(RwLock::new(State::new()));
         Self {
             id,
@@ -82,11 +110,17 @@ impl Agent {
             state,
             service_sender,
             closed: false,
+            frontend_service,
         }
     }
 
-    pub fn run_thread(id: i32, jsonrpc_context: jsonrpc::Context, service_sender: ServiceSender) -> AgentSender {
-        let mut agent = Self::new(id, jsonrpc_context, service_sender);
+    pub fn run_thread(
+        id: i32,
+        jsonrpc_context: jsonrpc::Context,
+        service_sender: ServiceSender,
+        frontend_service: FrontendServiceSender,
+    ) -> AgentSender {
+        let mut agent = Self::new(id, jsonrpc_context, service_sender, frontend_service);
         let sender = agent.sender.clone();
 
         thread::Builder::new()
@@ -114,7 +148,7 @@ impl Agent {
             .map_err(|err| format!("AddAgent failed {}", err))?;
 
         loop {
-            cdebug!("Agent-{} update", self.id);
+            ctrace!("Agent-{} update", self.id);
             self.update()?;
             thread::sleep(Duration::new(1, 0));
         }
@@ -124,11 +158,27 @@ impl Agent {
         let info = self.sender.agent_get_info().map_err(|err| format!("{}", err))?;
 
         let mut state = self.state.write().expect("Should success getting agent state");
-        *state = State::Normal {
+        let new_state = State::Normal {
             name: info.name,
             address: info.address,
             status: info.status,
         };
+
+        if new_state != *state {
+            let mut diff = json!({});
+            if state.address() != new_state.address() {
+                diff["address"] = serde_json::to_value(new_state.address()).unwrap();
+            }
+            if state.status() != new_state.status() {
+                diff["status"] = serde_json::to_value(new_state.status()).unwrap();
+            }
+
+            let message = jsonrpc::serialize_notification("dashboard_updated", vec![diff]);
+            self.frontend_service.send(FrontendServiceMessage::SendEvent(message)).expect("Should success send event");
+            cdebug!("Data updated, send notification");
+        }
+
+        *state = new_state;
         Ok(())
     }
 

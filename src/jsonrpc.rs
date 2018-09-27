@@ -10,7 +10,7 @@ use std::sync::PoisonError;
 use std::time::Duration;
 
 use jsonrpc_core::types::{
-    Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Output, Params, Response, Success,
+    Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Notification, Output, Params, Response, Success,
 };
 use rand;
 use serde::de::DeserializeOwned;
@@ -197,6 +197,17 @@ where
     }
 }
 
+pub fn serialize_notification<Arg>(method: &str, args: Vec<Arg>) -> String
+where
+    Arg: Serialize, {
+    let args_value = args.iter().map(|arg| serde_json::to_value(arg).expect("Should success serialize")).collect();
+    let noti = Notification {
+        jsonrpc: None,
+        method: method.to_string(),
+        params: Some(Params::Array(args_value)),
+    };
+    serde_json::to_string(&noti).expect("Should success serialize")
+}
 // Called on websocket thread
 pub fn on_receive(context: Context, text: String) {
     match on_receive_internal(context, text) {

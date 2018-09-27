@@ -6,6 +6,7 @@ use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sende
 
 use super::super::jsonrpc;
 use super::super::router::Router;
+use super::service::{Message as FrontendServiceMessage, ServiceSender as FrontendServiceSender};
 use super::types::Context;
 
 pub struct WebSocketHandler {
@@ -13,10 +14,14 @@ pub struct WebSocketHandler {
     pub count: Rc<Cell<u32>>,
     pub context: Context,
     pub router: Arc<Router<Context>>,
+    pub frontend_service: FrontendServiceSender,
 }
 
 impl Handler for WebSocketHandler {
     fn on_open(&mut self, _: Handshake) -> Result<()> {
+        self.frontend_service
+            .send(FrontendServiceMessage::AddWS(self.out.clone()))
+            .expect("Should success adding ws to frontend_service");
         // We have a new connection, so we increment the connection counter
         Ok(self.count.set(self.count.get() + 1))
     }
@@ -46,6 +51,9 @@ impl Handler for WebSocketHandler {
             CloseCode::Abnormal => cinfo!("Closing handshake failed! Unable to obtain closing status from client."),
             _ => cinfo!("The client encountered an error: {}", reason),
         }
+        self.frontend_service
+            .send(FrontendServiceMessage::RemoveWS(self.out.clone()))
+            .expect("Should success remove ws from frontend_service");
 
         // The connection is going down, so we need to decrement the count
         self.count.set(self.count.get() - 1)
