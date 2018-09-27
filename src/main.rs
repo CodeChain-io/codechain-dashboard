@@ -117,17 +117,14 @@ impl iron::Handler for WebHandler {
             return Ok(Response::with(status::NotFound))
         }
 
-        let node_address = paths.get(1).expect("Already checked");
-        let node_address = node_address
-            .parse()
-            .map_err(|_| iron::IronError::new(WebError::new("Invalid socket address"), status::BadRequest))?;
-        ctrace!("Get log for agent-{}", node_address);
+        let node_name = *paths.get(1).expect("Already checked");
+        ctrace!("Get log for agent-{}", node_name);
 
         let agent = self
             .agent_service_sender
             .lock()
             .expect("Should success get lock")
-            .get_agent(node_address)
+            .get_agent(node_name.to_string())
             .ok_or_else(|| iron::IronError::new(WebError::new("Not Found"), status::NotFound))?;
 
         let log =
