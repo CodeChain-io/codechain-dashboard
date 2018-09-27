@@ -23,6 +23,7 @@ interface OwnProps {
 }
 interface State {
   selectedNode?: NetworkNodeInfo;
+  selectedNetworkNodeList: NetworkNodeInfo[];
 }
 
 type Props = DispatchProp & OwnProps;
@@ -30,7 +31,8 @@ class Dashboard extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      selectedNode: undefined
+      selectedNode: undefined,
+      selectedNetworkNodeList: []
     };
   }
   public componentDidMount() {
@@ -40,132 +42,145 @@ class Dashboard extends React.Component<Props, State> {
   }
   public render() {
     const { chainNetworks } = this.props;
-    const { selectedNode } = this.state;
+    const { selectedNode, selectedNetworkNodeList } = this.state;
     if (!chainNetworks) {
       return <div>Loading...</div>;
     }
     return (
-      <div className="dashboard d-flex">
-        <div className="left-panel mr-3">
-          <ConnectionGraphContainer
-            chainNetworks={chainNetworks}
-            className="animated fadeIn"
-            onSelectNode={this.onSelectNode}
-            onDeselect={this.onDeselect}
-          />
-        </div>
-        <div className="right-panel">
-          <div className="dashboard-item animated fadeIn">
-            <div className="dashboard-item-header">
-              <h5 className="mb-0">
-                <FontAwesomeIcon className="mr-2" icon={faBroadcastTower} />
-                Status
-              </h5>
-            </div>
-            <div className="dashboard-item-body ">
-              <ul className="list-unstyled mb-0">
-                <li>
-                  <div className="d-flex align-items-center mb-1">
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className="text-success mr-2"
-                    />
-                    <span className="mr-auto">Run</span>
-                    <span>
-                      {
-                        _.filter(
-                          chainNetworks.nodes,
-                          node => node.status === "Run"
-                        ).length
-                      }
-                    </span>
-                  </div>
-                </li>
-                <li>
-                  <div className="d-flex align-items-center mb-1">
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className="text-warning mr-2"
-                    />
-                    <span className="mr-auto">Starting</span>
-                    <span>
-                      {
-                        _.filter(
-                          chainNetworks.nodes,
-                          node => node.status === "Starting"
-                        ).length
-                      }
-                    </span>
-                  </div>
-                </li>
-                <li>
-                  <div className="d-flex align-items-center mb-1">
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className="text-secondary mr-2"
-                    />
-                    <span className="mr-auto">Stop</span>
-                    <span>
-                      {
-                        _.filter(
-                          chainNetworks.nodes,
-                          node => node.status === "Stop"
-                        ).length
-                      }
-                    </span>
-                  </div>
-                </li>
-                <li>
-                  <div className="d-flex align-items-center mb-1">
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className="text-danger mr-2"
-                    />
-                    <span className="mr-auto">Error</span>
-                    <span>
-                      {
-                        _.filter(
-                          chainNetworks.nodes,
-                          node => node.status === "Error"
-                        ).length
-                      }
-                    </span>
-                  </div>
-                </li>
-                <li>
-                  <div className="d-flex align-items-center mb-1">
-                    <FontAwesomeIcon
-                      icon={faCircle}
-                      className="text-info mr-2"
-                    />
-                    <span className="mr-auto">UFO</span>
-                    <span>
-                      {
-                        _.filter(
-                          chainNetworks.nodes,
-                          node => node.status === "UFO"
-                        ).length
-                      }
-                    </span>
-                  </div>
-                </li>
-              </ul>
-            </div>
+      <div className="dashboard">
+        <div className="d-flex">
+          <div className="left-panel mr-3">
+            <ConnectionGraphContainer
+              chainNetworks={chainNetworks}
+              className="animated fadeIn"
+              onSelectNode={this.onSelectNode}
+              onDeselect={this.onDeselect}
+            />
           </div>
-          {selectedNode && (
-            <div className="dashboard-item mt-3">
+          <div className="right-panel">
+            <div className="dashboard-item animated fadeIn">
               <div className="dashboard-item-header">
                 <h5 className="mb-0">
-                  <FontAwesomeIcon className="mr-2" icon={faInfo} />
-                  Node info
+                  <FontAwesomeIcon className="mr-2" icon={faBroadcastTower} />
+                  Status
                 </h5>
               </div>
-              <div className="dashboard-item-body node-item-info-panel">
-                {this.getNodeInfoElem(selectedNode)}
+              <div className="dashboard-item-body ">
+                <ul className="list-unstyled mb-0">
+                  <li>
+                    <div className="d-flex align-items-center mb-1">
+                      <FontAwesomeIcon
+                        icon={faCircle}
+                        className="text-success mr-2"
+                      />
+                      <span className="mr-auto">Run</span>
+                      <span>
+                        {
+                          _.filter(
+                            chainNetworks.nodes,
+                            node => node.status === "Run"
+                          ).length
+                        }
+                      </span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="d-flex align-items-center mb-1">
+                      <FontAwesomeIcon
+                        icon={faCircle}
+                        className="text-warning mr-2"
+                      />
+                      <span className="mr-auto">Starting</span>
+                      <span>
+                        {
+                          _.filter(
+                            chainNetworks.nodes,
+                            node => node.status === "Starting"
+                          ).length
+                        }
+                      </span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="d-flex align-items-center mb-1">
+                      <FontAwesomeIcon
+                        icon={faCircle}
+                        className="text-secondary mr-2"
+                      />
+                      <span className="mr-auto">Stop</span>
+                      <span>
+                        {
+                          _.filter(
+                            chainNetworks.nodes,
+                            node => node.status === "Stop"
+                          ).length
+                        }
+                      </span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="d-flex align-items-center mb-1">
+                      <FontAwesomeIcon
+                        icon={faCircle}
+                        className="text-danger mr-2"
+                      />
+                      <span className="mr-auto">Error</span>
+                      <span>
+                        {
+                          _.filter(
+                            chainNetworks.nodes,
+                            node => node.status === "Error"
+                          ).length
+                        }
+                      </span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="d-flex align-items-center mb-1">
+                      <FontAwesomeIcon
+                        icon={faCircle}
+                        className="text-info mr-2"
+                      />
+                      <span className="mr-auto">UFO</span>
+                      <span>
+                        {
+                          _.filter(
+                            chainNetworks.nodes,
+                            node => node.status === "UFO"
+                          ).length
+                        }
+                      </span>
+                    </div>
+                  </li>
+                </ul>
               </div>
             </div>
-          )}
+            {selectedNode && (
+              <div className="dashboard-item mt-3">
+                <div className="dashboard-item-header">
+                  <h5 className="mb-0">
+                    <FontAwesomeIcon className="mr-2" icon={faInfo} />
+                    Node info
+                  </h5>
+                </div>
+                <div className="dashboard-item-body node-item-info-panel">
+                  {this.getNodeInfoElem(selectedNode)}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+        {selectedNetworkNodeList.length > 0 && (
+          <div className="selected-network-node-list-container">
+            {_.map(selectedNetworkNodeList, node => {
+              return (
+                <div key={node.address} className="network-node-info">
+                  {this.getNodeInfoElem(node)}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -174,10 +189,41 @@ class Dashboard extends React.Component<Props, State> {
       this.props.chainNetworks!.nodes,
       networkNodeInfo => networkNodeInfo.address === node.id
     );
+    setTimeout(() => {
+      let selectedNetworkNodeList = [node.id];
+      let beforeNetworkNodeList = [node.id];
+      const connections = this.props.chainNetworks!.connections;
+      while (true) {
+        for (const connection of connections) {
+          if (_.includes(beforeNetworkNodeList, connection.nodeA)) {
+            beforeNetworkNodeList.push(connection.nodeB);
+          }
+          if (_.includes(beforeNetworkNodeList, connection.nodeB)) {
+            beforeNetworkNodeList.push(connection.nodeA);
+          }
+        }
+        beforeNetworkNodeList = _.uniq(beforeNetworkNodeList);
+        if (
+          _.difference(beforeNetworkNodeList, selectedNetworkNodeList)
+            .length === 0
+        ) {
+          break;
+        }
+        selectedNetworkNodeList = _.clone(beforeNetworkNodeList);
+      }
+
+      const selectedNetworkNodeInfoList = _.filter(
+        this.props.chainNetworks!.nodes,
+        (netowrkNode: NetworkNodeInfo) =>
+          _.includes(selectedNetworkNodeList, netowrkNode.address) &&
+          netowrkNode.address !== node.id
+      );
+      this.setState({ selectedNetworkNodeList: selectedNetworkNodeInfoList });
+    });
     this.setState({ selectedNode });
   };
   private onDeselect = () => {
-    this.setState({ selectedNode: undefined });
+    this.setState({ selectedNode: undefined, selectedNetworkNodeList: [] });
   };
 
   private getNodeInfoElem = (node: NetworkNodeInfo) => {

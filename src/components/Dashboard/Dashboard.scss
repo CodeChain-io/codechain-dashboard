@@ -20,26 +20,42 @@
     .node-item-info-panel {
       height: 180px;
     }
-    .node-info-element {
-      position: relative;
-      height: 100%;
-
-      .bottom-container {
-        position: absolute;
-        bottom: 0px;
-      }
-    }
     .dashboard-item-body {
       background-color: white;
       padding: 9px;
     }
-    .view-details {
-      text-decoration: underline !important;
-      color: black;
-      font-style: italic;
-      &:hover {
-        color: rgb(97, 97, 97);
-      }
+  }
+  .node-info-element {
+    position: relative;
+    height: 100%;
+
+    .bottom-container {
+      position: absolute;
+      bottom: 0px;
+    }
+  }
+  .view-details {
+    text-decoration: underline !important;
+    color: black;
+    font-style: italic;
+    &:hover {
+      color: rgb(97, 97, 97);
+    }
+  }
+  .selected-network-node-list-container {
+    margin-top: 18px;
+    height: 190px;
+    overflow: auto;
+    white-space: nowrap;
+
+    .network-node-info {
+      position: relative;
+      height: 190px;
+      width: 300px;
+      display: inline-block;
+      background: white;
+      padding: 18px;
+      margin-right: 18px;
     }
   }
 }
