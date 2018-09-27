@@ -35,12 +35,10 @@ export default class RequestAgent {
         });
 
       this.ws.on("dashboard_updated", (e: ChainNetworksUpdate) => {
-        console.log(e);
         this.dispatch(Actions.updateChainNetworks(e));
       });
 
       this.ws.on("node_updated", (e: NodeUpdateInfo) => {
-        console.log(e);
         this.dispatch(Actions.updateNodeInfo(e.name, e));
       });
     });

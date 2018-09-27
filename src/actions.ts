@@ -29,7 +29,7 @@ export interface UpdateNodeInfo {
 
 export interface UpdateChainNetworks {
   type: "UpdateChainNetworks";
-  data: ChainNetworks;
+  data: ChainNetworksUpdate;
 }
 
 export const setChainNetworks = (data: ChainNetworks) => ({
