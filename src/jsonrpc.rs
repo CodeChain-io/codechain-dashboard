@@ -182,7 +182,7 @@ where
     };
     let serialized_request = serde_json::to_string(&request)?;
     context.add_callback(id, tx);
-    ctrace!("jend JSONRPC {}", serialized_request);
+    ctrace!("send JSONRPC {}", serialized_request);
     context.ws_sender.send(Message::Text(serialized_request))?;
     let received_string = rx.recv_timeout(Duration::new(10, 0))?;
     ctrace!("Receive JSONRPC {}", received_string);
