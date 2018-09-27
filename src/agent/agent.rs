@@ -11,6 +11,7 @@ use ws::CloseCode as WSCloseCode;
 
 use super::super::common_rpc_types::{NodeStatus, ShellStartCodeChainRequest};
 use super::super::frontend::service::{Message as FrontendServiceMessage, ServiceSender as FrontendServiceSender};
+use super::super::frontend::types::DashboardNode;
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
@@ -174,10 +175,33 @@ impl Agent {
                 diff["status"] = serde_json::to_value(new_state.status()).unwrap();
             }
 
-            let message = jsonrpc::serialize_notification("dashboard_updated", diff.clone());
-            self.frontend_service.send(FrontendServiceMessage::SendEvent(message)).expect("Should success send event");
-            let message = jsonrpc::serialize_notification("node_updated", diff);
-            self.frontend_service.send(FrontendServiceMessage::SendEvent(message)).expect("Should success send event");
+            match *state {
+                State::Initializing => {
+                    let dashboard_node = DashboardNode::from_state(&new_state);
+                    let message = jsonrpc::serialize_notification("node_added", json!({ "nodes": [dashboard_node] }));
+                    self.frontend_service
+                        .send(FrontendServiceMessage::SendEvent(message))
+                        .expect("Should success send event");
+                }
+                State::Normal {
+                    ..
+                } => {
+                    let message = jsonrpc::serialize_notification(
+                        "dashboard_updated",
+                        json!({
+                        "nodes": [diff.clone()]
+                    }),
+                    );
+                    self.frontend_service
+                        .send(FrontendServiceMessage::SendEvent(message))
+                        .expect("Should success send event");
+                    let message = jsonrpc::serialize_notification("node_updated", diff);
+                    self.frontend_service
+                        .send(FrontendServiceMessage::SendEvent(message))
+                        .expect("Should success send event");
+                }
+            }
+
             cdebug!("Data updated, send notification");
         }
 
