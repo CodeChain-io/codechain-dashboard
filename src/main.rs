@@ -74,15 +74,14 @@ fn main() {
         .name("agent listen".to_string())
         .spawn(move || {
             let count = Rc::new(Cell::new(0));
-            listen("127.0.0.1:4012", |out| AgentHandler::new(out, count.clone(), agent_service_sender.clone()))
-                .unwrap();
+            listen("0.0.0.0:4012", |out| AgentHandler::new(out, count.clone(), agent_service_sender.clone())).unwrap();
         })
         .expect("Should success listening agent");
 
     let webserver_join = thread::Builder::new()
         .name("webserver".to_string())
         .spawn(move || {
-            let _server = Iron::new(web_handler).http("localhost:5012").unwrap();
+            let _server = Iron::new(web_handler).http("0.0.0.0:5012").unwrap();
             cinfo!("Webserver listening on 5012");
         })
         .expect("Should success open webserver");
