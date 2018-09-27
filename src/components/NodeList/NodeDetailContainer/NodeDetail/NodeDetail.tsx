@@ -9,6 +9,7 @@ import StartNodeModal from "./StartNodeModal/StartNodeModal";
 const { confirmAlert } = require("react-confirm-alert");
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { getStatusClass } from "../../../../utils/getStatusClass";
 import UpgradeNodeModal from "./UpgradeNodeModal/UpgradeNodeModal";
 
 interface Props {
@@ -25,22 +26,6 @@ enum NodeStartErrors {
   AlreadyRunning = -10001,
   EnvParseError = -10002
 }
-
-const getStatusClass = (status: NodeStatus) => {
-  switch (status) {
-    case "Run":
-      return "text-success";
-    case "Stop":
-      return "text-secondary";
-    case "Error":
-      return "text-danger";
-    case "Starting":
-      return "text-warning";
-    case "UFO":
-      return "text-info";
-  }
-  throw new Error("Invalid status");
-};
 
 const getGBNumber = (byte: number) => {
   return Math.floor((byte / 1000 / 1000 / 1000) * 100) / 100;

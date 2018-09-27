@@ -12,11 +12,8 @@ import { Dispatch } from "redux";
 import { Actions } from "../../actions";
 import { RootState } from "../../reducers";
 import { Apis } from "../../requests";
-import {
-  ChainNetworks,
-  NetworkNodeInfo,
-  NodeStatus
-} from "../../requests/types";
+import { ChainNetworks, NetworkNodeInfo } from "../../requests/types";
+import { getStatusClass } from "../../utils/getStatusClass";
 import { ConnectionGraphContainer } from "./ConnectGraphContainer/ConnectionGraphContainer";
 import "./Dashboard.css";
 
@@ -27,22 +24,6 @@ interface OwnProps {
 interface State {
   selectedNode?: NetworkNodeInfo;
 }
-
-const getStatusClass = (status: NodeStatus) => {
-  switch (status) {
-    case "Run":
-      return "text-success";
-    case "Stop":
-      return "text-secondary";
-    case "Error":
-      return "text-danger";
-    case "Starting":
-      return "text-warning";
-    case "UFO":
-      return "text-info";
-  }
-  throw new Error("Invalid status");
-};
 
 type Props = DispatchProp & OwnProps;
 class Dashboard extends React.Component<Props, State> {

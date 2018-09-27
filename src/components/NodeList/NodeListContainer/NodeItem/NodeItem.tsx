@@ -2,28 +2,13 @@ import { faCircle, faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { NetworkNodeInfo, NodeStatus } from "../../../../requests/types";
+import { NetworkNodeInfo } from "../../../../requests/types";
+import { getStatusClass } from "../../../../utils/getStatusClass";
 import "./NodeItem.css";
 interface Props {
   className?: string;
   nodeInfo: NetworkNodeInfo;
 }
-
-const getStatusClass = (status: NodeStatus) => {
-  switch (status) {
-    case "Run":
-      return "text-success";
-    case "Stop":
-      return "text-secondary";
-    case "Error":
-      return "text-danger";
-    case "Starting":
-      return "text-warning";
-    case "UFO":
-      return "text-info";
-  }
-  return "text-warning";
-};
 
 const NodeItem = (props: Props) => {
   const { className, nodeInfo } = props;
