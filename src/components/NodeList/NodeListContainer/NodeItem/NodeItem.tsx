@@ -29,9 +29,14 @@ const NodeItem = (props: Props) => {
                 : nodeInfo.name}
             </div>
             <div className="node-info text-right">
-              <button type="button" className="btn btn-secondary">
-                Install Agent
-              </button>
+              <a
+                href="https://github.com/codechain-io/codechain-agent"
+                target="_blank"
+              >
+                <button type="button" className="btn btn-secondary">
+                  Install Agent
+                </button>
+              </a>
             </div>
           </div>
         </div>

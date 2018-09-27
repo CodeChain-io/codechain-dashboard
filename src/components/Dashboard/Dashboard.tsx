@@ -287,7 +287,12 @@ class Dashboard extends React.Component<Props, State> {
         )}
         {node.status === "UFO" && (
           <div className="bottom-container">
-            <span className="view-details">Install agent</span>
+            <a
+              href="https://github.com/codechain-io/codechain-agent"
+              target="_blank"
+            >
+              <span className="view-details">Install agent</span>
+            </a>
           </div>
         )}
       </div>
