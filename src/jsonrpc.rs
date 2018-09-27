@@ -198,14 +198,15 @@ where
     }
 }
 
-pub fn serialize_notification<Arg>(method: &str, args: Vec<Arg>) -> String
+pub fn serialize_notification<Arg>(method: &str, arg: Arg) -> String
 where
     Arg: Serialize, {
-    let args_value = args.iter().map(|arg| serde_json::to_value(arg).expect("Should success serialize")).collect();
+    let arg_value = serde_json::to_value(arg).expect("Should success serialization");
+    let arg_object = arg_value.as_object().unwrap();
     let noti = Notification {
         jsonrpc: Some(Version::V2),
         method: method.to_string(),
-        params: Some(Params::Array(args_value)),
+        params: Some(Params::Map(arg_object.clone())),
     };
     serde_json::to_string(&noti).expect("Should success serialize")
 }
