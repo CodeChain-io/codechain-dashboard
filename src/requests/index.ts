@@ -3,13 +3,13 @@ import { ChainNetworks, NodeInfo } from "./types";
 
 const getChainNetworks = async () => {
   return await RequestAgent.getInstance().call<ChainNetworks>(
-    "dashboard_getNetwork",
+    "real_dashboard_getNetwork",
     []
   );
 };
 
 const getNodeInfo = async (nodeName: string) => {
-  return await RequestAgent.getInstance().call<NodeInfo>("node_getInfo", [
+  return await RequestAgent.getInstance().call<NodeInfo>("real_node_getInfo", [
     nodeName
   ]);
 };
