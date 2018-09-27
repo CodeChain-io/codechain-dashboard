@@ -1,16 +1,4 @@
 @import "styles/variables.scss";
 .upgrade-node-modal {
   width: 800px;
-
-  .branch-container {
-    width: 200px;
-    height: 400px;
-    margin-right: 18px;
-    background: $dark-background-color;
-  }
-  .commit-container {
-    flex: 1;
-    height: 400px;
-    background: $dark-background-color;
-  }
 }
