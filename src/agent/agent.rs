@@ -166,7 +166,7 @@ impl Agent {
 
         if new_state != *state {
             let mut diff = json!({});
-            diff["name"] = serde_json::to_value(state.name()).unwrap();
+            diff["name"] = serde_json::to_value(new_state.name()).unwrap();
             if state.address() != new_state.address() {
                 diff["address"] = serde_json::to_value(new_state.address()).unwrap();
             }
