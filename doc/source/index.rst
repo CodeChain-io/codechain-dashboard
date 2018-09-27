@@ -120,9 +120,10 @@ DashboardNodeInfo
 
   interface DashboardNodeInfo {
     status: NodeStatus;
-    address: SocketAddr;
-    version: { version: string, hash: string };
-    bestBlockId:  { blockNumber: number, hash: H256 };
+    name: string;
+    address?: SocketAddr;
+    version?: { version: string, hash: string };
+    bestBlockId?:  { blockNumber: number, hash: H256 };
     name?: string;
   }
 
@@ -137,6 +138,7 @@ DashboardUFONodeInfo
 
   interface DashboardUFONodeInfo {
     status: NodeStatus;
+    name: string;
     address: SocketAddr;
   }
 
@@ -148,10 +150,10 @@ NodeInfo
 ::
 
   interface NodeInfo {
-    address: SocketAddr;
-    name?: string;
-    agentVersion: String;
     status: NodeStatus;
+    name: string;
+    address?: SocketAddr;
+    agentVersion: String;
     startOptions?: { env: string, args: string };
     version: { version: string, hash: string };
     commitHash: string;
@@ -177,8 +179,8 @@ UFONodeInfo
 ::
 
   interface UFONodeInfo {
+    name: string;
     address: SocketAddr;
-    agentVersion: String;
     status: NodeStatus;
   }
 
