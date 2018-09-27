@@ -173,7 +173,9 @@ impl Agent {
                 diff["status"] = serde_json::to_value(new_state.status()).unwrap();
             }
 
-            let message = jsonrpc::serialize_notification("dashboard_updated", vec![diff]);
+            let message = jsonrpc::serialize_notification("dashboard_updated", vec![diff.clone()]);
+            self.frontend_service.send(FrontendServiceMessage::SendEvent(message)).expect("Should success send event");
+            let message = jsonrpc::serialize_notification("node_updated", vec![diff]);
             self.frontend_service.send(FrontendServiceMessage::SendEvent(message)).expect("Should success send event");
             cdebug!("Data updated, send notification");
         }
