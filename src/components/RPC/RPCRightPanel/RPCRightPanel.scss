@@ -1,0 +1,27 @@
+@import "styles/variables.scss";
+
+.rpc-right-panel {
+  overflow: hidden;
+  border: $container-border-color;
+  border-radius: 3px;
+  padding: 18px;
+
+  .rpc-input {
+    height: 150px;
+    resize: none;
+  }
+  .select-btn {
+    width: 50px;
+    font-size: 0.7rem;
+    padding: 3px;
+  }
+
+  a {
+    text-decoration: underline !important;
+    color: black;
+    font-style: italic;
+    &:hover {
+      color: rgb(97, 97, 97);
+    }
+  }
+}

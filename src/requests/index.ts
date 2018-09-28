@@ -30,9 +30,17 @@ const stopNode = async (nodeName: string) => {
   ]);
 };
 
+const updateNode = async (nodeName: string, commitHash: string) => {
+  return await RequestAgent.getInstance().call<void>("node_udpate", [
+    nodeName,
+    commitHash
+  ]);
+};
+
 export const Apis = {
   getChainNetworks,
   getNodeInfo,
   startNode,
-  stopNode
+  stopNode,
+  updateNode
 };

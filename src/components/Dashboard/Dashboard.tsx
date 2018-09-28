@@ -6,7 +6,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as _ from "lodash";
 import * as React from "react";
-import { connect, DispatchProp } from "react-redux";
+import { connect } from "react-redux";
 import { Link } from "react-router-dom";
 import { Dispatch } from "redux";
 import { Actions } from "../../actions";
@@ -19,14 +19,17 @@ import "./Dashboard.css";
 
 interface OwnProps {
   chainNetworks: ChainNetworks | undefined;
-  getChainNetworks: () => void;
 }
 interface State {
   selectedNode?: NetworkNodeInfo;
   selectedNetworkNodeList: NetworkNodeInfo[];
 }
 
-type Props = DispatchProp & OwnProps;
+interface DispatchProps {
+  getChainNetworks: () => void;
+}
+
+type Props = DispatchProps & OwnProps;
 class Dashboard extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);

@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import * as React from "react";
-import { connect, DispatchProp } from "react-redux";
+import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { Actions } from "../../../actions";
 import { RootState } from "../../../reducers";
@@ -11,9 +11,11 @@ import "./NodeListContainer.css";
 
 interface OwnProps {
   chainNetworks: ChainNetworks | undefined;
+}
+interface DispatchProps {
   getChainNetworks: () => void;
 }
-type Props = DispatchProp & OwnProps;
+type Props = DispatchProps & OwnProps;
 class NodeListContainer extends React.Component<Props> {
   public componentDidMount() {
     if (!this.props.chainNetworks) {

@@ -1,0 +1,15 @@
+.rpc-container {
+  min-width: 900px;
+  .left-panel {
+    width: 300px;
+    background-color: white;
+    margin-right: 18px;
+    height: 600px;
+  }
+
+  .right-panel {
+    flex: 1;
+    background-color: white;
+    height: 600px;
+  }
+}
