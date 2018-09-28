@@ -3,7 +3,6 @@ use std::net::SocketAddr;
 use cprimitives::H256;
 
 use super::super::agent;
-use super::super::agent::agent::State as AgentState;
 use super::super::common_rpc_types::{NodeName, NodeStatus};
 
 #[derive(Clone)]
@@ -77,10 +76,10 @@ pub enum DashboardNode {
 }
 
 impl DashboardNode {
-    pub fn from_state(state: &AgentState) -> Option<Self> {
+    pub fn from_state(state: &agent::State) -> Option<Self> {
         match state {
-            AgentState::Initializing => None,
-            AgentState::Normal {
+            agent::State::Initializing => None,
+            agent::State::Normal {
                 name,
                 status,
                 address,
@@ -181,10 +180,10 @@ impl NodeGetInfoResponse {
         }
     }
 
-    pub fn from_state(state: &AgentState) -> Option<Self> {
+    pub fn from_state(state: &agent::State) -> Option<Self> {
         match state {
-            AgentState::Initializing => None,
-            AgentState::Normal {
+            agent::State::Initializing => None,
+            agent::State::Normal {
                 status,
                 address,
                 name,

@@ -1,4 +1,4 @@
-use super::super::agent::agent::SendAgentRPC;
+use super::super::agent::SendAgentRPC;
 use super::super::common_rpc_types::{NodeStatus, ShellStartCodeChainRequest};
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};

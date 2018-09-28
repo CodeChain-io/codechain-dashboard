@@ -10,8 +10,7 @@ use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
 use super::super::common_rpc_types::{NodeName, NodeStatus, ShellStartCodeChainRequest};
-use super::super::frontend::service::{Message as FrontendServiceMessage, ServiceSender as FrontendServiceSender};
-use super::super::frontend::types::DashboardNode;
+use super::super::frontend;
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
@@ -88,7 +87,7 @@ pub struct Agent {
     state: Arc<RwLock<State>>,
     service_sender: ServiceSender,
     closed: bool,
-    frontend_service: FrontendServiceSender,
+    frontend_service: frontend::ServiceSender,
 }
 
 pub enum AgentCleanupReason {
@@ -102,7 +101,7 @@ impl Agent {
         id: i32,
         jsonrpc_context: jsonrpc::Context,
         service_sender: ServiceSender,
-        frontend_service: FrontendServiceSender,
+        frontend_service: frontend::ServiceSender,
     ) -> Self {
         let state = Arc::new(RwLock::new(State::new()));
         Self {
@@ -119,7 +118,7 @@ impl Agent {
         id: i32,
         jsonrpc_context: jsonrpc::Context,
         service_sender: ServiceSender,
-        frontend_service: FrontendServiceSender,
+        frontend_service: frontend::ServiceSender,
     ) -> AgentSender {
         let mut agent = Self::new(id, jsonrpc_context, service_sender, frontend_service);
         let sender = agent.sender.clone();
@@ -177,11 +176,11 @@ impl Agent {
 
             match *state {
                 State::Initializing => {
-                    let dashboard_node = DashboardNode::from_state(&new_state);
+                    let dashboard_node = frontend::DashboardNode::from_state(&new_state);
                     let message =
                         jsonrpc::serialize_notification("dashboard_updated", json!({ "nodes": [dashboard_node] }));
                     self.frontend_service
-                        .send(FrontendServiceMessage::SendEvent(message))
+                        .send(frontend::Message::SendEvent(message))
                         .expect("Should success send event");
                 }
                 State::Normal {
@@ -194,11 +193,11 @@ impl Agent {
                     }),
                     );
                     self.frontend_service
-                        .send(FrontendServiceMessage::SendEvent(message))
+                        .send(frontend::Message::SendEvent(message))
                         .expect("Should success send event");
                     let message = jsonrpc::serialize_notification("node_updated", diff);
                     self.frontend_service
-                        .send(FrontendServiceMessage::SendEvent(message))
+                        .send(frontend::Message::SendEvent(message))
                         .expect("Should success send event");
                 }
             }

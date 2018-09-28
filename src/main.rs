@@ -33,21 +33,15 @@ use iron::prelude::*;
 use iron::status;
 use ws::listen;
 
-use self::agent::agent::SendAgentRPC;
-use self::agent::handler::WebSocketHandler as AgentHandler;
-use self::agent::service::{Service as AgentService, ServiceSender as AgentServiceSender};
-use self::frontend::api::add_routing as add_frontend_routing;
-use self::frontend::handler::WebSocketHandler as FrontendHandler;
-use self::frontend::service::Service as FrontendService;
-use self::frontend::types::Context as FrontendContext;
+use self::agent::SendAgentRPC;
 use self::logger::init as logger_init;
 use self::router::Router;
 
 fn main() {
     logger_init().expect("Logger should be initialized");
 
-    let frontend_service_sender = FrontendService::run_thread();
-    let agent_service_sender = AgentService::run_thread(frontend_service_sender.clone());
+    let frontend_service_sender = frontend::Service::run_thread();
+    let agent_service_sender = agent::Service::run_thread(frontend_service_sender.clone());
     let agent_service_for_frontend = agent_service_sender.clone();
     let web_handler = WebHandler::new(agent_service_sender.clone());
 
@@ -56,11 +50,11 @@ fn main() {
         .spawn(move || {
             let count = Rc::new(Cell::new(0));
             let mut frontend_router = Arc::new(Router::new());
-            add_frontend_routing(Arc::get_mut(&mut frontend_router).unwrap());
-            let frontend_context = FrontendContext {
+            frontend::add_routing(Arc::get_mut(&mut frontend_router).unwrap());
+            let frontend_context = frontend::Context {
                 agent_service: agent_service_for_frontend,
             };
-            listen("127.0.0.1:3012", move |out| FrontendHandler {
+            listen("127.0.0.1:3012", move |out| frontend::WebSocketHandler {
                 out,
                 count: count.clone(),
                 context: frontend_context.clone(),
@@ -74,7 +68,9 @@ fn main() {
         .name("agent listen".to_string())
         .spawn(move || {
             let count = Rc::new(Cell::new(0));
-            listen("0.0.0.0:4012", |out| AgentHandler::new(out, count.clone(), agent_service_sender.clone())).unwrap();
+            listen("0.0.0.0:4012", |out| {
+                agent::WebSocketHandler::new(out, count.clone(), agent_service_sender.clone())
+            }).unwrap();
         })
         .expect("Should success listening agent");
 
@@ -92,11 +88,11 @@ fn main() {
 }
 
 struct WebHandler {
-    agent_service_sender: Mutex<AgentServiceSender>,
+    agent_service_sender: Mutex<agent::ServiceSender>,
 }
 
 impl WebHandler {
-    fn new(agent_service_sender: AgentServiceSender) -> Self {
+    fn new(agent_service_sender: agent::ServiceSender) -> Self {
         Self {
             agent_service_sender: Mutex::new(agent_service_sender),
         }

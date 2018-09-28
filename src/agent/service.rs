@@ -4,9 +4,10 @@ use std::thread;
 use std::vec::Vec;
 
 use super::super::common_rpc_types::NodeName;
-use super::super::frontend::service::ServiceSender as FrontendServiceSender;
+use super::super::frontend;
 use super::super::jsonrpc;
-use super::agent::{Agent, AgentSender, State as AgentState};
+use super::agent;
+use super::agent::{Agent, AgentSender};
 
 pub struct State {
     agents: Vec<(i32, AgentSender)>,
@@ -19,7 +20,7 @@ impl State {
         }
     }
 
-    pub fn get_agent_info(&self) -> Vec<AgentState> {
+    pub fn get_agent_info(&self) -> Vec<agent::State> {
         let agent_states = self.agents.iter().map(|(_, agent)| agent.read_state().clone()).collect();
         agent_states
     }
@@ -58,7 +59,7 @@ pub struct Service {
     state: Arc<RwLock<State>>,
     next_id: i32,
     sender: ServiceSender,
-    frontend_service: FrontendServiceSender,
+    frontend_service: frontend::ServiceSender,
 }
 
 pub enum Message {
@@ -68,7 +69,7 @@ pub enum Message {
 }
 
 impl Service {
-    pub fn run_thread(frontend_service: FrontendServiceSender) -> ServiceSender {
+    pub fn run_thread(frontend_service: frontend::ServiceSender) -> ServiceSender {
         let (tx, rx) = channel();
         let state = Arc::new(RwLock::new(State::new()));
         let service_sender = ServiceSender {
@@ -100,7 +101,7 @@ impl Service {
         service_sender
     }
 
-    fn new(sender: ServiceSender, state: Arc<RwLock<State>>, frontend_service: FrontendServiceSender) -> Self {
+    fn new(sender: ServiceSender, state: Arc<RwLock<State>>, frontend_service: frontend::ServiceSender) -> Self {
         Service {
             state,
             next_id: 0_i32,
