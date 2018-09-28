@@ -379,6 +379,8 @@ impl Process {
             id: jsonrpc_core::Id::Num(1),
         };
 
+        ctrace!("Send JSONRPC to CodeChain {:#?}", jsonrpc_request);
+
         let url = format!("http://127.0.0.1:{}/", self.codechain_status.rpc_port());
         let client = reqwest::Client::new();
         let mut response =
@@ -386,6 +388,7 @@ impl Process {
 
         let response: jsonrpc_core::Response =
             response.json().map_err(|err| Error::CodeChainRPC(format!("JSON parse failed {}", err)))?;
+        ctrace!("Recieve JSONRPC response from CodeChain {:#?}", response);
         let value = serde_json::to_value(response).expect("Should success jsonrpc type to Value");
 
         Ok(value)

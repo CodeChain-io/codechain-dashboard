@@ -2,7 +2,9 @@ use std::cell::Cell;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use jsonrpc_core::types::{Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Response, Success};
+use jsonrpc_core::types::{
+    Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Response, Success, Version,
+};
 use serde_json;
 use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sender};
 
@@ -23,8 +25,7 @@ impl Handler for WebSocketHandler {
     }
 
     fn on_message(&mut self, msg: Message) -> Result<()> {
-        // Tell the user the current count
-        ctrace!("The number of live connections is {}", self.count.get());
+        ctrace!("Received {}", msg);
 
         let response: Option<Response> = match msg {
             Message::Text(text) => {
@@ -32,14 +33,14 @@ impl Handler for WebSocketHandler {
                 match deserialized {
                     Err(_) => Some(
                         Failure {
-                            jsonrpc: None,
+                            jsonrpc: Some(Version::V2),
                             id: Id::Null,
                             error: JSONRPCError::new(ErrorCode::ParseError),
                         }.into(),
                     ),
                     Ok(Call::Invalid(id)) => Some(
                         Failure {
-                            jsonrpc: None,
+                            jsonrpc: Some(Version::V2),
                             id,
                             error: JSONRPCError::new(ErrorCode::ParseError),
                         }.into(),
@@ -54,7 +55,7 @@ impl Handler for WebSocketHandler {
                         match self.router.run(self.context.clone(), &method, value_params) {
                             Ok(Some(value)) => Some(
                                 Success {
-                                    jsonrpc: None,
+                                    jsonrpc: Some(Version::V2),
                                     result: value,
                                     id,
                                 }.into(),
@@ -64,7 +65,7 @@ impl Handler for WebSocketHandler {
                                 error.data = Some(serde_json::Value::String("API returns no value".to_string()));
                                 Some(
                                     Failure {
-                                        jsonrpc: None,
+                                        jsonrpc: Some(Version::V2),
                                         id,
                                         error,
                                     }.into(),
@@ -72,14 +73,14 @@ impl Handler for WebSocketHandler {
                             }
                             Err(RouterError::MethodNotFound) => Some(
                                 Failure {
-                                    jsonrpc: None,
+                                    jsonrpc: Some(Version::V2),
                                     id,
                                     error: JSONRPCError::new(ErrorCode::MethodNotFound),
                                 }.into(),
                             ),
                             Err(RouterError::RPC(err)) => Some(
                                 Failure {
-                                    jsonrpc: None,
+                                    jsonrpc: Some(Version::V2),
                                     id,
                                     error: err.to_jsonrpc_error(),
                                 }.into(),
@@ -91,7 +92,7 @@ impl Handler for WebSocketHandler {
             }
             _ => Some(
                 Failure {
-                    jsonrpc: None,
+                    jsonrpc: Some(Version::V2),
                     id: Id::Null,
                     error: JSONRPCError::new(ErrorCode::ServerError(3)),
                 }.into(),
@@ -100,6 +101,7 @@ impl Handler for WebSocketHandler {
 
         if let Some(response) = response {
             let serialized = serde_json::to_string(&response).unwrap();
+            ctrace!("Reply to the Agent Hub {}", serialized);
             self.out.send(Message::Text(serialized))
         } else {
             Ok(())
