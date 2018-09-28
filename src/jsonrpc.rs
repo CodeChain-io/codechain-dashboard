@@ -164,20 +164,27 @@ impl From<RecvTimeoutError> for CallError {
 pub fn call_no_arg<Res>(context: Context, method: &str) -> Result<Res, CallError>
 where
     Res: DeserializeOwned, {
-    call(context, method, Value::Null)
+    call_one_arg(context, method, Value::Null)
 }
 
-pub fn call<Arg, Res>(context: Context, method: &str, arg: Arg) -> Result<Res, CallError>
+pub fn call_one_arg<Arg, Res>(context: Context, method: &str, arg: Arg) -> Result<Res, CallError>
+where
+    Arg: Serialize,
+    Res: DeserializeOwned, {
+    call_many_args(context, method, vec![arg])
+}
+
+pub fn call_many_args<Arg, Res>(context: Context, method: &str, args: Arg) -> Result<Res, CallError>
 where
     Arg: Serialize,
     Res: DeserializeOwned, {
     let (tx, rx) = channel();
-    let arg_value = serde_json::to_value(arg)?;
+    let args_value = serde_json::to_value(args)?;
     let id = rand::random();
     let request = MethodCall {
-        jsonrpc: None,
+        jsonrpc: Some(Version::V2),
         method: method.to_string(),
-        params: Some(Params::Array(vec![arg_value])),
+        params: Some(Params::Array(args_value.as_array().expect("This should be an array").clone())),
         id: Id::Num(id),
     };
     let serialized_request = serde_json::to_string(&request)?;
@@ -210,6 +217,7 @@ where
     };
     serde_json::to_string(&noti).expect("Should success serialize")
 }
+
 // Called on websocket thread
 pub fn on_receive(context: Context, text: String) {
     match on_receive_internal(context, text) {

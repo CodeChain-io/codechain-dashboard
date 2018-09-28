@@ -1,10 +1,11 @@
 use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
 use super::super::common_rpc_types::{NodeName, NodeStatus};
 use super::event::{Event, EventSubscriber};
-use super::types::AgentState;
+use super::types::{AgentState, Connections};
 
 pub enum Message {
     InitializeAgent(AgentState, Sender<bool>),
@@ -20,12 +21,14 @@ pub struct ServiceSender {
 
 struct State {
     agent_state: HashMap<NodeName, AgentState>,
+    connection: Connections,
 }
 
 impl State {
     pub fn new() -> Self {
         Self {
             agent_state: HashMap::new(),
+            connection: Connections::new(),
         }
     }
 }
@@ -111,15 +114,42 @@ impl Service {
         let name = after.name.clone();
         debug_assert_ne!(None, self.state.agent_state.get(&name));
 
+        {
+            let before = self.state.agent_state.get(&name).expect("Checked");
+
+            let (added, removed) = self.state.connection.update(before, &after);
+            if !added.is_empty() || !removed.is_empty() {
+                self.event_subscriber.on_event(Event::ConnectionChanged {
+                    added: added.iter().filter_map(|addrs| self.socket_addrs_to_name(addrs)).collect(),
+                    removed: removed.iter().filter_map(|addrs| self.socket_addrs_to_name(addrs)).collect(),
+                });
+            }
+
+            self.event_subscriber.on_event(Event::AgentUpdated {
+                before: Some(before.clone()),
+                after: after.clone(),
+            });
+        }
+
         let before = self.state.agent_state.get_mut(&name).expect("Checked");
-
-        debug_assert_ne!(*before, after);
-        self.event_subscriber.on_event(Event::AgentUpdated {
-            before: Some(before.clone()),
-            after: after.clone(),
-        });
-
         *before = after;
+    }
+
+    fn socket_addrs_to_name(&self, addrs: &(SocketAddr, SocketAddr)) -> Option<(NodeName, NodeName)> {
+        let (first, second) = addrs;
+        let first_name = self.socket_addr_to_name(first);
+        let second_name = self.socket_addr_to_name(second);
+        first_name.and_then(|first_name| second_name.map(|second_name| (first_name, second_name)))
+    }
+
+    fn socket_addr_to_name(&self, addr: &SocketAddr) -> Option<NodeName> {
+        let find = self
+            .state
+            .agent_state
+            .values()
+            .find(|agent| agent.address.map(|agent_address| agent_address == *addr).unwrap_or(false));
+
+        find.map(|agent| agent.name.clone())
     }
 
     fn get_agent(&self, name: NodeName, callback: Sender<Option<AgentState>>) {

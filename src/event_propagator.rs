@@ -1,4 +1,5 @@
 use serde_json;
+use serde_json::Value;
 
 use super::db;
 use super::frontend;
@@ -30,6 +31,7 @@ impl db::EventSubscriber for EventPropagator {
                 if before.is_none() {
                     diff["address"] = serde_json::to_value(after.address).unwrap();
                     diff["status"] = serde_json::to_value(after.status).unwrap();
+                    diff["peers"] = serde_json::to_value(after.peers).unwrap();
                 } else {
                     let before = before.unwrap();
                     if before == after {
@@ -42,6 +44,9 @@ impl db::EventSubscriber for EventPropagator {
                     if before.status != after.status {
                         diff["status"] = serde_json::to_value(after.status).unwrap();
                     }
+                    if before.peers != after.peers {
+                        diff["peers"] = serde_json::to_value(after.peers).unwrap();
+                    }
                 }
 
                 let message = jsonrpc::serialize_notification(
@@ -53,6 +58,38 @@ impl db::EventSubscriber for EventPropagator {
 
                 self.frontend_service.send(frontend::Message::SendEvent(message)).expect("Should success send event");
                 let message = jsonrpc::serialize_notification("node_updated", diff);
+                self.frontend_service.send(frontend::Message::SendEvent(message)).expect("Should success send event");
+            }
+            db::Event::ConnectionChanged {
+                added,
+                removed,
+            } => {
+                let collection_added: Vec<Value> = added
+                    .iter()
+                    .map(|(first, second)| {
+                        json!({
+                            "nodeA": first,
+                            "nodeB": second,
+                        })
+                    })
+                    .collect();
+                let collection_removed: Vec<Value> = removed
+                    .iter()
+                    .map(|(first, second)| {
+                        json!({
+                            "nodeA": first,
+                            "nodeB": second,
+                        })
+                    })
+                    .collect();
+                let message = jsonrpc::serialize_notification(
+                    "dashboard_updated",
+                    json!({
+                        "connectionsAdded": collection_added,
+                        "connectionsRemoved": collection_removed,
+                    }),
+                );
+
                 self.frontend_service.send(frontend::Message::SendEvent(message)).expect("Should success send event");
             }
         }

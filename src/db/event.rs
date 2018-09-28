@@ -1,9 +1,14 @@
+use super::super::common_rpc_types::NodeName;
 use super::types::AgentState;
 
 pub enum Event {
     AgentUpdated {
         before: Option<AgentState>,
         after: AgentState,
+    },
+    ConnectionChanged {
+        added: Vec<(NodeName, NodeName)>,
+        removed: Vec<(NodeName, NodeName)>,
     },
 }
 

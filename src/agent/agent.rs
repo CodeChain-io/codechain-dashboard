@@ -5,6 +5,8 @@ use std::sync::{RwLock, RwLockReadGuard};
 use std::thread;
 use std::time::Duration;
 
+use jsonrpc_core::{Failure, Output, Success};
+use serde_json;
 use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
@@ -48,9 +50,13 @@ impl State {
     //                status,
     //                ..
     //            } => Some(*status),
+    //            State::Stop {
+    //                status,
+    //                ..
+    //            } => Some(*status),
     //        }
     //    }
-    //
+
     //    pub fn address(&self) -> Option<SocketAddr> {
     //        match self {
     //            State::Initializing => None,
@@ -198,7 +204,9 @@ impl Agent {
                 name: info.name.clone(),
                 status: info.status,
                 address: info.address,
+                peers: Vec::new(),
             });
+
             if !success {
                 *state = State::Stop {
                     name: info.name.clone(),
@@ -208,17 +216,47 @@ impl Agent {
                 };
                 return Ok(())
             }
-        } else if *state != new_state {
-            ctrace!("Update state from {:?} to {:?}", state, new_state);
-            self.db_service.update_agent_state(db::AgentState {
-                name: info.name,
-                status: info.status,
-                address: info.address,
-            });
+
+            *state = new_state;
+            return Ok(())
         }
 
+        let peers: Vec<SocketAddr> = self.get_peers(info.status)?;
+
+        ctrace!("Update state from {:?} to {:?}", state, new_state);
+        self.db_service.update_agent_state(db::AgentState {
+            name: info.name,
+            status: info.status,
+            address: info.address,
+            peers,
+        });
         *state = new_state;
+
         Ok(())
+    }
+
+    fn get_peers(&self, status: NodeStatus) -> Result<Vec<SocketAddr>, String> {
+        if status != NodeStatus::Run {
+            return Ok(Vec::new())
+        }
+
+        let response = self
+            .sender
+            .codechain_call_rpc(("net_getEstablishedPeers".to_string(), Vec::new()))
+            .map_err(|err| format!("{}", err))?;
+
+        let peers: Vec<SocketAddr> = match response {
+            Output::Success(Success {
+                result,
+                ..
+            }) => serde_json::from_value(result).map_err(|err| format!("{}", err))?,
+            Output::Failure(Failure {
+                error,
+                ..
+            }) => return Err(format!("get_peers error {:#?}", error)),
+        };
+
+        Ok(peers)
     }
 
     fn clean_up(&mut self, reason: AgentCleanupReason) {
@@ -259,6 +297,7 @@ impl Agent {
                 name,
                 status: NodeStatus::Error,
                 address,
+                peers: Vec::new(),
             });
         }
 
@@ -288,12 +327,13 @@ pub trait SendAgentRPC {
     fn shell_stop_codechain(&self) -> RPCResult<()>;
     fn shell_get_codechain_log(&self) -> RPCResult<String>;
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse>;
-    fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>;
+    fn codechain_call_rpc_raw(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>;
+    fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<Output>;
 }
 
 impl SendAgentRPC for AgentSender {
     fn shell_start_codechain(&self, req: ShellStartCodeChainRequest) -> RPCResult<()> {
-        jsonrpc::call(self.jsonrpc_context.clone(), "shell_startCodeChain", req)?;
+        jsonrpc::call_one_arg(self.jsonrpc_context.clone(), "shell_startCodeChain", req)?;
         Ok(())
     }
 
@@ -312,8 +352,15 @@ impl SendAgentRPC for AgentSender {
         Ok(result)
     }
 
-    fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse> {
-        let result = jsonrpc::call(self.jsonrpc_context.clone(), "codechain_callRPC", args)?;
+    fn codechain_call_rpc_raw(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse> {
+        let result = jsonrpc::call_many_args(self.jsonrpc_context.clone(), "codechain_callRPC", args)?;
         Ok(result)
+    }
+
+    fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<Output> {
+        let result: CodeChainCallRPCResponse =
+            jsonrpc::call_many_args(self.jsonrpc_context.clone(), "codechain_callRPC", args)?;
+        let output: Output = serde_json::from_value(result.inner_response)?;
+        Ok(output)
     }
 }
