@@ -79,7 +79,7 @@ class RPCRightPanel extends React.Component<Props, State> {
           <div className="form-group mt-3">
             <Row>
               <Col sm={5}>
-                <Label for="rpc-node-list">Node list</Label>
+                <Label for="rpc-node-list">Running node list</Label>
                 <select
                   multiple={true}
                   className="form-control"

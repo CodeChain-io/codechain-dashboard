@@ -9,6 +9,7 @@ import StartNodeModal from "./StartNodeModal/StartNodeModal";
 const { confirmAlert } = require("react-confirm-alert");
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { toast } from "react-toastify";
 import { getStatusClass } from "../../../../utils/getStatusClass";
 import UpgradeNodeModal from "./UpgradeNodeModal/UpgradeNodeModal";
 
@@ -349,9 +350,9 @@ export default class NodeDetail extends React.Component<Props, State> {
     } catch (e) {
       const error = e as JsonRPCError;
       if (error.code === NodeStartErrors.AlreadyRunning) {
-        console.log("Already running");
+        toast.error("The node is already running.");
       } else if (error.code === NodeStartErrors.EnvParseError) {
-        console.log("Env parsing error");
+        toast.error("Env parsing error.");
       }
     }
     this.setState({ isStartNodeModalOpen: false });
@@ -407,7 +408,11 @@ export default class NodeDetail extends React.Component<Props, State> {
         {
           label: "Yes",
           onClick: async () => {
-            await Apis.stopNode(this.props.nodeInfo.name);
+            try {
+              await Apis.stopNode(this.props.nodeInfo.name);
+            } catch (e) {
+              console.log(e);
+            }
           }
         },
         {

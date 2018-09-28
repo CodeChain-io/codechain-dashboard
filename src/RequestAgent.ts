@@ -6,6 +6,7 @@ import {
   NodeUpdateInfo
 } from "./requests/types";
 const WebSocket = require("rpc-websockets").Client;
+import { toast } from "react-toastify";
 
 export interface JsonRPCError {
   code: number;
@@ -46,6 +47,7 @@ export default class RequestAgent {
       console.log("error", e);
     });
     this.ws.on("close", () => {
+      toast.error("Agent hub is closed.");
       console.log("closed");
     });
   }
@@ -56,7 +58,12 @@ export default class RequestAgent {
     method: string,
     params: object | Array<object>
   ): Promise<T> => {
-    await this.ensureConnection();
+    try {
+      await this.ensureConnection();
+    } catch (e) {
+      toast.error("Agent hub is not responding.");
+      throw e;
+    }
     let response;
     try {
       response = await this.ws.call(method, params);
@@ -73,10 +80,10 @@ export default class RequestAgent {
   private handleCommonError = (e: JsonRPCError) => {
     switch (e.code) {
       case CommonError.AgentNotFound:
-        console.log("Agent not found");
+        toast.error("Agent not found.");
         return true;
       case CommonError.CodeChainIsNotRunning:
-        console.log("CodeChain Not running");
+        toast.error("CodeChain is not running.");
         return true;
     }
     return false;
