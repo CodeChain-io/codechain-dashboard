@@ -3,6 +3,7 @@ use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::thread;
 use std::vec::Vec;
 
+use super::super::common_rpc_types::NodeName;
 use super::super::frontend::service::ServiceSender as FrontendServiceSender;
 use super::super::jsonrpc;
 use super::agent::{Agent, AgentSender, State as AgentState};
@@ -39,7 +40,7 @@ impl ServiceSender {
         self.state.read().expect("Should success read service state")
     }
 
-    pub fn get_agent(&self, name: String) -> Option<AgentSender> {
+    pub fn get_agent(&self, name: NodeName) -> Option<AgentSender> {
         let state = self.state.read().expect("Should access read service state");
         let find_result = state.agents.iter().find(|(_, agent)| {
             let agent_state = agent.read_state();

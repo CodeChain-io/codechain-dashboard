@@ -4,7 +4,7 @@ use cprimitives::H256;
 
 use super::super::agent;
 use super::super::agent::agent::State as AgentState;
-use super::super::common_rpc_types::NodeStatus;
+use super::super::common_rpc_types::{NodeName, NodeStatus};
 
 #[derive(Clone)]
 pub struct Context {
@@ -66,12 +66,12 @@ pub enum DashboardNode {
         address: Option<SocketAddr>,
         version: NodeVersion,
         best_block_id: BlockId,
-        name: String,
+        name: NodeName,
     },
     #[serde(rename_all = "camelCase")]
     UFO {
         status: NodeStatus,
-        name: String,
+        name: NodeName,
         address: Option<SocketAddr>,
     },
 }
@@ -125,7 +125,7 @@ pub struct StartOption {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGetInfoResponse {
-    pub name: String,
+    pub name: NodeName,
     pub status: NodeStatus,
     pub start_option: Option<StartOption>,
     pub address: Option<SocketAddr>,

@@ -1,3 +1,5 @@
+pub type NodeName = String;
+
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
 pub enum NodeStatus {
     Starting,

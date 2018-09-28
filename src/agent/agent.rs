@@ -9,7 +9,7 @@ use serde_json;
 use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
-use super::super::common_rpc_types::{NodeStatus, ShellStartCodeChainRequest};
+use super::super::common_rpc_types::{NodeName, NodeStatus, ShellStartCodeChainRequest};
 use super::super::frontend::service::{Message as FrontendServiceMessage, ServiceSender as FrontendServiceSender};
 use super::super::frontend::types::DashboardNode;
 use super::super::jsonrpc;
@@ -21,7 +21,7 @@ use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
 pub enum State {
     Initializing,
     Normal {
-        name: String,
+        name: NodeName,
         address: Option<SocketAddr>,
         status: NodeStatus,
     },
@@ -52,7 +52,7 @@ impl State {
         }
     }
 
-    pub fn name(&self) -> Option<String> {
+    pub fn name(&self) -> Option<NodeName> {
         match self {
             State::Initializing => None,
             State::Normal {

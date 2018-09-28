@@ -2,13 +2,13 @@ use std::net::SocketAddr;
 
 use serde_json::Value;
 
-use super::super::common_rpc_types::NodeStatus;
+use super::super::common_rpc_types::{NodeName, NodeStatus};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentGetInfoResponse {
     pub status: NodeStatus,
-    pub name: String,
+    pub name: NodeName,
     pub address: Option<SocketAddr>,
 }
 
