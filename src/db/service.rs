@@ -5,7 +5,7 @@ use std::thread;
 
 use super::super::common_rpc_types::{NodeName, NodeStatus};
 use super::event::{Event, EventSubscriber};
-use super::types::{AgentState, Connections};
+use super::types::{AgentState, Connection, Connections};
 
 pub enum Message {
     InitializeAgent(AgentState, Sender<bool>),
@@ -135,7 +135,7 @@ impl Service {
         *before = after;
     }
 
-    fn socket_addrs_to_name(&self, addrs: &(SocketAddr, SocketAddr)) -> Option<(NodeName, NodeName)> {
+    fn socket_addrs_to_name(&self, addrs: &Connection) -> Option<(NodeName, NodeName)> {
         let (first, second) = addrs;
         let first_name = self.socket_addr_to_name(first);
         let second_name = self.socket_addr_to_name(second);
