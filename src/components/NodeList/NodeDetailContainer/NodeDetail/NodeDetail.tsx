@@ -145,11 +145,11 @@ export default class NodeDetail extends React.Component<Props, State> {
               </h4>
             </div>
             <div>
-              <h4>
+              <h5>
                 {nodeInfo.address
                   ? `${nodeInfo.name}(${nodeInfo.address})`
                   : nodeInfo.name}
-              </h4>
+              </h5>
             </div>
           </div>
           {nodeInfo.startOption && (
@@ -231,6 +231,7 @@ export default class NodeDetail extends React.Component<Props, State> {
           </div>
         </div>
         <div className="right-panel">
+          <div className="text-right">Agent : v0.1.0</div>
           <div className="mt-5 mb-5 d-flex align-items-center">
             <div className="chart-data-container d-flex justify-content-center">
               <div className="chart-data">

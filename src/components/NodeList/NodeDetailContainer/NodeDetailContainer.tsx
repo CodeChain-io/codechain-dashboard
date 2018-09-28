@@ -44,12 +44,13 @@ class NodeDetailContainer extends React.Component<Props> {
   }
 }
 const mapStateToProps = (state: RootState, ownProps: OwnProps) => ({
-  nodeInfo: state.nodeInfo[ownProps.match.params.nodeId]
+  nodeInfo: state.nodeInfo[decodeURI(ownProps.match.params.nodeId)]
 });
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps) => ({
   getNodeInfo: async () => {
-    const nodeInfo = await Apis.getNodeInfo(ownProps.match.params.nodeId);
-    dispatch(Actions.setNodeInfo(ownProps.match.params.nodeId, nodeInfo));
+    const nodeId = decodeURI(ownProps.match.params.nodeId);
+    const nodeInfo = await Apis.getNodeInfo(nodeId);
+    dispatch(Actions.setNodeInfo(nodeId, nodeInfo));
   }
 });
 export default connect(
