@@ -2,11 +2,12 @@ use std::collections::HashMap;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
-use super::super::common_rpc_types::NodeName;
+use super::super::common_rpc_types::{NodeName, NodeStatus};
 use super::event::{Event, EventSubscriber};
 use super::types::AgentState;
 
 pub enum Message {
+    InitializeAgent(AgentState, Sender<bool>),
     UpdateAgent(AgentState),
     GetAgent(NodeName, Sender<Option<AgentState>>),
     GetAgents(Sender<Vec<AgentState>>),
@@ -53,6 +54,9 @@ impl Service {
             .spawn(move || {
                 for message in rx {
                     match message {
+                        Message::InitializeAgent(agent_state, callback) => {
+                            service.initialize_agent(agent_state, callback);
+                        }
                         Message::UpdateAgent(agent_state) => {
                             service.update_agent(agent_state);
                         }
@@ -70,26 +74,50 @@ impl Service {
         service_sender
     }
 
-    fn update_agent(&mut self, after: AgentState) {
-        let name = after.name.clone();
-        let before_is_none = self.state.agent_state.get(&name).is_none();
-        if before_is_none {
+    fn initialize_agent(&mut self, state: AgentState, callback: Sender<bool>) {
+        let name = state.name.clone();
+        if !self.state.agent_state.contains_key(&name) {
             self.event_subscriber.on_event(Event::AgentUpdated {
                 before: None,
-                after: after.clone(),
+                after: state.clone(),
             });
-            self.state.agent_state.insert(name, after);
+            self.state.agent_state.insert(name, state);
+            if let Err(err) = callback.send(true) {
+                cerror!("Cannot send callback : {}", err);
+            }
             return
         }
 
+        let before = self.state.agent_state.get_mut(&name).unwrap();
+        if before.status != NodeStatus::Error {
+            cinfo!("Node {}({:?}) try to connect but a node with the same name already connected", name, before.status);
+            if let Err(err) = callback.send(false) {
+                cerror!("Cannot send callback : {}", err);
+            }
+            return
+        }
+
+        self.event_subscriber.on_event(Event::AgentUpdated {
+            before: None,
+            after: state.clone(),
+        });
+        *before = state;
+        if let Err(err) = callback.send(true) {
+            cerror!("Cannot send callback : {}", err);
+        }
+    }
+
+    fn update_agent(&mut self, after: AgentState) {
+        let name = after.name.clone();
+        debug_assert_ne!(None, self.state.agent_state.get(&name));
+
         let before = self.state.agent_state.get_mut(&name).expect("Checked");
 
-        if *before != after {
-            self.event_subscriber.on_event(Event::AgentUpdated {
-                before: Some(before.clone()),
-                after: after.clone(),
-            });
-        }
+        debug_assert_ne!(*before, after);
+        self.event_subscriber.on_event(Event::AgentUpdated {
+            before: Some(before.clone()),
+            after: after.clone(),
+        });
 
         *before = after;
     }
@@ -114,6 +142,13 @@ impl ServiceSender {
         Self {
             sender,
         }
+    }
+
+    pub fn initialize_agent_state(&self, agent_state: AgentState) -> bool {
+        let (tx, rx) = channel();
+        self.sender.send(Message::InitializeAgent(agent_state, tx)).expect("Should success update agent");
+        let result = rx.recv().expect("Should success initialize_agent_state");
+        result
     }
 
     pub fn update_agent_state(&self, agent_state: AgentState) {

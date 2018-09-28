@@ -15,7 +15,7 @@ use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
 use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum State {
     Initializing,
     Normal {
@@ -23,6 +23,17 @@ pub enum State {
         address: Option<SocketAddr>,
         status: NodeStatus,
     },
+    Stop {
+        name: NodeName,
+        address: Option<SocketAddr>,
+        status: NodeStatus,
+        cause: StopCause,
+    },
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum StopCause {
+    AlreadyConnected,
 }
 
 impl State {
@@ -54,6 +65,10 @@ impl State {
         match self {
             State::Initializing => None,
             State::Normal {
+                name,
+                ..
+            } => Some(name.clone()),
+            State::Stop {
                 name,
                 ..
             } => Some(name.clone()),
@@ -92,6 +107,7 @@ pub struct Agent {
 pub enum AgentCleanupReason {
     Error(String),
     Success,
+    AlreadyConnected,
     Unexpected,
 }
 
@@ -125,8 +141,8 @@ impl Agent {
         thread::Builder::new()
             .name(format!("agent-{}", id))
             .spawn(move || match agent.run() {
-                Ok(_) => {
-                    agent.clean_up(AgentCleanupReason::Success);
+                Ok(StopCause::AlreadyConnected) => {
+                    agent.clean_up(AgentCleanupReason::AlreadyConnected);
                 }
                 Err(err) => {
                     cerror!("Agent failed : {}", err);
@@ -138,10 +154,17 @@ impl Agent {
         sender
     }
 
-    fn run(&mut self) -> Result<(), String> {
+    fn run(&mut self) -> Result<StopCause, String> {
         cinfo!("Agent-{} started", self.id);
 
         self.update()?;
+        if let State::Stop {
+            cause,
+            ..
+        } = *self.state.read().unwrap()
+        {
+            return Ok(cause)
+        }
         self.service_sender
             .send(ServiceMessage::AddAgent(self.id, self.sender.clone()))
             .map_err(|err| format!("AddAgent failed {}", err))?;
@@ -149,6 +172,13 @@ impl Agent {
         loop {
             ctrace!("Agent-{} update", self.id);
             self.update()?;
+            if let State::Stop {
+                cause,
+                ..
+            } = *self.state.read().unwrap()
+            {
+                return Ok(cause)
+            }
             thread::sleep(Duration::new(1, 0));
         }
     }
@@ -163,52 +193,29 @@ impl Agent {
             status: info.status,
         };
 
-        self.db_service.update_agent_state(db::AgentState {
-            name: info.name,
-            status: info.status,
-            address: info.address,
-        });
-
-        //        if new_state != *state {
-        //            let mut diff = json!({});
-        //            diff["name"] = serde_json::to_value(new_state.name()).unwrap();
-        //            if state.address() != new_state.address() {
-        //                diff["address"] = serde_json::to_value(new_state.address()).unwrap();
-        //            }
-        //            if state.status() != new_state.status() {
-        //                diff["status"] = serde_json::to_value(new_state.status()).unwrap();
-        //            }
-        //
-        //            match *state {
-        //                State::Initializing => {
-        //                    let dashboard_node = frontend::DashboardNode::from_state(&new_state);
-        //                    let message =
-        //                        jsonrpc::serialize_notification("dashboard_updated", json!({ "nodes": [dashboard_node] }));
-        //                    self.frontend_service
-        //                        .send(frontend::Message::SendEvent(message))
-        //                        .expect("Should success send event");
-        //                }
-        //                State::Normal {
-        //                    ..
-        //                } => {
-        //                    let message = jsonrpc::serialize_notification(
-        //                        "dashboard_updated",
-        //                        json!({
-        //                        "nodes": [diff.clone()]
-        //                    }),
-        //                    );
-        //                    self.frontend_service
-        //                        .send(frontend::Message::SendEvent(message))
-        //                        .expect("Should success send event");
-        //                    let message = jsonrpc::serialize_notification("node_updated", diff);
-        //                    self.frontend_service
-        //                        .send(frontend::Message::SendEvent(message))
-        //                        .expect("Should success send event");
-        //                }
-        //            }
-        //
-        //            cdebug!("Data updated, send notification");
-        //        }
+        if let State::Initializing = *state {
+            let success = self.db_service.initialize_agent_state(db::AgentState {
+                name: info.name.clone(),
+                status: info.status,
+                address: info.address,
+            });
+            if !success {
+                *state = State::Stop {
+                    name: info.name.clone(),
+                    address: info.address,
+                    status: info.status,
+                    cause: StopCause::AlreadyConnected,
+                };
+                return Ok(())
+            }
+        } else if *state != new_state {
+            ctrace!("Update state from {:?} to {:?}", state, new_state);
+            self.db_service.update_agent_state(db::AgentState {
+                name: info.name,
+                status: info.status,
+                address: info.address,
+            });
+        }
 
         *state = new_state;
         Ok(())
@@ -229,6 +236,9 @@ impl Agent {
                 let err = "Unexpected cleanup";
                 cerror!("Agent cleanuped because {}", err);
                 (true, err.to_string())
+            }
+            AgentCleanupReason::AlreadyConnected => {
+                (true, "An agent which has same name is already connected".to_string())
             }
             AgentCleanupReason::Success => (false, "".to_string()),
         };
