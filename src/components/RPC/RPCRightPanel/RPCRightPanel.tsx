@@ -18,6 +18,10 @@ import "./RPCRightPanel.css";
 
 interface OwnProps {
   className?: string;
+  rpc?: {
+    method: string;
+    params: object[] | object;
+  };
 }
 
 interface StateProps {
@@ -28,6 +32,7 @@ interface State {
   checkedNodeList: string[];
   checkedSelectedNodeList: string[];
   selectedNodeList: string[];
+  jsonRPCInput: string;
 }
 
 interface DispatchProps {
@@ -42,8 +47,16 @@ class RPCRightPanel extends React.Component<Props, State> {
     this.state = {
       checkedNodeList: [],
       checkedSelectedNodeList: [],
-      selectedNodeList: []
+      selectedNodeList: [],
+      jsonRPCInput: props.rpc ? this.createJSONRPCString(props.rpc) : ""
     };
+  }
+  public componentDidUpdate(prevProps: Props) {
+    if (this.props.rpc && this.props.rpc !== prevProps.rpc) {
+      this.setState({
+        jsonRPCInput: this.createJSONRPCString(this.props.rpc)
+      });
+    }
   }
   public componentDidMount() {
     if (!this.props.chainNetworks) {
@@ -55,7 +68,8 @@ class RPCRightPanel extends React.Component<Props, State> {
     const {
       selectedNodeList,
       checkedNodeList,
-      checkedSelectedNodeList
+      checkedSelectedNodeList,
+      jsonRPCInput
     } = this.state;
     return (
       <div className={`${className} rpc-right-panel`}>
@@ -73,6 +87,8 @@ class RPCRightPanel extends React.Component<Props, State> {
             aria-label="RPC area"
             placeholder="Type json rpc"
             id="rpc-input"
+            value={jsonRPCInput}
+            onChange={this.handleChangeJSONInput}
           />
         </div>
         <div>
@@ -176,6 +192,19 @@ class RPCRightPanel extends React.Component<Props, State> {
     );
   }
 
+  private createJSONRPCString = (rpc: {
+    method: string;
+    params: object[] | object;
+  }) => {
+    const jsonForamt = {
+      jsonrpc: "2.0",
+      method: rpc.method,
+      params: rpc.params,
+      id: null
+    };
+    return JSON.stringify(jsonForamt, null, 2);
+  };
+
   private getAvailableNodeList = () => {
     if (!this.props.chainNetworks) {
       return [];
@@ -212,6 +241,10 @@ class RPCRightPanel extends React.Component<Props, State> {
     this.setState({
       checkedSelectedNodeList: value
     });
+  };
+
+  private handleChangeJSONInput = (e: any) => {
+    this.setState({ jsonRPCInput: e.target.value });
   };
 
   private moveRightAll = () => {

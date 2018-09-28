@@ -4,6 +4,12 @@ import "./RPCLeftPanel.css";
 
 interface Props {
   className?: string;
+  onClickHistoryItem: (
+    rpc: {
+      method: string;
+      params: object[] | object;
+    }
+  ) => void;
 }
 export class RPCLeftPanel extends React.Component<Props> {
   public render() {
@@ -17,7 +23,11 @@ export class RPCLeftPanel extends React.Component<Props> {
         <div className="history-container">
           {_.map(_.range(10), index => {
             return (
-              <div key={index} className="history-item">
+              <div
+                key={index}
+                className="history-item"
+                onClick={this.onClickItem}
+              >
                 <p className="history-item-name mb-0">
                   Dummy_getBestBlockNumber
                 </p>
@@ -34,6 +44,13 @@ export class RPCLeftPanel extends React.Component<Props> {
       </div>
     );
   }
+
+  private onClickItem = () => {
+    this.props.onClickHistoryItem({
+      method: "Dummy_getBestBlockNumber",
+      params: ["DummyParam", 1, "number", "123"]
+    });
+  };
 }
 
 export default RPCLeftPanel;
