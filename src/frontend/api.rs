@@ -119,8 +119,8 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
 }
 
 fn real_dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetworkResponse> {
-    let agent_infos = context.agent_service.read_state().get_agent_info();
-    let dashboard_nodes = agent_infos.iter().filter_map(DashboardNode::from_state).collect();
+    let agents_state = context.db_service.get_agents_state();
+    let dashboard_nodes = agents_state.iter().map(|agent| DashboardNode::from_db_state(agent)).collect();
     response(DashboardGetNetworkResponse {
         nodes: dashboard_nodes,
         connections: Vec::new(),
@@ -129,10 +129,9 @@ fn real_dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetwo
 
 fn real_node_get_info(context: Context, args: (String,)) -> RPCResponse<NodeGetInfoResponse> {
     let (name,) = args;
-    let agent = context.agent_service.get_agent(name).ok_or(RPCError::AgentNotFound)?;
-    let state = agent.read_state();
-    let node_response = NodeGetInfoResponse::from_state(&*state).ok_or(RPCError::AgentNotFound)?;
-    response(node_response)
+    let agent_state = context.db_service.get_agent_state(&name).ok_or(RPCError::AgentNotFound)?;
+
+    response(NodeGetInfoResponse::from_db_state(&agent_state))
 }
 
 fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {

@@ -1,12 +1,11 @@
 use std::sync::mpsc::{channel, SendError, Sender};
-use std::sync::{Arc, RwLock, RwLockReadGuard};
+use std::sync::{Arc, RwLock};
 use std::thread;
 use std::vec::Vec;
 
 use super::super::common_rpc_types::NodeName;
-use super::super::frontend;
+use super::super::db;
 use super::super::jsonrpc;
-use super::agent;
 use super::agent::{Agent, AgentSender};
 
 pub struct State {
@@ -19,11 +18,6 @@ impl State {
             agents: Vec::new(),
         }
     }
-
-    pub fn get_agent_info(&self) -> Vec<agent::State> {
-        let agent_states = self.agents.iter().map(|(_, agent)| agent.read_state().clone()).collect();
-        agent_states
-    }
 }
 
 #[derive(Clone)]
@@ -35,10 +29,6 @@ pub struct ServiceSender {
 impl ServiceSender {
     pub fn send(&self, message: Message) -> Result<(), SendError<Message>> {
         self.sender.send(message)
-    }
-
-    pub fn read_state(&self) -> RwLockReadGuard<State> {
-        self.state.read().expect("Should success read service state")
     }
 
     pub fn get_agent(&self, name: NodeName) -> Option<AgentSender> {
@@ -59,7 +49,7 @@ pub struct Service {
     state: Arc<RwLock<State>>,
     next_id: i32,
     sender: ServiceSender,
-    frontend_service: frontend::ServiceSender,
+    db_service: db::ServiceSender,
 }
 
 pub enum Message {
@@ -69,7 +59,7 @@ pub enum Message {
 }
 
 impl Service {
-    pub fn run_thread(frontend_service: frontend::ServiceSender) -> ServiceSender {
+    pub fn run_thread(db_service: db::ServiceSender) -> ServiceSender {
         let (tx, rx) = channel();
         let state = Arc::new(RwLock::new(State::new()));
         let service_sender = ServiceSender {
@@ -77,7 +67,7 @@ impl Service {
             state: state.clone(),
         };
 
-        let mut service = Service::new(service_sender.clone(), state, frontend_service);
+        let mut service = Service::new(service_sender.clone(), state, db_service);
 
         thread::Builder::new()
             .name("agent service".to_string())
@@ -101,19 +91,19 @@ impl Service {
         service_sender
     }
 
-    fn new(sender: ServiceSender, state: Arc<RwLock<State>>, frontend_service: frontend::ServiceSender) -> Self {
+    fn new(sender: ServiceSender, state: Arc<RwLock<State>>, db_service: db::ServiceSender) -> Self {
         Service {
             state,
             next_id: 0_i32,
             sender,
-            frontend_service,
+            db_service,
         }
     }
 
     fn create_agent(&mut self, jsonrpc_context: jsonrpc::Context) {
         let id = self.next_id;
         self.next_id += 1;
-        Agent::run_thread(id, jsonrpc_context, self.sender.clone(), self.frontend_service.clone());
+        Agent::run_thread(id, jsonrpc_context, self.sender.clone(), self.db_service.clone());
         cdebug!("Agent {} initialization starts", id);
     }
 

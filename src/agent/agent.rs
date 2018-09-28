@@ -5,12 +5,11 @@ use std::sync::{RwLock, RwLockReadGuard};
 use std::thread;
 use std::time::Duration;
 
-use serde_json;
 use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
 use super::super::common_rpc_types::{NodeName, NodeStatus, ShellStartCodeChainRequest};
-use super::super::frontend;
+use super::super::db;
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
@@ -31,26 +30,26 @@ impl State {
         State::Initializing
     }
 
-    pub fn status(&self) -> Option<NodeStatus> {
-        match self {
-            State::Initializing => None,
-            State::Normal {
-                status,
-                ..
-            } => Some(*status),
-        }
-    }
-
-    pub fn address(&self) -> Option<SocketAddr> {
-        match self {
-            State::Initializing => None,
-            State::Normal {
-                address,
-                ..
-            } => *address,
-        }
-    }
-
+    //    pub fn status(&self) -> Option<NodeStatus> {
+    //        match self {
+    //            State::Initializing => None,
+    //            State::Normal {
+    //                status,
+    //                ..
+    //            } => Some(*status),
+    //        }
+    //    }
+    //
+    //    pub fn address(&self) -> Option<SocketAddr> {
+    //        match self {
+    //            State::Initializing => None,
+    //            State::Normal {
+    //                address,
+    //                ..
+    //            } => *address,
+    //        }
+    //    }
+    //
     pub fn name(&self) -> Option<NodeName> {
         match self {
             State::Initializing => None,
@@ -87,7 +86,7 @@ pub struct Agent {
     state: Arc<RwLock<State>>,
     service_sender: ServiceSender,
     closed: bool,
-    frontend_service: frontend::ServiceSender,
+    db_service: db::ServiceSender,
 }
 
 pub enum AgentCleanupReason {
@@ -101,7 +100,7 @@ impl Agent {
         id: i32,
         jsonrpc_context: jsonrpc::Context,
         service_sender: ServiceSender,
-        frontend_service: frontend::ServiceSender,
+        db_service: db::ServiceSender,
     ) -> Self {
         let state = Arc::new(RwLock::new(State::new()));
         Self {
@@ -110,7 +109,7 @@ impl Agent {
             state,
             service_sender,
             closed: false,
-            frontend_service,
+            db_service,
         }
     }
 
@@ -118,9 +117,9 @@ impl Agent {
         id: i32,
         jsonrpc_context: jsonrpc::Context,
         service_sender: ServiceSender,
-        frontend_service: frontend::ServiceSender,
+        db_service: db::ServiceSender,
     ) -> AgentSender {
-        let mut agent = Self::new(id, jsonrpc_context, service_sender, frontend_service);
+        let mut agent = Self::new(id, jsonrpc_context, service_sender, db_service);
         let sender = agent.sender.clone();
 
         thread::Builder::new()
@@ -159,51 +158,57 @@ impl Agent {
 
         let mut state = self.state.write().expect("Should success getting agent state");
         let new_state = State::Normal {
-            name: info.name,
+            name: info.name.clone(),
             address: info.address,
             status: info.status,
         };
 
-        if new_state != *state {
-            let mut diff = json!({});
-            diff["name"] = serde_json::to_value(new_state.name()).unwrap();
-            if state.address() != new_state.address() {
-                diff["address"] = serde_json::to_value(new_state.address()).unwrap();
-            }
-            if state.status() != new_state.status() {
-                diff["status"] = serde_json::to_value(new_state.status()).unwrap();
-            }
+        self.db_service.update_agent_state(db::AgentState {
+            name: info.name,
+            status: info.status,
+            address: info.address,
+        });
 
-            match *state {
-                State::Initializing => {
-                    let dashboard_node = frontend::DashboardNode::from_state(&new_state);
-                    let message =
-                        jsonrpc::serialize_notification("dashboard_updated", json!({ "nodes": [dashboard_node] }));
-                    self.frontend_service
-                        .send(frontend::Message::SendEvent(message))
-                        .expect("Should success send event");
-                }
-                State::Normal {
-                    ..
-                } => {
-                    let message = jsonrpc::serialize_notification(
-                        "dashboard_updated",
-                        json!({
-                        "nodes": [diff.clone()]
-                    }),
-                    );
-                    self.frontend_service
-                        .send(frontend::Message::SendEvent(message))
-                        .expect("Should success send event");
-                    let message = jsonrpc::serialize_notification("node_updated", diff);
-                    self.frontend_service
-                        .send(frontend::Message::SendEvent(message))
-                        .expect("Should success send event");
-                }
-            }
-
-            cdebug!("Data updated, send notification");
-        }
+        //        if new_state != *state {
+        //            let mut diff = json!({});
+        //            diff["name"] = serde_json::to_value(new_state.name()).unwrap();
+        //            if state.address() != new_state.address() {
+        //                diff["address"] = serde_json::to_value(new_state.address()).unwrap();
+        //            }
+        //            if state.status() != new_state.status() {
+        //                diff["status"] = serde_json::to_value(new_state.status()).unwrap();
+        //            }
+        //
+        //            match *state {
+        //                State::Initializing => {
+        //                    let dashboard_node = frontend::DashboardNode::from_state(&new_state);
+        //                    let message =
+        //                        jsonrpc::serialize_notification("dashboard_updated", json!({ "nodes": [dashboard_node] }));
+        //                    self.frontend_service
+        //                        .send(frontend::Message::SendEvent(message))
+        //                        .expect("Should success send event");
+        //                }
+        //                State::Normal {
+        //                    ..
+        //                } => {
+        //                    let message = jsonrpc::serialize_notification(
+        //                        "dashboard_updated",
+        //                        json!({
+        //                        "nodes": [diff.clone()]
+        //                    }),
+        //                    );
+        //                    self.frontend_service
+        //                        .send(frontend::Message::SendEvent(message))
+        //                        .expect("Should success send event");
+        //                    let message = jsonrpc::serialize_notification("node_updated", diff);
+        //                    self.frontend_service
+        //                        .send(frontend::Message::SendEvent(message))
+        //                        .expect("Should success send event");
+        //                }
+        //            }
+        //
+        //            cdebug!("Data updated, send notification");
+        //        }
 
         *state = new_state;
         Ok(())
@@ -231,6 +236,20 @@ impl Agent {
         let send_result = self.service_sender.send(ServiceMessage::RemoveAgent(self.id));
         if let Err(error) = send_result {
             cerror!("Agent cleanup error {}", error);
+        }
+
+        let state = self.state.read().expect("Should success read");
+        if let State::Normal {
+            name,
+            address,
+            ..
+        } = state.clone()
+        {
+            self.db_service.update_agent_state(db::AgentState {
+                name,
+                status: NodeStatus::Error,
+                address,
+            });
         }
 
         let ws_close_result = self.sender.jsonrpc_context.ws_sender.close_with_reason(

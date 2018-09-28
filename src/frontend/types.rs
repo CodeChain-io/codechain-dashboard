@@ -4,10 +4,12 @@ use cprimitives::H256;
 
 use super::super::agent;
 use super::super::common_rpc_types::{NodeName, NodeStatus};
+use super::super::db;
 
 #[derive(Clone)]
 pub struct Context {
     pub agent_service: agent::ServiceSender,
+    pub db_service: db::ServiceSender,
 }
 
 pub type Event = String;
@@ -76,26 +78,19 @@ pub enum DashboardNode {
 }
 
 impl DashboardNode {
-    pub fn from_state(state: &agent::State) -> Option<Self> {
-        match state {
-            agent::State::Initializing => None,
-            agent::State::Normal {
-                name,
-                status,
-                address,
-            } => Some(DashboardNode::Normal {
-                status: *status,
-                name: name.clone(),
-                address: *address,
-                version: NodeVersion {
-                    version: String::new(),
-                    hash: String::new(),
-                },
-                best_block_id: BlockId {
-                    block_number: 0,
-                    hash: H256::new(),
-                },
-            }),
+    pub fn from_db_state(state: &db::AgentState) -> Self {
+        DashboardNode::Normal {
+            status: state.status,
+            name: state.name.clone(),
+            address: state.address,
+            version: NodeVersion {
+                version: String::new(),
+                hash: String::new(),
+            },
+            best_block_id: BlockId {
+                block_number: 0,
+                hash: H256::new(),
+            },
         }
     }
 }
@@ -180,20 +175,11 @@ impl NodeGetInfoResponse {
         }
     }
 
-    pub fn from_state(state: &agent::State) -> Option<Self> {
-        match state {
-            agent::State::Initializing => None,
-            agent::State::Normal {
-                status,
-                address,
-                name,
-            } => {
-                let mut dummy = Self::dummy();
-                dummy.address = *address;
-                dummy.status = *status;
-                dummy.name = name.clone();
-                Some(dummy)
-            }
-        }
+    pub fn from_db_state(state: &db::AgentState) -> Self {
+        let mut dummy = Self::dummy();
+        dummy.address = state.address;
+        dummy.status = state.status;
+        dummy.name = state.name.clone();
+        dummy
     }
 }

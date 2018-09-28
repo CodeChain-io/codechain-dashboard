@@ -17,6 +17,8 @@ extern crate ws;
 mod logger;
 mod agent;
 mod common_rpc_types;
+mod db;
+mod event_propagator;
 mod frontend;
 mod jsonrpc;
 mod router;
@@ -34,6 +36,7 @@ use iron::status;
 use ws::listen;
 
 use self::agent::SendAgentRPC;
+use self::event_propagator::EventPropagator;
 use self::logger::init as logger_init;
 use self::router::Router;
 
@@ -41,7 +44,9 @@ fn main() {
     logger_init().expect("Logger should be initialized");
 
     let frontend_service_sender = frontend::Service::run_thread();
-    let agent_service_sender = agent::Service::run_thread(frontend_service_sender.clone());
+    let event_propagater = Box::new(EventPropagator::new(frontend_service_sender.clone()));
+    let db_service_sender = db::Service::run_thread(event_propagater);
+    let agent_service_sender = agent::Service::run_thread(db_service_sender.clone());
     let agent_service_for_frontend = agent_service_sender.clone();
     let web_handler = WebHandler::new(agent_service_sender.clone());
 
@@ -53,6 +58,7 @@ fn main() {
             frontend::add_routing(Arc::get_mut(&mut frontend_router).unwrap());
             let frontend_context = frontend::Context {
                 agent_service: agent_service_for_frontend,
+                db_service: db_service_sender.clone(),
             };
             listen("127.0.0.1:3012", move |out| frontend::WebSocketHandler {
                 out,
