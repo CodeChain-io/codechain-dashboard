@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
+use super::super::common_rpc_types as rpc_type;
 use super::super::common_rpc_types::{NodeName, NodeStatus};
 use super::event::{Event, EventSubscriber};
 use super::types::{AgentState, Connection, Connections};
@@ -12,6 +13,7 @@ pub enum Message {
     UpdateAgent(AgentState),
     GetAgent(NodeName, Sender<Option<AgentState>>),
     GetAgents(Sender<Vec<AgentState>>),
+    GetConnections(Sender<Vec<rpc_type::Connection>>),
 }
 
 #[derive(Clone)]
@@ -68,6 +70,9 @@ impl Service {
                         }
                         Message::GetAgents(callback) => {
                             service.get_agents(callback);
+                        }
+                        Message::GetConnections(callback) => {
+                            service.get_connections(callback);
                         }
                     }
                 }
@@ -135,7 +140,7 @@ impl Service {
         *before = after;
     }
 
-    fn socket_addrs_to_name(&self, addrs: &Connection) -> Option<(NodeName, NodeName)> {
+    fn socket_addrs_to_name(&self, addrs: &Connection) -> Option<rpc_type::Connection> {
         let (first, second) = addrs;
         let first_name = self.socket_addr_to_name(first);
         let second_name = self.socket_addr_to_name(second);
@@ -162,6 +167,15 @@ impl Service {
     fn get_agents(&self, callback: Sender<Vec<AgentState>>) {
         let states: Vec<AgentState> = self.state.agent_state.values().into_iter().map(|state| state.clone()).collect();
         if let Err(err) = callback.send(states) {
+            cerror!("Callback error {}", err);
+        }
+    }
+
+    fn get_connections(&self, callback: Sender<Vec<rpc_type::Connection>>) {
+        let connections: Vec<Connection> = self.state.connection.get_all();
+        let rpc_connections =
+            connections.iter().filter_map(|connection| self.socket_addrs_to_name(connection)).collect();
+        if let Err(err) = callback.send(rpc_connections) {
             cerror!("Callback error {}", err);
         }
     }
@@ -197,5 +211,12 @@ impl ServiceSender {
         self.sender.send(Message::GetAgents(tx)).expect("Should success send request");
         let agents_state = rx.recv().expect("Should success get_agents_state");
         agents_state
+    }
+
+    pub fn get_connections(&self) -> Vec<rpc_type::Connection> {
+        let (tx, rx) = channel();
+        self.sender.send(Message::GetConnections(tx)).expect("Should success send request");
+        let connections = rx.recv().expect("Should success get_connections");
+        connections
     }
 }

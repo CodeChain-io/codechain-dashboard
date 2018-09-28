@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use cprimitives::H256;
 
 use super::super::agent;
+use super::super::common_rpc_types;
 use super::super::common_rpc_types::{NodeName, NodeStatus};
 use super::super::db;
 
@@ -100,6 +101,16 @@ impl DashboardNode {
 pub struct NodeConnection {
     pub node_a: String,
     pub node_b: String,
+}
+
+impl NodeConnection {
+    pub fn from_connection(connection: &common_rpc_types::Connection) -> Self {
+        let (node_a, node_b) = connection;
+        Self {
+            node_a: node_a.clone(),
+            node_b: node_b.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]

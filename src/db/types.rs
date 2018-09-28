@@ -87,4 +87,8 @@ impl Connections {
             (b, a)
         }
     }
+
+    pub fn get_all(&self) -> Vec<Connection> {
+        self.data.iter().map(|connection| *connection).collect()
+    }
 }

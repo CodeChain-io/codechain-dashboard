@@ -120,10 +120,11 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
 
 fn real_dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetworkResponse> {
     let agents_state = context.db_service.get_agents_state();
+    let connections = context.db_service.get_connections();
     let dashboard_nodes = agents_state.iter().map(|agent| DashboardNode::from_db_state(agent)).collect();
     response(DashboardGetNetworkResponse {
         nodes: dashboard_nodes,
-        connections: Vec::new(),
+        connections: connections.iter().map(|connection| NodeConnection::from_connection(connection)).collect(),
     })
 }
 

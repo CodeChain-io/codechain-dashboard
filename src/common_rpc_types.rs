@@ -15,3 +15,5 @@ pub struct ShellStartCodeChainRequest {
     pub env: String,
     pub args: String,
 }
+
+pub type Connection = (NodeName, NodeName);
