@@ -180,8 +180,34 @@ class RPCRightPanel extends React.Component<Props, State> {
         </div>
         <div>
           <Label for="response-input">Response</Label>
+          <div className="rpc-response-tab-container">
+            <div className="rpc-response-tab d-inline-block active">
+              <span>Agent 1 response</span>
+            </div>
+            <div className="rpc-response-tab d-inline-block">
+              <span>Agent 2 response</span>
+            </div>
+            <div className="rpc-response-tab d-inline-block">
+              <span>Agent 3 response</span>
+            </div>
+            <div className="rpc-response-tab d-inline-block">
+              <span>Agent 3 response</span>
+            </div>
+            <div className="rpc-response-tab d-inline-block">
+              <span>Agent 3 response</span>
+            </div>
+            <div className="rpc-response-tab d-inline-block">
+              <span>Agent 3 response</span>
+            </div>
+            <div className="rpc-response-tab d-inline-block">
+              <span>Agent 3 response</span>
+            </div>
+            <div className="rpc-response-tab d-inline-block">
+              <span>Agent 5 response</span>
+            </div>
+          </div>
           <textarea
-            className="form-control rpc-input"
+            className="form-control rpc-response"
             aria-label="response area"
             readOnly={true}
             id="response-input"

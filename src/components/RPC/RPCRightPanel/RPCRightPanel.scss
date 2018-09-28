@@ -10,12 +10,36 @@
     height: 250px;
     resize: none;
   }
+  .rpc-response {
+    height: 200px;
+    resize: none;
+  }
+  .rpc-response-tab-container {
+    height: 50px;
+    margin-bottom: 5px;
+    overflow: scroll;
+    white-space: nowrap;
+
+    .rpc-response-tab {
+      margin-right: 8px;
+      padding-left: 8px;
+      padding-right: 8px;
+      border: 1px solid #cfd4d9;
+      cursor: pointer;
+
+      &.active {
+        background-color: #e9ecef;
+      }
+      span {
+        line-height: 40px;
+      }
+    }
+  }
   .select-btn {
     width: 50px;
     font-size: 0.7rem;
     padding: 3px;
   }
-
   a {
     text-decoration: underline !important;
     color: black;
