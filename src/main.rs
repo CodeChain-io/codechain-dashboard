@@ -60,7 +60,7 @@ fn main() {
                 agent_service: agent_service_for_frontend,
                 db_service: db_service_sender.clone(),
             };
-            listen("127.0.0.1:3012", move |out| frontend::WebSocketHandler {
+            listen("0.0.0.0:3012", move |out| frontend::WebSocketHandler {
                 out,
                 count: count.clone(),
                 context: frontend_context.clone(),
