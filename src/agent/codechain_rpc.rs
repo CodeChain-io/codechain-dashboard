@@ -32,6 +32,14 @@ impl CodeChainRPC {
         }))
     }
 
+    pub fn version(&self, status: NodeStatus) -> Result<Option<String>, String> {
+        self.call_rpc(status, "version")
+    }
+
+    pub fn commit_hash(&self, status: NodeStatus) -> Result<Option<String>, String> {
+        self.call_rpc(status, "commitHash")
+    }
+
     fn call_rpc<T>(&self, status: NodeStatus, method: &str) -> Result<T, String>
     where
         T: Default + DeserializeOwned, {

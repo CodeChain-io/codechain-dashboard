@@ -32,3 +32,10 @@ pub struct BlockId {
     pub block_number: i64,
     pub hash: H256,
 }
+
+#[derive(Debug, Serialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeVersion {
+    pub version: String,
+    pub hash: String,
+}

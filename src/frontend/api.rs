@@ -1,10 +1,10 @@
 use super::super::agent::SendAgentRPC;
-use super::super::common_rpc_types::{BlockId, NodeStatus, ShellStartCodeChainRequest};
+use super::super::common_rpc_types::{BlockId, NodeStatus, NodeVersion, ShellStartCodeChainRequest};
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
     Context, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
-    NodeConnection, NodeGetInfoResponse, NodeVersion, StartOption,
+    NodeConnection, NodeGetInfoResponse, StartOption,
 };
 
 pub fn add_routing(router: &mut Router<Context>) {
@@ -44,10 +44,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 name: "Gilyoung".to_string(),
                 status: NodeStatus::Run,
                 address: Some("127.0.0.1:3485".parse().unwrap()),
-                version: NodeVersion {
+                version: Some(NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
-                },
+                }),
                 best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -57,10 +57,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 name: "Juhyung".to_string(),
                 status: NodeStatus::Run,
                 address: Some("127.0.0.2:3486".parse().unwrap()),
-                version: NodeVersion {
+                version: Some(NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
-                },
+                }),
                 best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -70,10 +70,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 name: "Hi stopped test node1".to_string(),
                 status: NodeStatus::Stop,
                 address: Some("42.124.241.2:3487".parse().unwrap()),
-                version: NodeVersion {
+                version: Some(NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
-                },
+                }),
                 best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -83,10 +83,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 name: "Starting node".to_string(),
                 status: NodeStatus::Starting,
                 address: Some("127.0.0.3:3488".parse().unwrap()),
-                version: NodeVersion {
+                version: Some(NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
-                },
+                }),
                 best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -96,10 +96,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                 name: "Test Error node".to_string(),
                 status: NodeStatus::Error,
                 address: Some("127.0.0.3:3489".parse().unwrap()),
-                version: NodeVersion {
+                version: Some(NodeVersion {
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
-                },
+                }),
                 best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
@@ -139,19 +139,19 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
     response(NodeGetInfoResponse {
         address: Some("127.0.0.1:3485".parse().unwrap()),
         name: "Dummy".to_string(),
-        version: NodeVersion {
+        version: Some(NodeVersion {
             version: "0.1.0".to_string(),
             hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
-        },
+        }),
         status: NodeStatus::Stop,
         start_option: Some(StartOption {
             env: "RUST_LOG=trace".to_string(),
             args: "-c husky".to_string(),
         }),
-        best_block_id: BlockId {
+        best_block_id: Some(BlockId {
             block_number: 0,
             hash: Default::default(),
-        },
+        }),
         pending_parcels: Vec::new(),
         peers: Vec::new(),
         whitelist: NetworkPermission {

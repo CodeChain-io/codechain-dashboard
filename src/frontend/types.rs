@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use super::super::agent;
 use super::super::common_rpc_types;
-use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus};
+use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus, NodeVersion};
 use super::super::db;
 
 #[derive(Clone)]
@@ -24,13 +24,6 @@ pub struct Parcel {
 pub struct NetworkPermission {
     pub list: Vec<SocketAddr>,
     pub enabled: bool,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NodeVersion {
-    pub version: String,
-    pub hash: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -57,7 +50,7 @@ pub enum DashboardNode {
     Normal {
         status: NodeStatus,
         address: Option<SocketAddr>,
-        version: NodeVersion,
+        version: Option<NodeVersion>,
         best_block_id: Option<BlockId>,
         name: NodeName,
     },
@@ -75,11 +68,8 @@ impl DashboardNode {
             status: state.status,
             name: state.name.clone(),
             address: state.address,
-            version: NodeVersion {
-                version: String::new(),
-                hash: String::new(),
-            },
-            best_block_id: state.best_block_id,
+            version: state.version.clone(),
+            best_block_id: state.best_block_id.clone(),
         }
     }
 }
@@ -122,8 +112,8 @@ pub struct NodeGetInfoResponse {
     pub status: NodeStatus,
     pub start_option: Option<StartOption>,
     pub address: Option<SocketAddr>,
-    pub version: NodeVersion,
-    pub best_block_id: BlockId,
+    pub version: Option<NodeVersion>,
+    pub best_block_id: Option<BlockId>,
     pub pending_parcels: Vec<Parcel>,
     pub peers: Vec<SocketAddr>,
     pub whitelist: NetworkPermission,
@@ -137,16 +127,16 @@ impl NodeGetInfoResponse {
         NodeGetInfoResponse {
             name: "Dummy".to_string(),
             address: Some("127.0.0.1:3485".parse().unwrap()),
-            version: NodeVersion {
+            version: Some(NodeVersion {
                 version: "0.1.0".to_string(),
                 hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
-            },
+            }),
             status: NodeStatus::Run,
             start_option: None,
-            best_block_id: BlockId {
+            best_block_id: Some(BlockId {
                 block_number: 0,
                 hash: Default::default(),
-            },
+            }),
             pending_parcels: Vec::new(),
             peers: Vec::new(),
             whitelist: NetworkPermission {
@@ -179,6 +169,9 @@ impl NodeGetInfoResponse {
         dummy.address = state.address;
         dummy.status = state.status;
         dummy.name = state.name.clone();
+        dummy.peers = state.peers.clone();
+        dummy.best_block_id = state.best_block_id.clone();
+        dummy.version = state.version.clone();
         dummy
     }
 }

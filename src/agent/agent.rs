@@ -10,7 +10,7 @@ use serde_json;
 use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
-use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus, ShellStartCodeChainRequest};
+use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest};
 use super::super::db;
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
@@ -227,6 +227,14 @@ impl Agent {
 
         let peers: Vec<SocketAddr> = self.codechain_rpc.get_peers(info.status)?;
         let best_block_id: Option<BlockId> = self.codechain_rpc.get_best_block_id(info.status)?;
+        let codechain_version = self.codechain_rpc.version(info.status)?;
+        let codechain_version_hash = self.codechain_rpc.commit_hash(info.status)?;
+        let version = codechain_version.and_then(|version| {
+            codechain_version_hash.map(|hash| NodeVersion {
+                version,
+                hash,
+            })
+        });
 
         ctrace!("Update state from {:?} to {:?}", state, new_state);
         self.db_service.update_agent_state(db::AgentState {
@@ -235,6 +243,7 @@ impl Agent {
             address: info.address,
             peers,
             best_block_id,
+            version,
         });
         *state = new_state;
 
