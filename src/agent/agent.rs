@@ -236,6 +236,8 @@ impl Agent {
             })
         });
         let pending_parcels = self.codechain_rpc.get_pending_parcels(info.status)?;
+        let whitelist = self.codechain_rpc.get_whitelist(info.status)?;
+        let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
 
         ctrace!("Update state from {:?} to {:?}", state, new_state);
         self.db_service.update_agent_state(db::AgentState {
@@ -246,6 +248,8 @@ impl Agent {
             best_block_id,
             version,
             pending_parcels,
+            whitelist,
+            blacklist,
         });
         *state = new_state;
 

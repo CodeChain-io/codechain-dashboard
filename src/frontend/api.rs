@@ -1,10 +1,12 @@
 use super::super::agent::SendAgentRPC;
-use super::super::common_rpc_types::{BlockId, NodeStatus, NodeVersion, ShellStartCodeChainRequest};
+use super::super::common_rpc_types::{
+    BlackList, BlockId, NodeStatus, NodeVersion, ShellStartCodeChainRequest, WhiteList,
+};
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
-    Context, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
-    NodeConnection, NodeGetInfoResponse, StartOption,
+    Context, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NodeConnection,
+    NodeGetInfoResponse, StartOption,
 };
 
 pub fn add_routing(router: &mut Router<Context>) {
@@ -154,14 +156,14 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
         }),
         pending_parcels: Vec::new(),
         peers: Vec::new(),
-        whitelist: NetworkPermission {
+        whitelist: Some(WhiteList {
             list: Vec::new(),
             enabled: false,
-        },
-        blacklist: NetworkPermission {
+        }),
+        blacklist: Some(BlackList {
             list: Vec::new(),
             enabled: false,
-        },
+        }),
         hardware: HardwareInfo {
             cpu_usage: vec![0.95, 0.03, 0.58],
             disk_usage: HardwareUsage {

@@ -4,7 +4,7 @@ use jsonrpc_core::types::{Failure, Output, Success};
 use serde::de::DeserializeOwned;
 use serde_json;
 
-use super::super::common_rpc_types::{BlockId, NodeStatus, PendingParcel};
+use super::super::common_rpc_types::{BlackList, BlockId, NodeStatus, PendingParcel, WhiteList};
 use super::agent::{AgentSender, SendAgentRPC};
 use super::types::ChainGetBestBlockIdResponse;
 
@@ -42,6 +42,14 @@ impl CodeChainRPC {
 
     pub fn get_pending_parcels(&self, status: NodeStatus) -> Result<Vec<PendingParcel>, String> {
         self.call_rpc(status, "chain_getPendingParcels")
+    }
+
+    pub fn get_whitelist(&self, status: NodeStatus) -> Result<Option<WhiteList>, String> {
+        self.call_rpc(status, "net_getWhitelist")
+    }
+
+    pub fn get_blacklist(&self, status: NodeStatus) -> Result<Option<BlackList>, String> {
+        self.call_rpc(status, "net_getBlacklist")
     }
 
     fn call_rpc<T>(&self, status: NodeStatus, method: &str) -> Result<T, String>

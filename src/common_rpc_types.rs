@@ -1,3 +1,5 @@
+use std::net::IpAddr;
+
 use cprimitives::H256;
 use serde_json;
 
@@ -42,3 +44,14 @@ pub struct NodeVersion {
 }
 
 pub type PendingParcel = serde_json::Value;
+
+pub type Tag = String;
+
+#[derive(Debug, Serialize, PartialEq, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WhiteList {
+    pub list: Vec<(IpAddr, Tag)>,
+    pub enabled: bool,
+}
+
+pub type BlackList = WhiteList;

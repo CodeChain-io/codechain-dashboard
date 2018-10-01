@@ -35,6 +35,8 @@ impl db::EventSubscriber for EventPropagator {
                     diff["bestBlockId"] = serde_json::to_value(after.best_block_id).unwrap();
                     diff["version"] = serde_json::to_value(after.version).unwrap();
                     diff["pendingParcels"] = serde_json::to_value(after.pending_parcels).unwrap();
+                    diff["whitelist"] = serde_json::to_value(after.whitelist).unwrap();
+                    diff["blacklist"] = serde_json::to_value(after.blacklist).unwrap();
                 } else {
                     let before = before.unwrap();
                     if before == after {
@@ -58,6 +60,12 @@ impl db::EventSubscriber for EventPropagator {
                     }
                     if before.pending_parcels != after.pending_parcels {
                         diff["pendingParcels"] = serde_json::to_value(after.pending_parcels).unwrap();
+                    }
+                    if before.whitelist != after.whitelist {
+                        diff["whitelist"] = serde_json::to_value(after.whitelist).unwrap();
+                    }
+                    if before.blacklist != after.blacklist {
+                        diff["blacklist"] = serde_json::to_value(after.blacklist).unwrap();
                     }
                 }
 

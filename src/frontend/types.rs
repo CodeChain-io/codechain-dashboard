@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use super::super::agent;
 use super::super::common_rpc_types;
-use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus, NodeVersion, PendingParcel};
+use super::super::common_rpc_types::{BlackList, BlockId, NodeName, NodeStatus, NodeVersion, PendingParcel, WhiteList};
 use super::super::db;
 
 #[derive(Clone)]
@@ -12,13 +12,6 @@ pub struct Context {
 }
 
 pub type Event = String;
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NetworkPermission {
-    pub list: Vec<SocketAddr>,
-    pub enabled: bool,
-}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -110,8 +103,8 @@ pub struct NodeGetInfoResponse {
     pub best_block_id: Option<BlockId>,
     pub pending_parcels: Vec<PendingParcel>,
     pub peers: Vec<SocketAddr>,
-    pub whitelist: NetworkPermission,
-    pub blacklist: NetworkPermission,
+    pub whitelist: Option<WhiteList>,
+    pub blacklist: Option<BlackList>,
     pub hardware: HardwareInfo,
     pub events: Vec<Event>,
 }
@@ -133,14 +126,14 @@ impl NodeGetInfoResponse {
             }),
             pending_parcels: Vec::new(),
             peers: Vec::new(),
-            whitelist: NetworkPermission {
+            whitelist: Some(WhiteList {
                 list: Vec::new(),
                 enabled: false,
-            },
-            blacklist: NetworkPermission {
+            }),
+            blacklist: Some(BlackList {
                 list: Vec::new(),
                 enabled: false,
-            },
+            }),
             hardware: HardwareInfo {
                 cpu_usage: vec![0.34, 0.03, 0.58],
                 disk_usage: HardwareUsage {
@@ -167,6 +160,8 @@ impl NodeGetInfoResponse {
         dummy.best_block_id = state.best_block_id.clone();
         dummy.version = state.version.clone();
         dummy.pending_parcels = state.pending_parcels.clone();
+        dummy.whitelist = state.whitelist.clone();
+        dummy.blacklist = state.blacklist.clone();
         dummy
     }
 }
