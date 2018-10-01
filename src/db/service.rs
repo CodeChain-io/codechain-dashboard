@@ -6,13 +6,13 @@ use std::thread;
 use super::super::common_rpc_types as rpc_type;
 use super::super::common_rpc_types::{NodeName, NodeStatus};
 use super::event::{Event, EventSubscriber};
-use super::types::{AgentState, Connection, Connections};
+use super::types::{AgentQueryResult, Connection, Connections};
 
 pub enum Message {
-    InitializeAgent(AgentState, Sender<bool>),
-    UpdateAgent(AgentState),
-    GetAgent(NodeName, Sender<Option<AgentState>>),
-    GetAgents(Sender<Vec<AgentState>>),
+    InitializeAgent(AgentQueryResult, Sender<bool>),
+    UpdateAgent(AgentQueryResult),
+    GetAgent(NodeName, Sender<Option<AgentQueryResult>>),
+    GetAgents(Sender<Vec<AgentQueryResult>>),
     GetConnections(Sender<Vec<rpc_type::Connection>>),
 }
 
@@ -22,14 +22,14 @@ pub struct ServiceSender {
 }
 
 struct State {
-    agent_state: HashMap<NodeName, AgentState>,
+    agent_query_result: HashMap<NodeName, AgentQueryResult>,
     connection: Connections,
 }
 
 impl State {
     pub fn new() -> Self {
         Self {
-            agent_state: HashMap::new(),
+            agent_query_result: HashMap::new(),
             connection: Connections::new(),
         }
     }
@@ -59,11 +59,11 @@ impl Service {
             .spawn(move || {
                 for message in rx {
                     match message {
-                        Message::InitializeAgent(agent_state, callback) => {
-                            service.initialize_agent(agent_state, callback);
+                        Message::InitializeAgent(agent_query_result, callback) => {
+                            service.initialize_agent(agent_query_result, callback);
                         }
-                        Message::UpdateAgent(agent_state) => {
-                            service.update_agent(agent_state);
+                        Message::UpdateAgent(agent_query_result) => {
+                            service.update_agent(agent_query_result);
                         }
                         Message::GetAgent(node_name, callback) => {
                             service.get_agent(node_name, callback);
@@ -82,21 +82,21 @@ impl Service {
         service_sender
     }
 
-    fn initialize_agent(&mut self, state: AgentState, callback: Sender<bool>) {
+    fn initialize_agent(&mut self, state: AgentQueryResult, callback: Sender<bool>) {
         let name = state.name.clone();
-        if !self.state.agent_state.contains_key(&name) {
+        if !self.state.agent_query_result.contains_key(&name) {
             self.event_subscriber.on_event(Event::AgentUpdated {
                 before: None,
                 after: state.clone(),
             });
-            self.state.agent_state.insert(name, state);
+            self.state.agent_query_result.insert(name, state);
             if let Err(err) = callback.send(true) {
                 cerror!("Cannot send callback : {}", err);
             }
             return
         }
 
-        let before = self.state.agent_state.get_mut(&name).unwrap();
+        let before = self.state.agent_query_result.get_mut(&name).unwrap();
         if before.status != NodeStatus::Error {
             cinfo!("Node {}({:?}) try to connect but a node with the same name already connected", name, before.status);
             if let Err(err) = callback.send(false) {
@@ -115,12 +115,12 @@ impl Service {
         }
     }
 
-    fn update_agent(&mut self, after: AgentState) {
+    fn update_agent(&mut self, after: AgentQueryResult) {
         let name = after.name.clone();
-        debug_assert_ne!(None, self.state.agent_state.get(&name));
+        debug_assert_ne!(None, self.state.agent_query_result.get(&name));
 
         {
-            let before = self.state.agent_state.get(&name).expect("Checked");
+            let before = self.state.agent_query_result.get(&name).expect("Checked");
 
             let (added, removed) = self.state.connection.update(before, &after);
             if !added.is_empty() || !removed.is_empty() {
@@ -136,7 +136,7 @@ impl Service {
             });
         }
 
-        let before = self.state.agent_state.get_mut(&name).expect("Checked");
+        let before = self.state.agent_query_result.get_mut(&name).expect("Checked");
         *before = after;
     }
 
@@ -150,22 +150,23 @@ impl Service {
     fn socket_addr_to_name(&self, addr: &SocketAddr) -> Option<NodeName> {
         let find = self
             .state
-            .agent_state
+            .agent_query_result
             .values()
             .find(|agent| agent.address.map(|agent_address| agent_address == *addr).unwrap_or(false));
 
         find.map(|agent| agent.name.clone())
     }
 
-    fn get_agent(&self, name: NodeName, callback: Sender<Option<AgentState>>) {
-        let agent_state = self.state.agent_state.get(&name);
-        if let Err(err) = callback.send(agent_state.map(|state| state.clone())) {
+    fn get_agent(&self, name: NodeName, callback: Sender<Option<AgentQueryResult>>) {
+        let agent_query_result = self.state.agent_query_result.get(&name);
+        if let Err(err) = callback.send(agent_query_result.map(|state| state.clone())) {
             cerror!("Cannot call calback get_agent, name: {}\nerr: {}", name, err);
         }
     }
 
-    fn get_agents(&self, callback: Sender<Vec<AgentState>>) {
-        let states: Vec<AgentState> = self.state.agent_state.values().into_iter().map(|state| state.clone()).collect();
+    fn get_agents(&self, callback: Sender<Vec<AgentQueryResult>>) {
+        let states: Vec<AgentQueryResult> =
+            self.state.agent_query_result.values().into_iter().map(|state| state.clone()).collect();
         if let Err(err) = callback.send(states) {
             cerror!("Callback error {}", err);
         }
@@ -188,25 +189,25 @@ impl ServiceSender {
         }
     }
 
-    pub fn initialize_agent_state(&self, agent_state: AgentState) -> bool {
+    pub fn initialize_agent_query_result(&self, agent_query_result: AgentQueryResult) -> bool {
         let (tx, rx) = channel();
-        self.sender.send(Message::InitializeAgent(agent_state, tx)).expect("Should success update agent");
-        let result = rx.recv().expect("Should success initialize_agent_state");
+        self.sender.send(Message::InitializeAgent(agent_query_result, tx)).expect("Should success update agent");
+        let result = rx.recv().expect("Should success initialize_agent_query_result");
         result
     }
 
-    pub fn update_agent_state(&self, agent_state: AgentState) {
-        self.sender.send(Message::UpdateAgent(agent_state)).expect("Should success update agent");
+    pub fn update_agent_query_result(&self, agent_query_result: AgentQueryResult) {
+        self.sender.send(Message::UpdateAgent(agent_query_result)).expect("Should success update agent");
     }
 
-    pub fn get_agent_state(&self, name: &str) -> Option<AgentState> {
+    pub fn get_agent_query_result(&self, name: &str) -> Option<AgentQueryResult> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetAgent(name.to_string(), tx)).expect("Should success send request");
-        let agent_state = rx.recv().expect("Should success get_agent_state");
-        agent_state
+        let agent_query_result = rx.recv().expect("Should success get_agent_query_result");
+        agent_query_result
     }
 
-    pub fn get_agents_state(&self) -> Vec<AgentState> {
+    pub fn get_agents_state(&self) -> Vec<AgentQueryResult> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetAgents(tx)).expect("Should success send request");
         let agents_state = rx.recv().expect("Should success get_agents_state");

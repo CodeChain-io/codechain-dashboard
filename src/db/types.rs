@@ -6,7 +6,7 @@ use std::net::SocketAddr;
 use super::super::common_rpc_types::{BlackList, BlockId, NodeName, NodeStatus, NodeVersion, PendingParcel, WhiteList};
 
 #[derive(PartialEq, Clone, Debug, Default)]
-pub struct AgentState {
+pub struct AgentQueryResult {
     pub name: NodeName,
     pub status: NodeStatus,
     pub address: Option<SocketAddr>,
@@ -31,7 +31,11 @@ impl Connections {
         }
     }
 
-    pub fn update(&mut self, before: &AgentState, after: &AgentState) -> (Vec<Connection>, Vec<Connection>) {
+    pub fn update(
+        &mut self,
+        before: &AgentQueryResult,
+        after: &AgentQueryResult,
+    ) -> (Vec<Connection>, Vec<Connection>) {
         if before.address.is_none() || after.address.is_none() {
             return (Vec::new(), Vec::new())
         }
@@ -57,7 +61,7 @@ impl Connections {
         (ret_added, ret_removed)
     }
 
-    fn get_added(before: &AgentState, after: &AgentState) -> Vec<Connection> {
+    fn get_added(before: &AgentQueryResult, after: &AgentQueryResult) -> Vec<Connection> {
         let before_peers: HashSet<&SocketAddr> = before.peers.iter().collect();
         after
             .peers
@@ -67,7 +71,7 @@ impl Connections {
             .collect()
     }
 
-    fn get_removed(before: &AgentState, after: &AgentState) -> Vec<Connection> {
+    fn get_removed(before: &AgentQueryResult, after: &AgentQueryResult) -> Vec<Connection> {
         let after_peers: HashSet<&SocketAddr> = after.peers.iter().collect();
         before
             .peers

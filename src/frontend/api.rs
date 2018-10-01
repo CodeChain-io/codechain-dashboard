@@ -132,9 +132,9 @@ fn real_dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetwo
 
 fn real_node_get_info(context: Context, args: (String,)) -> RPCResponse<NodeGetInfoResponse> {
     let (name,) = args;
-    let agent_state = context.db_service.get_agent_state(&name).ok_or(RPCError::AgentNotFound)?;
+    let agent_query_result = context.db_service.get_agent_query_result(&name).ok_or(RPCError::AgentNotFound)?;
 
-    response(NodeGetInfoResponse::from_db_state(&agent_state))
+    response(NodeGetInfoResponse::from_db_state(&agent_query_result))
 }
 
 fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {

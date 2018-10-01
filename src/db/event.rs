@@ -1,10 +1,10 @@
 use super::super::common_rpc_types::NodeName;
-use super::types::AgentState;
+use super::types::AgentQueryResult;
 
 pub enum Event {
     AgentUpdated {
-        before: Option<AgentState>,
-        after: AgentState,
+        before: Option<AgentQueryResult>,
+        after: AgentQueryResult,
     },
     ConnectionChanged {
         added: Vec<(NodeName, NodeName)>,

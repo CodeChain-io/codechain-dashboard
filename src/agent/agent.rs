@@ -204,7 +204,7 @@ impl Agent {
         };
 
         if let State::Initializing = *state {
-            let success = self.db_service.initialize_agent_state(db::AgentState {
+            let success = self.db_service.initialize_agent_query_result(db::AgentQueryResult {
                 name: info.name.clone(),
                 status: info.status,
                 address: info.address,
@@ -240,7 +240,7 @@ impl Agent {
         let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
 
         ctrace!("Update state from {:?} to {:?}", state, new_state);
-        self.db_service.update_agent_state(db::AgentState {
+        self.db_service.update_agent_query_result(db::AgentQueryResult {
             name: info.name,
             status: info.status,
             address: info.address,
@@ -290,7 +290,7 @@ impl Agent {
             ..
         } = state.clone()
         {
-            self.db_service.update_agent_state(db::AgentState {
+            self.db_service.update_agent_query_result(db::AgentQueryResult {
                 name,
                 status: NodeStatus::Error,
                 address,

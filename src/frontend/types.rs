@@ -50,7 +50,7 @@ pub enum DashboardNode {
 }
 
 impl DashboardNode {
-    pub fn from_db_state(state: &db::AgentState) -> Self {
+    pub fn from_db_state(state: &db::AgentQueryResult) -> Self {
         DashboardNode::Normal {
             status: state.status,
             name: state.name.clone(),
@@ -151,7 +151,7 @@ impl NodeGetInfoResponse {
         }
     }
 
-    pub fn from_db_state(state: &db::AgentState) -> Self {
+    pub fn from_db_state(state: &db::AgentQueryResult) -> Self {
         let mut dummy = Self::dummy();
         dummy.address = state.address;
         dummy.status = state.status;
