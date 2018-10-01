@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use cprimitives::H256;
 use serde_json::Value;
 
 use super::super::common_rpc_types::{NodeName, NodeStatus};
@@ -23,4 +24,11 @@ pub struct CodeChainCallRPCResponse {
 pub struct CodeChainCallRPCResponseHelper {
     pub result: Option<Value>,
     pub error: Option<Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChainGetBestBlockIdResponse {
+    pub hash: H256,
+    pub number: i64,
 }

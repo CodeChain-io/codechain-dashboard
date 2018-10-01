@@ -48,10 +48,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
                 },
-                best_block_id: BlockId {
+                best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
-                },
+                }),
             },
             DashboardNode::Normal {
                 name: "Juhyung".to_string(),
@@ -61,10 +61,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
                 },
-                best_block_id: BlockId {
+                best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
-                },
+                }),
             },
             DashboardNode::Normal {
                 name: "Hi stopped test node1".to_string(),
@@ -74,10 +74,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
                 },
-                best_block_id: BlockId {
+                best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
-                },
+                }),
             },
             DashboardNode::Normal {
                 name: "Starting node".to_string(),
@@ -87,10 +87,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
                 },
-                best_block_id: BlockId {
+                best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
-                },
+                }),
             },
             DashboardNode::Normal {
                 name: "Test Error node".to_string(),
@@ -100,10 +100,10 @@ fn dashboard_get_network(_: Context) -> RPCResponse<DashboardGetNetworkResponse>
                     version: "0.1.0".to_string(),
                     hash: "d6fb3195876b6b175902d25dd621db99527ccb6f".to_string(),
                 },
-                best_block_id: BlockId {
+                best_block_id: Some(BlockId {
                     block_number: 0,
                     hash: Default::default(),
-                },
+                }),
             },
             DashboardNode::UFO {
                 status: NodeStatus::UFO,

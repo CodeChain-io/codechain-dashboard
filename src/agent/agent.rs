@@ -10,12 +10,12 @@ use serde_json;
 use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
-use super::super::common_rpc_types::{NodeName, NodeStatus, ShellStartCodeChainRequest};
+use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus, ShellStartCodeChainRequest};
 use super::super::db;
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
 use super::service::{Message as ServiceMessage, ServiceSender};
-use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
+use super::types::{AgentGetInfoResponse, ChainGetBestBlockIdResponse, CodeChainCallRPCResponse};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum State {
@@ -204,7 +204,7 @@ impl Agent {
                 name: info.name.clone(),
                 status: info.status,
                 address: info.address,
-                peers: Vec::new(),
+                ..Default::default()
             });
 
             if !success {
@@ -222,6 +222,7 @@ impl Agent {
         }
 
         let peers: Vec<SocketAddr> = self.get_peers(info.status)?;
+        let best_block_id: Option<BlockId> = self.get_best_block_id(info.status)?;
 
         ctrace!("Update state from {:?} to {:?}", state, new_state);
         self.db_service.update_agent_state(db::AgentState {
@@ -229,6 +230,7 @@ impl Agent {
             status: info.status,
             address: info.address,
             peers,
+            best_block_id,
         });
         *state = new_state;
 
@@ -257,6 +259,33 @@ impl Agent {
         };
 
         Ok(peers)
+    }
+
+    fn get_best_block_id(&self, status: NodeStatus) -> Result<Option<BlockId>, String> {
+        if status != NodeStatus::Run {
+            return Ok(None)
+        }
+
+        let response = self
+            .sender
+            .codechain_call_rpc(("chain_getBestBlockId".to_string(), Vec::new()))
+            .map_err(|err| format!("{}", err))?;
+
+        let best_block_id: ChainGetBestBlockIdResponse = match response {
+            Output::Success(Success {
+                result,
+                ..
+            }) => serde_json::from_value(result).map_err(|err| format!("{}", err))?,
+            Output::Failure(Failure {
+                error,
+                ..
+            }) => return Err(format!("get_peers error {:#?}", error)),
+        };
+
+        Ok(Some(BlockId {
+            block_number: best_block_id.number,
+            hash: best_block_id.hash,
+        }))
     }
 
     fn clean_up(&mut self, reason: AgentCleanupReason) {
@@ -297,7 +326,7 @@ impl Agent {
                 name,
                 status: NodeStatus::Error,
                 address,
-                peers: Vec::new(),
+                ..Default::default()
             });
         }
 

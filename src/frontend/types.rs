@@ -1,7 +1,5 @@
 use std::net::SocketAddr;
 
-use cprimitives::H256;
-
 use super::super::agent;
 use super::super::common_rpc_types;
 use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus};
@@ -60,7 +58,7 @@ pub enum DashboardNode {
         status: NodeStatus,
         address: Option<SocketAddr>,
         version: NodeVersion,
-        best_block_id: BlockId,
+        best_block_id: Option<BlockId>,
         name: NodeName,
     },
     #[serde(rename_all = "camelCase")]
@@ -81,10 +79,7 @@ impl DashboardNode {
                 version: String::new(),
                 hash: String::new(),
             },
-            best_block_id: BlockId {
-                block_number: 0,
-                hash: H256::new(),
-            },
+            best_block_id: state.best_block_id,
         }
     }
 }

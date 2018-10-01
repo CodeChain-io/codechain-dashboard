@@ -3,14 +3,15 @@ use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::net::SocketAddr;
 
-use super::super::common_rpc_types::{NodeName, NodeStatus};
+use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus};
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Default)]
 pub struct AgentState {
     pub name: NodeName,
     pub status: NodeStatus,
     pub address: Option<SocketAddr>,
     pub peers: Vec<SocketAddr>,
+    pub best_block_id: Option<BlockId>,
 }
 
 pub type Connection = (SocketAddr, SocketAddr);
