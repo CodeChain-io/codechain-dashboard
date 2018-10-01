@@ -235,6 +235,7 @@ impl Agent {
                 hash,
             })
         });
+        let pending_parcels = self.codechain_rpc.get_pending_parcels(info.status)?;
 
         ctrace!("Update state from {:?} to {:?}", state, new_state);
         self.db_service.update_agent_state(db::AgentState {
@@ -244,6 +245,7 @@ impl Agent {
             peers,
             best_block_id,
             version,
+            pending_parcels,
         });
         *state = new_state;
 

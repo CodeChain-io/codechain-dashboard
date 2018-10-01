@@ -1,4 +1,5 @@
 use cprimitives::H256;
+use serde_json;
 
 pub type NodeName = String;
 
@@ -39,3 +40,5 @@ pub struct NodeVersion {
     pub version: String,
     pub hash: String,
 }
+
+pub type PendingParcel = serde_json::Value;

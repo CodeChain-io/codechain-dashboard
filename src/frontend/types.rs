@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use super::super::agent;
 use super::super::common_rpc_types;
-use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus, NodeVersion};
+use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus, NodeVersion, PendingParcel};
 use super::super::db;
 
 #[derive(Clone)]
@@ -12,12 +12,6 @@ pub struct Context {
 }
 
 pub type Event = String;
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Parcel {
-    // FIXME: fill structure
-}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -114,7 +108,7 @@ pub struct NodeGetInfoResponse {
     pub address: Option<SocketAddr>,
     pub version: Option<NodeVersion>,
     pub best_block_id: Option<BlockId>,
-    pub pending_parcels: Vec<Parcel>,
+    pub pending_parcels: Vec<PendingParcel>,
     pub peers: Vec<SocketAddr>,
     pub whitelist: NetworkPermission,
     pub blacklist: NetworkPermission,
@@ -172,6 +166,7 @@ impl NodeGetInfoResponse {
         dummy.peers = state.peers.clone();
         dummy.best_block_id = state.best_block_id.clone();
         dummy.version = state.version.clone();
+        dummy.pending_parcels = state.pending_parcels.clone();
         dummy
     }
 }

@@ -34,6 +34,7 @@ impl db::EventSubscriber for EventPropagator {
                     diff["peers"] = serde_json::to_value(after.peers).unwrap();
                     diff["bestBlockId"] = serde_json::to_value(after.best_block_id).unwrap();
                     diff["version"] = serde_json::to_value(after.version).unwrap();
+                    diff["pendingParcels"] = serde_json::to_value(after.pending_parcels).unwrap();
                 } else {
                     let before = before.unwrap();
                     if before == after {
@@ -54,6 +55,9 @@ impl db::EventSubscriber for EventPropagator {
                     }
                     if before.version != after.version {
                         diff["version"] = serde_json::to_value(after.version).unwrap();
+                    }
+                    if before.pending_parcels != after.pending_parcels {
+                        diff["pendingParcels"] = serde_json::to_value(after.pending_parcels).unwrap();
                     }
                 }
 

@@ -4,7 +4,7 @@ use jsonrpc_core::types::{Failure, Output, Success};
 use serde::de::DeserializeOwned;
 use serde_json;
 
-use super::super::common_rpc_types::{BlockId, NodeStatus};
+use super::super::common_rpc_types::{BlockId, NodeStatus, PendingParcel};
 use super::agent::{AgentSender, SendAgentRPC};
 use super::types::ChainGetBestBlockIdResponse;
 
@@ -38,6 +38,10 @@ impl CodeChainRPC {
 
     pub fn commit_hash(&self, status: NodeStatus) -> Result<Option<String>, String> {
         self.call_rpc(status, "commitHash")
+    }
+
+    pub fn get_pending_parcels(&self, status: NodeStatus) -> Result<Vec<PendingParcel>, String> {
+        self.call_rpc(status, "chain_getPendingParcels")
     }
 
     fn call_rpc<T>(&self, status: NodeStatus, method: &str) -> Result<T, String>
