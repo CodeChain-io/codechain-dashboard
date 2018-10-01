@@ -1,12 +1,13 @@
 use std::cell::Cell;
 use std::rc::Rc;
+use std::sync::mpsc::channel;
 use std::sync::Arc;
 
 use ws::connect;
 
 use super::handler::WebSocketHandler;
 use super::logger::init as logger_init;
-use super::process::{Process, ProcessOption};
+use super::process::{Message as ProcessMessage, Process, ProcessOption};
 use super::rpc::api::add_routing;
 use super::rpc::router::Router;
 use super::types::{AgentArgs, HandlerContext};
@@ -27,14 +28,30 @@ pub fn run(args: AgentArgs) {
     let context = Arc::new(HandlerContext {
         codechain_address: args.codechain_address,
         name: args.name.to_string(),
-        process,
+        process: process.clone(),
     });
 
     cinfo!("Connect to {}", args.hub_url);
-    connect(args.hub_url, move |out| WebSocketHandler {
+    if let Err(err) = connect(args.hub_url, move |out| WebSocketHandler {
         out,
         count: count.clone(),
         router: router.clone(),
         context: context.clone(),
-    }).unwrap();
+    }) {
+        cerror!("Error from websocket {}", err);
+    }
+
+    cinfo!("Close CodeChain");
+    let (tx, rx) = channel();
+    if let Err(err) = process.send(ProcessMessage::Quit {
+        callback: tx,
+    }) {
+        cerror!("Error while closing CodeChain {}", err);
+        return
+    }
+    match rx.recv() {
+        Err(err) => cerror!("Error while closing CodeChain {}", err),
+        Ok(Err(err)) => cerror!("Error while closing CodeChain {:?}", err),
+        Ok(_) => {}
+    }
 }

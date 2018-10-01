@@ -192,7 +192,8 @@ impl Process {
             Message::Quit {
                 callback,
             } => {
-                callback.send(Ok(())).expect("Callback should be success");
+                let result = self.stop();
+                callback.send(result).expect("Callback should be success");
                 return
             }
             Message::GetStatus {
