@@ -69,9 +69,7 @@ const NodeItem = (props: Props) => {
                     ? nodeInfo.bestBlockId.blockNumber
                     : "Unknown"}{" "}
                   (
-                  {nodeInfo.bestBlockId
-                    ? nodeInfo.bestBlockId.hash.value
-                    : "Unknown"}
+                  {nodeInfo.bestBlockId ? nodeInfo.bestBlockId.hash : "Unknown"}
                   )
                 </div>
                 <div>

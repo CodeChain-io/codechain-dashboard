@@ -262,8 +262,8 @@ class Dashboard extends React.Component<Props, State> {
                 Best block :{" "}
                 <span>
                   {node.bestBlockId.blockNumber} (
-                  {node.bestBlockId.hash.value
-                    ? node.bestBlockId.hash.value.slice(0, 6)
+                  {node.bestBlockId.hash
+                    ? node.bestBlockId.hash.slice(0, 6)
                     : "Invalid hash"}
                   )
                 </span>

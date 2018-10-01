@@ -1,4 +1,4 @@
-import { H256, Parcel } from "codechain-sdk/lib/core/classes";
+import { Parcel } from "codechain-sdk/lib/core/classes";
 export type NodeStatus = "Run" | "Starting" | "Stop" | "Error" | "UFO";
 export type SocketAddr = string;
 export type IpAddr = string;
@@ -16,7 +16,7 @@ export interface NetworkNodeInfo {
   status: NodeStatus;
   address?: SocketAddr;
   version?: { version: string; hash: string };
-  bestBlockId?: { blockNumber: number; hash: H256 };
+  bestBlockId?: { blockNumber: number; hash: string };
   name: string;
 }
 export interface ChainNetworks {
@@ -28,7 +28,7 @@ export interface ChainNetworksUpdate {
     status?: NodeStatus;
     address?: SocketAddr;
     version?: { version: string; hash: string };
-    bestBlockId?: { blockNumber: number; hash: H256 };
+    bestBlockId?: { blockNumber: number; hash: string };
     name: string;
   }[];
   connectionsAdded?: { nodeA: string; nodeB: string }[];
@@ -41,7 +41,7 @@ export interface NodeInfo {
   agentVersion?: string;
   status: NodeStatus;
   version?: { version: string; hash: string };
-  bestBlockId?: { blockNumber: number; hash: H256 };
+  bestBlockId?: { blockNumber: number; hash: string };
   pendingParcels?: Parcel[];
   peers?: SocketAddr[];
   whitelist?: WhiteList;
@@ -60,7 +60,7 @@ export interface NodeUpdateInfo {
   agentVersion?: string;
   status?: NodeStatus;
   version?: { version: string; hash: string };
-  bestBlockId?: { blockNumber: number; hash: H256 };
+  bestBlockId?: { blockNumber: number; hash: string };
   pendingParcels?: Parcel[];
   peers?: SocketAddr[];
   whitelist?: { list: SocketAddr[]; enabled: boolean };
