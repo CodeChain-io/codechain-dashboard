@@ -69,7 +69,16 @@ SocketAddr
 
 ::
 
-  type SocketAddr = string
+  type SocketAddr = string // "127.0.0.1:3485"
+
+.. _type-IpAddr:
+
+IpAddr
+------
+
+::
+
+  type IpAddr = string // "127.0.0.1"
 
 .. _type-Block:
 
@@ -110,6 +119,35 @@ NodeStatus
 
   type NodeStatus = "Run" | "Stop" | "Error" | "UFO";
 
+.. _type-WhiteList
+
+WhiteList
+----------
+
+::
+
+  type Tag = string;
+  interface WhiteList = {
+    list: [IpAddr, Tag][];
+    enabled: boolean;
+  }
+  
+links: type-IpAddr_
+  
+.. _type-BalckList
+
+BlackList
+----------
+
+::
+
+  type Tag = string;
+  interface BlackList = {
+    list: [IpAddr, Tag][];
+    enabled: boolean;
+  }
+
+links: type-IpAddr_
 
 .. _type-DashboardNodeInfo:
 
@@ -160,8 +198,8 @@ NodeInfo
     bestBlockId: { blockNumber: number, hash: H256 };
     pendingParcels: Parcel[];
     peers: SocketAddr[];
-    whitelist: { list: SocketAddr[], enabled: bool };
-    blacklist: { list: SocketAddr[], enabled: bool };
+    whitelist: WhiteList;
+    blacklist: BlackList;
     hardware: { 
       cpuUsage: number,
       diskUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"},
@@ -170,6 +208,8 @@ NodeInfo
     // events from this node order by created time.
     events: Event[];
   }
+
+links: type-NodeStatus_, type-SocketAddr_, type-Parcel_, type-WhiteList_, type-BlackList_
 
 .. _type-UFONodeInfo:
 
@@ -661,13 +701,13 @@ Arguments
     bestBlockId?: { blockNumber: number, hash: H256 };
     pendingParcels?: Parcel[];
     peers?: SocketAddr[];
-    whitelist?: { list: SocketAddr[], enabled: bool };
-    blacklist?: { list: SocketAddr[], enabled: bool };
+    whitelist?: WhiteList;
+    blacklist?: BlackList;
     hardware?: HardwareGetResponse;
     eventsAdded?: Event[];
   }]
 
-links: type-NodeStatus_, type-HardwareGetResponse_
+links: type-NodeStatus_, type-HardwareGetResponse_, type-WhiteList_, type-BlackList_
 
 node_start ➡️ ⬅️ 
 ----------------
