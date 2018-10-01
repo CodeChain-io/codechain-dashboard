@@ -190,16 +190,15 @@ NodeInfo
   interface NodeInfo {
     status: NodeStatus;
     name: string;
-    address?: SocketAddr;
     agentVersion: String;
+    address?: SocketAddr;
     startOptions?: { env: string, args: string };
-    version: { version: string, hash: string };
-    commitHash: string;
-    bestBlockId: { blockNumber: number, hash: H256 };
+    version?: { version: string, hash: string };
+    bestBlockId?: { blockNumber: number, hash: H256 };
     pendingParcels: Parcel[];
     peers: SocketAddr[];
-    whitelist: WhiteList;
-    blacklist: BlackList;
+    whitelist?: WhiteList;
+    blacklist?: BlackList;
     hardware: { 
       cpuUsage: number,
       diskUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"},
