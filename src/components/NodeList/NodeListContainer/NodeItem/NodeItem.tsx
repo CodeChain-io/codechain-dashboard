@@ -64,12 +64,23 @@ const NodeItem = (props: Props) => {
               </div>
               <div className="node-info text-right">
                 <div>
-                  Best block number {nodeInfo.bestBlockId!.blockNumber} (
-                  {nodeInfo.bestBlockId!.hash.value})
+                  Block:{" "}
+                  {nodeInfo.bestBlockId
+                    ? nodeInfo.bestBlockId.blockNumber
+                    : "Unknown"}{" "}
+                  (
+                  {nodeInfo.bestBlockId
+                    ? nodeInfo.bestBlockId.hash.value
+                    : "Unknown"}
+                  )
                 </div>
                 <div>
-                  {nodeInfo.version!.version} (
-                  {nodeInfo.version!.hash.substr(0, 6)})
+                  Version:{" "}
+                  {nodeInfo.version ? nodeInfo.version.version : "Unknown"} (
+                  {nodeInfo.version
+                    ? nodeInfo.version.hash.substr(0, 6)
+                    : "Unknown"}
+                  )
                 </div>
               </div>
             </div>

@@ -125,11 +125,13 @@ export default class NodeDetail extends React.Component<Props, State> {
           onStartNode={this.handleOnStartNode}
           startOption={nodeInfo.startOption}
         />
-        <UpgradeNodeModal
-          isOpen={isUpgradeNodeModalOpen}
-          currentCommitHash={nodeInfo.version.hash}
-          onClose={this.handleOnCloseUpgradeModal}
-        />
+        {nodeInfo.version && (
+          <UpgradeNodeModal
+            isOpen={isUpgradeNodeModalOpen}
+            currentCommitHash={nodeInfo.version.hash}
+            onClose={this.handleOnCloseUpgradeModal}
+          />
+        )}
         <div className="left-panel">
           <div className="data-row mb-1">
             <div>
@@ -176,58 +178,92 @@ export default class NodeDetail extends React.Component<Props, State> {
           <hr />
           <div className="data-row">
             <div>Version</div>
-            <div>{nodeInfo.version.version}</div>
+            <div>{nodeInfo.version ? nodeInfo.version.version : "Unknown"}</div>
           </div>
           <div className="data-row mb-3">
             <div>Hash</div>
             <div>
-              <span className="link-text" onClick={this.openUpgradeNodeModal}>
-                {nodeInfo.version.hash.slice(0, 6)}
-              </span>
+              {nodeInfo.version ? (
+                <span className="link-text" onClick={this.openUpgradeNodeModal}>
+                  {nodeInfo.version.hash.slice(0, 6)}
+                </span>
+              ) : (
+                "Unknown"
+              )}
             </div>
           </div>
           <hr />
           <div className="data-row">
             <div>Best block number</div>
-            <div>{nodeInfo.bestBlockId.blockNumber}</div>
+            <div>
+              {nodeInfo.bestBlockId
+                ? nodeInfo.bestBlockId.blockNumber
+                : "Unknown"}
+            </div>
           </div>
           <div className="data-row">
             <div>Best block hash</div>
-            <div>{nodeInfo.bestBlockId.hash}</div>
+            <div>
+              {nodeInfo.bestBlockId ? nodeInfo.bestBlockId.hash : "Unknown"}
+            </div>
           </div>
           <div className="data-row mb-1">
             <div>Pending parcels</div>
-            <div>{nodeInfo.pendingParcels.length}</div>
+            <div>
+              {nodeInfo.pendingParcels ? nodeInfo.pendingParcels.length : 0}
+            </div>
           </div>
           <div className="data-container mb-3">
-            Dummy - Parcel1, Parcel2, Parcel3 ...
-            <br />
-            Dummy - Parcel1, Parcel2, Parcel3 ...
-            <br />
-            Dummy - Parcel1, Parcel2, Parcel3 ...
+            {nodeInfo.pendingParcels
+              ? _.map(nodeInfo.pendingParcels, pendingParcel =>
+                  pendingParcel.hash()
+                ).join(" ")
+              : ""}
           </div>
           <hr />
           <div className="data-row">
             <div>Peer count</div>
-            <div>{nodeInfo.peers.length}</div>
+            <div>{nodeInfo.peers ? nodeInfo.peers.length : "Unknown"}</div>
           </div>
           <div className="data-row mb-1">
             <div>Peer list</div>
           </div>
-          <div className="data-container mb-3">{nodeInfo.peers.join(" ")}</div>
+          <div className="data-container mb-3">
+            {nodeInfo.peers ? nodeInfo.peers.join(" ") : ""}
+          </div>
           <div className="data-row mb-1">
             <div>Whitelist</div>
-            <div>{nodeInfo.whitelist.enabled ? "Enabled" : "Disabled"}</div>
+            <div>
+              {nodeInfo.whitelist
+                ? nodeInfo.whitelist.enabled
+                  ? "Enabled"
+                  : "Disabled"
+                : "Unknown"}
+            </div>
           </div>
           <div className="data-container mb-3">
-            {nodeInfo.whitelist.list.join(" ")}
+            {nodeInfo.whitelist
+              ? _.map(nodeInfo.whitelist.list, whitelist =>
+                  whitelist.join(",")
+                ).join(" ")
+              : ""}
           </div>
           <div className="data-row mb-1">
             <div>Blacklist</div>
-            <div>{nodeInfo.blacklist.enabled ? "Enabled" : "Disabled"}</div>
+            <div>
+              {nodeInfo.blacklist
+                ? nodeInfo.blacklist.enabled
+                  ? "Enabled"
+                  : "Disabled"
+                : "Unknown"}
+            </div>
           </div>
           <div className="data-container mb-3">
-            {nodeInfo.blacklist.list.join(" ")}
+            {nodeInfo.blacklist
+              ? _.map(nodeInfo.blacklist.list, blacklist =>
+                  blacklist.join(",")
+                ).join(" ")
+              : ""}
           </div>
         </div>
         <div className="right-panel">
@@ -236,12 +272,15 @@ export default class NodeDetail extends React.Component<Props, State> {
             <div className="chart-data-container d-flex justify-content-center">
               <div className="chart-data">
                 <h5>CPU usage</h5>
-                {_.map(nodeInfo.hardware.cpuUsage, (usage, index) => (
-                  <p key={`cpu-usage-p-${index}`} className="mb-0">
-                    {`CPU-${index} : ${Math.floor(usage * 100 * 100) / 100}`}
-                    (%)
-                  </p>
-                ))}
+                {nodeInfo.hardware
+                  ? _.map(nodeInfo.hardware.cpuUsage, (usage, index) => (
+                      <p key={`cpu-usage-p-${index}`} className="mb-0">
+                        {`CPU-${index} : ${Math.floor(usage * 100 * 100) /
+                          100}`}
+                        (%)
+                      </p>
+                    ))
+                  : "Unknown"}
               </div>
             </div>
             <div className="chart-container d-flex justify-content-center">
@@ -262,7 +301,18 @@ export default class NodeDetail extends React.Component<Props, State> {
                       ]
                     }
                   }}
-                  data={getCpuUsage(nodeInfo.hardware.cpuUsage)}
+                  data={
+                    nodeInfo.hardware
+                      ? getCpuUsage(nodeInfo.hardware.cpuUsage)
+                      : {
+                          datasets: [
+                            {
+                              data: []
+                            }
+                          ],
+                          labels: []
+                        }
+                  }
                 />
               </div>
             </div>
@@ -272,20 +322,27 @@ export default class NodeDetail extends React.Component<Props, State> {
               <div className="chart-data">
                 <h5>Disk usage</h5>
                 <p className="mb-0">
-                  Total pace : {getGBNumber(nodeInfo.hardware.diskUsage.total)}
+                  Total pace :{" "}
+                  {nodeInfo.hardware
+                    ? getGBNumber(nodeInfo.hardware.diskUsage.total)
+                    : "Unknown"}
                   (GB)
                 </p>
                 <p className="mb-0">
                   Used space :{" "}
-                  {getGBNumber(
-                    nodeInfo.hardware.diskUsage.total -
-                      nodeInfo.hardware.diskUsage.available
-                  )}
+                  {nodeInfo.hardware
+                    ? getGBNumber(
+                        nodeInfo.hardware.diskUsage.total -
+                          nodeInfo.hardware.diskUsage.available
+                      )
+                    : "Unknown"}
                   (GB)
                 </p>
                 <p className="mb-0">
                   Free space :{" "}
-                  {getGBNumber(nodeInfo.hardware.diskUsage.available)}
+                  {nodeInfo.hardware
+                    ? getGBNumber(nodeInfo.hardware.diskUsage.available)
+                    : "Unknown"}
                   (GB)
                 </p>
               </div>
@@ -298,7 +355,18 @@ export default class NodeDetail extends React.Component<Props, State> {
                       position: "bottom"
                     }
                   }}
-                  data={getDistUsage(nodeInfo.hardware.diskUsage)}
+                  data={
+                    nodeInfo.hardware
+                      ? getDistUsage(nodeInfo.hardware.diskUsage)
+                      : {
+                          datasets: [
+                            {
+                              data: []
+                            }
+                          ],
+                          labels: []
+                        }
+                  }
                 />
               </div>
             </div>
@@ -309,20 +377,26 @@ export default class NodeDetail extends React.Component<Props, State> {
                 <h5>Memory usage</h5>
                 <p className="mb-0">
                   Total space :{" "}
-                  {getGBNumber(nodeInfo.hardware.memoryUsage.total)}
+                  {nodeInfo.hardware
+                    ? getGBNumber(nodeInfo.hardware.memoryUsage.total)
+                    : "Unknown"}
                   (GB)
                 </p>
                 <p className="mb-0">
                   Used space :{" "}
-                  {getGBNumber(
-                    nodeInfo.hardware.memoryUsage.total -
-                      nodeInfo.hardware.memoryUsage.available
-                  )}
+                  {nodeInfo.hardware
+                    ? getGBNumber(
+                        nodeInfo.hardware.memoryUsage.total -
+                          nodeInfo.hardware.memoryUsage.available
+                      )
+                    : "Unknown"}
                   (GB)
                 </p>
                 <p className="mb-0">
                   Free space :{" "}
-                  {getGBNumber(nodeInfo.hardware.memoryUsage.available)}
+                  {nodeInfo.hardware
+                    ? getGBNumber(nodeInfo.hardware.memoryUsage.available)
+                    : "Unknown"}
                   (GB)
                 </p>
               </div>
@@ -335,7 +409,18 @@ export default class NodeDetail extends React.Component<Props, State> {
                       position: "bottom"
                     }
                   }}
-                  data={getMemoryUsage(nodeInfo.hardware.memoryUsage)}
+                  data={
+                    nodeInfo.hardware
+                      ? getMemoryUsage(nodeInfo.hardware.memoryUsage)
+                      : {
+                          datasets: [
+                            {
+                              data: []
+                            }
+                          ],
+                          labels: []
+                        }
+                  }
                 />
               </div>
             </div>
