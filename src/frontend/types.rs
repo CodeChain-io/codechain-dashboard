@@ -4,7 +4,7 @@ use cprimitives::H256;
 
 use super::super::agent;
 use super::super::common_rpc_types;
-use super::super::common_rpc_types::{NodeName, NodeStatus};
+use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus};
 use super::super::db;
 
 #[derive(Clone)]
@@ -26,13 +26,6 @@ pub struct Parcel {
 pub struct NetworkPermission {
     pub list: Vec<SocketAddr>,
     pub enabled: bool,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BlockId {
-    pub block_number: i64,
-    pub hash: H256,
 }
 
 #[derive(Debug, Serialize)]

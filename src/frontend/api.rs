@@ -1,9 +1,9 @@
 use super::super::agent::SendAgentRPC;
-use super::super::common_rpc_types::{NodeStatus, ShellStartCodeChainRequest};
+use super::super::common_rpc_types::{BlockId, NodeStatus, ShellStartCodeChainRequest};
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
-    BlockId, Context, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
+    Context, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NetworkPermission,
     NodeConnection, NodeGetInfoResponse, NodeVersion, StartOption,
 };
 
