@@ -95,7 +95,9 @@ export const appReducer = (state = initialState, action: Action) => {
       }
       const updatedNodeInfo = {
         ...state.nodeInfo,
-        [action.name]: merge(state.nodeInfo[action.name], action.data)
+        [action.name]: merge(state.nodeInfo[action.name], action.data, {
+          arrayMerge: overwriteMerge
+        })
       };
       return {
         ...state,
