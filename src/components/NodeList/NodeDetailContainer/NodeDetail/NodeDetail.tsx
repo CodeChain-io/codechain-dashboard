@@ -204,7 +204,9 @@ export default class NodeDetail extends React.Component<Props, State> {
           <div className="data-row">
             <div>Best block hash</div>
             <div>
-              {nodeInfo.bestBlockId ? nodeInfo.bestBlockId.hash : "Unknown"}
+              {nodeInfo.bestBlockId
+                ? nodeInfo.bestBlockId.hash.slice(0, 8)
+                : "Unknown"}
             </div>
           </div>
           <div className="data-row mb-1">
