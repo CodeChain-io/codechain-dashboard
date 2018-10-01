@@ -18,6 +18,12 @@ pub struct AgentQueryResult {
     pub blacklist: Option<BlackList>,
 }
 
+#[derive(PartialEq, Clone, Debug, Default)]
+pub struct AgentExtra {
+    pub prev_env: String,
+    pub prev_args: String,
+}
+
 pub type Connection = (SocketAddr, SocketAddr);
 
 pub struct Connections {

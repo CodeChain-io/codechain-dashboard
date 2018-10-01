@@ -112,6 +112,37 @@ impl db::EventSubscriber for EventPropagator {
 
                 self.frontend_service.send(frontend::Message::SendEvent(message)).expect("Should success send event");
             }
+            db::Event::AgentExtraUpdated {
+                name,
+                before,
+                after,
+            } => {
+                let mut diff = json!({
+                    "name": name,
+                });
+
+                if before.is_none() {
+                    diff["startOption"] = json!({
+                        "env": after.prev_env,
+                        "args": after.prev_args,
+                    });
+                } else {
+                    let before = before.unwrap();
+                    if before == after {
+                        return
+                    }
+
+                    if before.prev_env != after.prev_env || before.prev_args != after.prev_args {
+                        diff["startOption"] = json!({
+                            "env": after.prev_env,
+                            "args": after.prev_args,
+                        });
+                    }
+                }
+
+                let message = jsonrpc::serialize_notification("node_updated", diff);
+                self.frontend_service.send(frontend::Message::SendEvent(message)).expect("Should success send event");
+            }
         }
     }
 }

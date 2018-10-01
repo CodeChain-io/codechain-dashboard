@@ -20,7 +20,7 @@ impl Default for NodeStatus {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ShellStartCodeChainRequest {
     pub env: String,

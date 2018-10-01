@@ -1,5 +1,5 @@
 use super::super::common_rpc_types::NodeName;
-use super::types::AgentQueryResult;
+use super::types::{AgentExtra, AgentQueryResult};
 
 pub enum Event {
     AgentUpdated {
@@ -9,6 +9,11 @@ pub enum Event {
     ConnectionChanged {
         added: Vec<(NodeName, NodeName)>,
         removed: Vec<(NodeName, NodeName)>,
+    },
+    AgentExtraUpdated {
+        name: NodeName,
+        before: Option<AgentExtra>,
+        after: AgentExtra,
     },
 }
 

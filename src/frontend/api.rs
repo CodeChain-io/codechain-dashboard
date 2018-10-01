@@ -1,6 +1,6 @@
 use super::super::agent::SendAgentRPC;
 use super::super::common_rpc_types::{
-    BlackList, BlockId, NodeStatus, NodeVersion, ShellStartCodeChainRequest, WhiteList,
+    BlackList, BlockId, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest, WhiteList,
 };
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
@@ -133,8 +133,8 @@ fn real_dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetwo
 fn real_node_get_info(context: Context, args: (String,)) -> RPCResponse<NodeGetInfoResponse> {
     let (name,) = args;
     let agent_query_result = context.db_service.get_agent_query_result(&name).ok_or(RPCError::AgentNotFound)?;
-
-    response(NodeGetInfoResponse::from_db_state(&agent_query_result))
+    let extra = context.db_service.get_agent_extra(&name);
+    response(NodeGetInfoResponse::from_db_state(&agent_query_result, &extra))
 }
 
 fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
@@ -181,15 +181,17 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
     })
 }
 
-fn node_start(context: Context, args: (String, ShellStartCodeChainRequest)) -> RPCResponse<()> {
+fn node_start(context: Context, args: (NodeName, ShellStartCodeChainRequest)) -> RPCResponse<()> {
     let (name, req) = args;
 
-    let agent = context.agent_service.get_agent(name);
+    let agent = context.agent_service.get_agent(name.clone());
     if agent.is_none() {
         return Err(RPCError::AgentNotFound)
     }
     let agent = agent.expect("Already checked");
-    agent.shell_start_codechain(req)?;
+    agent.shell_start_codechain(req.clone())?;
+
+    context.db_service.save_start_option(&name, &req.env, &req.args);
 
     response(())
 }

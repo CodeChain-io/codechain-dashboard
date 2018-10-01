@@ -6,7 +6,7 @@ use std::thread;
 use super::super::common_rpc_types as rpc_type;
 use super::super::common_rpc_types::{NodeName, NodeStatus};
 use super::event::{Event, EventSubscriber};
-use super::types::{AgentQueryResult, Connection, Connections};
+use super::types::{AgentExtra, AgentQueryResult, Connection, Connections};
 
 pub enum Message {
     InitializeAgent(AgentQueryResult, Sender<bool>),
@@ -14,6 +14,8 @@ pub enum Message {
     GetAgent(NodeName, Sender<Option<AgentQueryResult>>),
     GetAgents(Sender<Vec<AgentQueryResult>>),
     GetConnections(Sender<Vec<rpc_type::Connection>>),
+    SaveStartOption(NodeName, String, String),
+    GetAgentExtra(NodeName, Sender<Option<AgentExtra>>),
 }
 
 #[derive(Clone)]
@@ -23,6 +25,7 @@ pub struct ServiceSender {
 
 struct State {
     agent_query_result: HashMap<NodeName, AgentQueryResult>,
+    agent_extra: HashMap<NodeName, AgentExtra>,
     connection: Connections,
 }
 
@@ -30,6 +33,7 @@ impl State {
     pub fn new() -> Self {
         Self {
             agent_query_result: HashMap::new(),
+            agent_extra: HashMap::new(),
             connection: Connections::new(),
         }
     }
@@ -73,6 +77,12 @@ impl Service {
                         }
                         Message::GetConnections(callback) => {
                             service.get_connections(callback);
+                        }
+                        Message::SaveStartOption(node_name, env, args) => {
+                            service.save_start_option(node_name, env, args);
+                        }
+                        Message::GetAgentExtra(node_name, callback) => {
+                            service.get_agent_extra(node_name, callback);
                         }
                     }
                 }
@@ -180,6 +190,31 @@ impl Service {
             cerror!("Callback error {}", err);
         }
     }
+
+    fn save_start_option(&mut self, node_name: NodeName, env: String, args: String) {
+        let extra_db = &mut self.state.agent_extra;
+        let before_extra = extra_db.get(&node_name).cloned();
+        let mut extra = before_extra.clone().unwrap_or(Default::default());
+
+        extra.prev_env = env;
+        extra.prev_args = args;
+
+        let after_extra = extra.clone();
+        extra_db.insert(node_name.clone(), extra);
+
+        self.event_subscriber.on_event(Event::AgentExtraUpdated {
+            name: node_name,
+            before: before_extra,
+            after: after_extra,
+        });
+    }
+
+    fn get_agent_extra(&self, node_name: NodeName, callback: Sender<Option<AgentExtra>>) {
+        let extra = self.state.agent_extra.get(&node_name).cloned();
+        if let Err(err) = callback.send(extra) {
+            cerror!("Callback error {}", err);
+        }
+    }
 }
 
 impl ServiceSender {
@@ -219,5 +254,18 @@ impl ServiceSender {
         self.sender.send(Message::GetConnections(tx)).expect("Should success send request");
         let connections = rx.recv().expect("Should success get_connections");
         connections
+    }
+
+    pub fn save_start_option(&self, node_name: &NodeName, env: &str, args: &str) {
+        self.sender
+            .send(Message::SaveStartOption(node_name.clone(), env.to_string(), args.to_string()))
+            .expect("Should success send request");
+    }
+
+    pub fn get_agent_extra(&self, node_name: &NodeName) -> Option<AgentExtra> {
+        let (tx, rx) = channel();
+        self.sender.send(Message::GetAgentExtra(node_name.clone(), tx)).expect("Should success send request");
+        let agent_extra = rx.recv().expect("Should success");
+        agent_extra
     }
 }

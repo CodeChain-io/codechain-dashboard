@@ -151,7 +151,7 @@ impl NodeGetInfoResponse {
         }
     }
 
-    pub fn from_db_state(state: &db::AgentQueryResult) -> Self {
+    pub fn from_db_state(state: &db::AgentQueryResult, extra: &Option<db::AgentExtra>) -> Self {
         let mut dummy = Self::dummy();
         dummy.address = state.address;
         dummy.status = state.status;
@@ -162,6 +162,10 @@ impl NodeGetInfoResponse {
         dummy.pending_parcels = state.pending_parcels.clone();
         dummy.whitelist = state.whitelist.clone();
         dummy.blacklist = state.blacklist.clone();
+        dummy.start_option = extra.as_ref().map(|extra| StartOption {
+            env: extra.prev_env.clone(),
+            args: extra.prev_args.clone(),
+        });
         dummy
     }
 }

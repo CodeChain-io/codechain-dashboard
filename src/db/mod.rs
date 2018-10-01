@@ -4,4 +4,4 @@ mod types;
 
 pub use self::event::{Event, EventSubscriber};
 pub use self::service::{Service, ServiceSender};
-pub use self::types::AgentQueryResult;
+pub use self::types::{AgentExtra, AgentQueryResult};
