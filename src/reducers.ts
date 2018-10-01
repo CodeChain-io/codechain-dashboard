@@ -1,7 +1,12 @@
 import * as _ from "lodash";
 import { Action } from "./actions";
-import { ChainNetworks, NetworkNodeInfo, NodeInfo } from "./requests/types";
+import { ChainNetworks, NodeInfo } from "./requests/types";
 const merge = require("deepmerge").default;
+const overwriteMerge = (
+  destinationArray: any,
+  sourceArray: any,
+  options: any
+) => sourceArray;
 
 export interface RootState {
   nodeInfo: {
@@ -35,51 +40,50 @@ export const appReducer = (state = initialState, action: Action) => {
       };
     }
     case "UpdateChainNetworks": {
-      if (!state.chainNetworks) {
+      const chainNetworks = state.chainNetworks;
+      if (!chainNetworks) {
         return {
           ...state
         };
       }
-      const newNodes = _.filter(
+
+      const newNodes = _.differenceBy(
         action.data.nodes,
-        (updateNode: NetworkNodeInfo) =>
-          !_.find(
-            state.chainNetworks!.nodes,
-            (node: NetworkNodeInfo) => node.name === updateNode.name
-          )
+        chainNetworks.nodes,
+        "name"
       );
-      let updatedNodes = _.concat(state.chainNetworks.nodes, newNodes);
-      updatedNodes = _.map(updatedNodes, node => {
-        const changedNode = _.find(
+
+      const updatedNodes = _.map(chainNetworks.nodes, node => {
+        const findNode = _.find(
           action.data.nodes,
-          (updateNode: NetworkNodeInfo) => updateNode.name === node.name
+          actionNode => actionNode.name === node.name
         );
-        if (changedNode) {
-          return merge(
-            node,
-            _.find(
-              action.data.nodes,
-              (updateNode: NetworkNodeInfo) => updateNode.name === node.name
-            )
-          );
+        if (findNode) {
+          return merge(node, findNode, { arrayMerge: overwriteMerge });
         } else {
           return node;
         }
       });
-      const connectionAdded = action.data.connectionsAdded
-        ? _.concat(
-            state.chainNetworks.connections,
-            action.data.connectionsAdded
-          )
-        : _.clone(state.chainNetworks.connections);
-      const connectionRemoved = action.data.connectionsRemoved
-        ? _.difference(connectionAdded, action.data.connectionsRemoved)
-        : connectionAdded;
+
+      const addedConnections =
+        action.data.connectionsAdded && action.data.connectionsAdded.length > 0
+          ? _.concat(chainNetworks.connections, action.data.connectionsAdded)
+          : _.cloneDeep(chainNetworks.connections);
+
+      const removedConnections =
+        action.data.connectionsRemoved &&
+        action.data.connectionsRemoved.length > 0
+          ? _.differenceWith(
+              addedConnections,
+              action.data.connectionsRemoved,
+              _.isEqual
+            )
+          : addedConnections;
       return {
         ...state,
         chainNetworks: {
-          nodes: updatedNodes,
-          connections: connectionRemoved
+          nodes: _.concat(updatedNodes, newNodes),
+          connections: removedConnections
         }
       };
     }
