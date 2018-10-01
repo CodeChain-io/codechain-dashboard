@@ -1,4 +1,5 @@
 pub mod agent;
+mod codechain_rpc;
 pub mod handler;
 pub mod service;
 mod types;
