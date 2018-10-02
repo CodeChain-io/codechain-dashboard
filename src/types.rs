@@ -1,6 +1,7 @@
 use std::net::IpAddr;
 use std::sync::mpsc::Sender;
 
+use super::hardware_usage::HardwareService;
 use super::process::Message as ProcessMessage;
 
 pub struct AgentArgs<'a> {
@@ -15,4 +16,5 @@ pub struct HandlerContext {
     pub process: Sender<ProcessMessage>,
     pub codechain_address: IpAddr,
     pub name: String,
+    pub hardware_service: HardwareService,
 }

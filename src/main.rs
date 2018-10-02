@@ -11,12 +11,14 @@ extern crate reqwest;
 extern crate serde;
 extern crate serde_json;
 extern crate subprocess;
+extern crate systemstat;
 extern crate ws;
 
 #[macro_use]
 mod logger;
 mod agent;
 mod handler;
+mod hardware_usage;
 mod process;
 mod rpc;
 mod types;

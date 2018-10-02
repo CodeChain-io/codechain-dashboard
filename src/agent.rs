@@ -6,6 +6,7 @@ use std::sync::Arc;
 use ws::connect;
 
 use super::handler::WebSocketHandler;
+use super::hardware_usage::HardwareService;
 use super::logger::init as logger_init;
 use super::process::{Message as ProcessMessage, Process, ProcessOption};
 use super::rpc::api::add_routing;
@@ -25,10 +26,13 @@ pub fn run(args: AgentArgs) {
         log_file_path: args.log_file_path.to_string(),
     });
 
+    let hardware_service = HardwareService::run_thread();
+
     let context = Arc::new(HandlerContext {
         codechain_address: args.codechain_address,
         name: args.name.to_string(),
         process: process.clone(),
+        hardware_service: hardware_service.clone(),
     });
 
     cinfo!("Connect to {}", args.hub_url);
@@ -54,4 +58,6 @@ pub fn run(args: AgentArgs) {
         Ok(Err(err)) => cerror!("Error while closing CodeChain {:?}", err),
         Ok(_) => {}
     }
+
+    hardware_service.quit();
 }

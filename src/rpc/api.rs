@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use serde_json::Value;
 
+use super::super::hardware_usage::HardwareInfo;
 use super::super::process::{Error as ProcessError, Message as ProcessMessage};
 use super::super::types::HandlerContext;
 use super::router::Router;
@@ -31,7 +32,8 @@ pub fn add_routing(router: &mut Router) {
         Box::new(
             codechain_call_rpc as fn(Arc<HandlerContext>, (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>,
         ),
-    )
+    );
+    router.add_route("hardware_get", Box::new(hardware_get as fn(Arc<HandlerContext>) -> RPCResult<HardwareInfo>));
 }
 
 fn ping(_context: Arc<HandlerContext>) -> RPCResult<String> {
@@ -107,4 +109,8 @@ fn codechain_call_rpc(context: Arc<HandlerContext>, args: (String, Vec<Value>)) 
     response(CodeChainCallRPCResponse {
         inner_response: value,
     })
+}
+
+fn hardware_get(context: Arc<HandlerContext>) -> RPCResult<HardwareInfo> {
+    response(context.hardware_service.get())
 }
