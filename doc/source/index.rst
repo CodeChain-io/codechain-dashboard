@@ -200,7 +200,7 @@ NodeInfo
     whitelist?: WhiteList;
     blacklist?: BlackList;
     hardware: { 
-      cpuUsage: number,
+      cpuUsage: number[],
       diskUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"},
       memoryUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"}
     };
@@ -330,7 +330,7 @@ Response
 ::
 
   interface HardwareGetResponse { 
-    cpuUsage: number;
+    cpuUsage: number[];
     diskUsage: { total: "{}GB", available: "{}GB", percentageUsed: "{}%"};
     memoryUsage: { total: "{}GB", available: "{}GB", percentageUsed: "{}%"};
   }
