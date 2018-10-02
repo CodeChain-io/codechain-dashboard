@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate log;
-extern crate iron;
 
 extern crate codechain_rpc as crpc;
+extern crate iron;
 extern crate jsonrpc_core;
 extern crate primitives as cprimitives;
 extern crate rand;
