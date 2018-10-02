@@ -1,6 +1,8 @@
 CodeChain Agent Hub
 ====================
 
+[![Join the chat at https://gitter.im/CodeChain-io/codechain-agent-hub](https://badges.gitter.im/CodeChain-io/codechain-agent-hub.svg)](https://gitter.im/CodeChain-io/codechain-agent-hub?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 CodeChain Agent Hub is a server which collects many CodeChain node's information(best block, pending parcels, log, ...). Also, CodeChain Agent Hub serves collected data to CodeChain Dashboard.
 
 Install
