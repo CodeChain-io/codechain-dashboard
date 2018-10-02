@@ -201,8 +201,8 @@ NodeInfo
     blacklist?: BlackList;
     hardware: { 
       cpuUsage: number[],
-      diskUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"},
-      memoryUsage: { total: "{}GB", available:"{}GB", percentageUsed: "{}%"}
+      diskUsage: { total: i64, available: i64, percentageUsed: f64},
+      memoryUsage: { total: i64, available: i64, percentageUsed: f64}
     };
     // events from this node order by created time.
     events: Event[];
@@ -331,8 +331,8 @@ Response
 
   interface HardwareGetResponse { 
     cpuUsage: number[];
-    diskUsage: { total: "{}GB", available: "{}GB", percentageUsed: "{}%"};
-    memoryUsage: { total: "{}GB", available: "{}GB", percentageUsed: "{}%"};
+    diskUsage: { total: i64, available: i64, percentageUsed: f64};
+    memoryUsage: { total: i64, available: i64, percentageUsed: f64};
   }
   
 agent_getInfo ➡️ ⬅️ 
