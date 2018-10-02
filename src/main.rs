@@ -24,6 +24,7 @@ mod frontend;
 mod jsonrpc;
 mod router;
 mod rpc;
+mod util;
 
 use std::cell::Cell;
 use std::fmt;
@@ -44,9 +45,17 @@ use self::router::Router;
 fn main() {
     logger_init().expect("Logger should be initialized");
 
+    // FIXME: move to config
+    let db_user = "codechain-agent-hub";
+    let db_password = "preempt-entreat-bell-chanson";
+
     let frontend_service_sender = frontend::Service::run_thread();
     let event_propagater = Box::new(EventPropagator::new(frontend_service_sender.clone()));
-    let db_service_sender = db::Service::run_thread(event_propagater);
+    let db_service_sender = db::Service::run_thread(db::ServiceNewArg {
+        event_subscriber: event_propagater,
+        db_user: db_user.to_string(),
+        db_password: db_password.to_string(),
+    });
     let agent_service_sender = agent::Service::run_thread(db_service_sender.clone());
     let agent_service_for_frontend = agent_service_sender.clone();
     let web_handler = WebHandler::new(agent_service_sender.clone());

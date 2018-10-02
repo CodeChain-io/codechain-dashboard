@@ -24,6 +24,7 @@ fn create_agent_extra_schema(conn: &Connection) {
     conn.execute(
         "CREATE TABLE agent_extra (\
         id SERIAL PRIMARY KEY,
+        name VARCHAR NOT NULL UNIQUE,
         prev_env VARCHAR NOT NULL,
         prev_args VARCHAR NOT NULL
     )",

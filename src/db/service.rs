@@ -1,13 +1,20 @@
 use std::collections::HashMap;
+use std::error;
 use std::net::SocketAddr;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
+use postgres;
+use postgres::TlsMode;
+
 use super::super::common_rpc_types as rpc_type;
 use super::super::common_rpc_types::{NodeName, NodeStatus};
 use super::event::{Event, EventSubscriber};
+use super::queries;
 use super::types::{AgentExtra, AgentQueryResult, Connection, Connections};
+use util;
 
+#[derive(Debug, Clone)]
 pub enum Message {
     InitializeAgent(AgentQueryResult, Sender<bool>),
     UpdateAgent(AgentQueryResult),
@@ -25,7 +32,6 @@ pub struct ServiceSender {
 
 struct State {
     agent_query_result: HashMap<NodeName, AgentQueryResult>,
-    agent_extra: HashMap<NodeName, AgentExtra>,
     connection: Connections,
 }
 
@@ -33,7 +39,6 @@ impl State {
     pub fn new() -> Self {
         Self {
             agent_query_result: HashMap::new(),
-            agent_extra: HashMap::new(),
             connection: Connections::new(),
         }
     }
@@ -42,47 +47,63 @@ impl State {
 pub struct Service {
     state: State,
     event_subscriber: Box<EventSubscriber>,
+    db_conn: postgres::Connection,
+}
+
+pub struct ServiceNewArg {
+    pub event_subscriber: Box<EventSubscriber>,
+    pub db_user: String,
+    pub db_password: String,
 }
 
 impl Service {
-    fn new(event_subscriber: Box<EventSubscriber>) -> Self {
+    fn new(
+        ServiceNewArg {
+            event_subscriber,
+            db_user,
+            db_password,
+        }: ServiceNewArg,
+    ) -> Self {
+        let conn_uri = format!("postgres://{}:{}@localhost", db_user, db_password);
+        let conn = postgres::Connection::connect(conn_uri, TlsMode::None).unwrap();
         Self {
             state: State::new(),
             event_subscriber,
+            db_conn: conn,
         }
     }
 
-    pub fn run_thread(event_subscriber: Box<EventSubscriber>) -> ServiceSender {
+    pub fn run_thread(arg: ServiceNewArg) -> ServiceSender {
         let (tx, rx) = channel();
         let service_sender = ServiceSender::new(tx.clone());
 
-        let mut service = Service::new(event_subscriber);
+        let mut service = Service::new(arg);
 
         thread::Builder::new()
             .name("db service".to_string())
             .spawn(move || {
                 for message in rx {
-                    match message {
+                    match &message {
                         Message::InitializeAgent(agent_query_result, callback) => {
-                            service.initialize_agent(agent_query_result, callback);
+                            service.initialize_agent(agent_query_result, callback.clone());
                         }
                         Message::UpdateAgent(agent_query_result) => {
-                            service.update_agent(agent_query_result);
+                            service.update_agent(agent_query_result.clone());
                         }
                         Message::GetAgent(node_name, callback) => {
-                            service.get_agent(node_name, callback);
+                            service.get_agent(node_name, callback.clone());
                         }
                         Message::GetAgents(callback) => {
-                            service.get_agents(callback);
+                            service.get_agents(callback.clone());
                         }
                         Message::GetConnections(callback) => {
-                            service.get_connections(callback);
+                            service.get_connections(callback.clone());
                         }
                         Message::SaveStartOption(node_name, env, args) => {
-                            service.save_start_option(node_name, env, args);
+                            util::log_error(message.clone(), service.save_start_option(node_name, env, args));
                         }
                         Message::GetAgentExtra(node_name, callback) => {
-                            service.get_agent_extra(node_name, callback);
+                            util::log_error(message.clone(), service.get_agent_extra(node_name, callback.clone()));
                         }
                     }
                 }
@@ -92,14 +113,14 @@ impl Service {
         service_sender
     }
 
-    fn initialize_agent(&mut self, state: AgentQueryResult, callback: Sender<bool>) {
+    fn initialize_agent(&mut self, state: &AgentQueryResult, callback: Sender<bool>) {
         let name = state.name.clone();
         if !self.state.agent_query_result.contains_key(&name) {
             self.event_subscriber.on_event(Event::AgentUpdated {
                 before: None,
                 after: state.clone(),
             });
-            self.state.agent_query_result.insert(name, state);
+            self.state.agent_query_result.insert(name, state.clone());
             if let Err(err) = callback.send(true) {
                 cerror!("Cannot send callback : {}", err);
             }
@@ -119,7 +140,7 @@ impl Service {
             before: None,
             after: state.clone(),
         });
-        *before = state;
+        *before = state.clone();
         if let Err(err) = callback.send(true) {
             cerror!("Cannot send callback : {}", err);
         }
@@ -167,8 +188,8 @@ impl Service {
         find.map(|agent| agent.name.clone())
     }
 
-    fn get_agent(&self, name: NodeName, callback: Sender<Option<AgentQueryResult>>) {
-        let agent_query_result = self.state.agent_query_result.get(&name);
+    fn get_agent(&self, name: &NodeName, callback: Sender<Option<AgentQueryResult>>) {
+        let agent_query_result = self.state.agent_query_result.get(name);
         if let Err(err) = callback.send(agent_query_result.map(|state| state.clone())) {
             cerror!("Cannot call calback get_agent, name: {}\nerr: {}", name, err);
         }
@@ -191,29 +212,40 @@ impl Service {
         }
     }
 
-    fn save_start_option(&mut self, node_name: NodeName, env: String, args: String) {
-        let extra_db = &mut self.state.agent_extra;
-        let before_extra = extra_db.get(&node_name).cloned();
+    fn save_start_option(
+        &mut self,
+        node_name: &NodeName,
+        env: &String,
+        args: &String,
+    ) -> Result<(), Box<error::Error>> {
+        let before_extra = queries::agent_extra::get(&self.db_conn, node_name)?;
         let mut extra = before_extra.clone().unwrap_or(Default::default());
 
-        extra.prev_env = env;
-        extra.prev_args = args;
+        extra.prev_env = env.to_string();
+        extra.prev_args = args.to_string();
 
         let after_extra = extra.clone();
-        extra_db.insert(node_name.clone(), extra);
+        queries::agent_extra::upsert(&self.db_conn, node_name, &extra)?;
 
         self.event_subscriber.on_event(Event::AgentExtraUpdated {
-            name: node_name,
+            name: node_name.clone(),
             before: before_extra,
             after: after_extra,
         });
+
+        Ok(())
     }
 
-    fn get_agent_extra(&self, node_name: NodeName, callback: Sender<Option<AgentExtra>>) {
-        let extra = self.state.agent_extra.get(&node_name).cloned();
+    fn get_agent_extra(
+        &self,
+        node_name: &NodeName,
+        callback: Sender<Option<AgentExtra>>,
+    ) -> Result<(), Box<error::Error>> {
+        let extra = queries::agent_extra::get(&self.db_conn, node_name)?;
         if let Err(err) = callback.send(extra) {
             cerror!("Callback error {}", err);
         }
+        Ok(())
     }
 }
 
