@@ -10,7 +10,9 @@ use serde_json;
 use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
-use super::super::common_rpc_types::{BlockId, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest};
+use super::super::common_rpc_types::{
+    BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest,
+};
 use super::super::db;
 use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
@@ -238,6 +240,7 @@ impl Agent {
         let pending_parcels = self.codechain_rpc.get_pending_parcels(info.status)?;
         let whitelist = self.codechain_rpc.get_whitelist(info.status)?;
         let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
+        let hardware = self.sender.hardware_get().map_err(|err| format!("Agent Update {}", err))?;
 
         ctrace!("Update state from {:?} to {:?}", state, new_state);
         self.db_service.update_agent_query_result(db::AgentQueryResult {
@@ -250,6 +253,7 @@ impl Agent {
             pending_parcels,
             whitelist,
             blacklist,
+            hardware: Some(hardware),
         });
         *state = new_state;
 
@@ -326,6 +330,7 @@ pub trait SendAgentRPC {
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse>;
     fn codechain_call_rpc_raw(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>;
     fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<Output>;
+    fn hardware_get(&self) -> RPCResult<HardwareInfo>;
 }
 
 impl SendAgentRPC for AgentSender {
@@ -359,5 +364,10 @@ impl SendAgentRPC for AgentSender {
             jsonrpc::call_many_args(self.jsonrpc_context.clone(), "codechain_callRPC", args)?;
         let output: Output = serde_json::from_value(result.inner_response)?;
         Ok(output)
+    }
+
+    fn hardware_get(&self) -> RPCResult<HardwareInfo> {
+        let result = jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "hardware_get")?;
+        Ok(result)
     }
 }

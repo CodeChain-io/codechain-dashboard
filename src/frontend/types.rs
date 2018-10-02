@@ -2,7 +2,9 @@ use std::net::SocketAddr;
 
 use super::super::agent;
 use super::super::common_rpc_types;
-use super::super::common_rpc_types::{BlackList, BlockId, NodeName, NodeStatus, NodeVersion, PendingParcel, WhiteList};
+use super::super::common_rpc_types::{
+    BlackList, BlockId, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion, PendingParcel, WhiteList,
+};
 use super::super::db;
 
 #[derive(Clone)]
@@ -12,22 +14,6 @@ pub struct Context {
 }
 
 pub type Event = String;
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HardwareUsage {
-    pub total: i64,
-    pub available: i64,
-    pub percentage_used: f64,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HardwareInfo {
-    pub cpu_usage: Vec<f64>,
-    pub disk_usage: HardwareUsage,
-    pub memory_usage: HardwareUsage,
-}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -105,7 +91,7 @@ pub struct NodeGetInfoResponse {
     pub peers: Vec<SocketAddr>,
     pub whitelist: Option<WhiteList>,
     pub blacklist: Option<BlackList>,
-    pub hardware: HardwareInfo,
+    pub hardware: Option<HardwareInfo>,
     pub events: Vec<Event>,
 }
 
@@ -134,7 +120,7 @@ impl NodeGetInfoResponse {
                 list: Vec::new(),
                 enabled: false,
             }),
-            hardware: HardwareInfo {
+            hardware: Some(HardwareInfo {
                 cpu_usage: vec![0.34, 0.03, 0.58],
                 disk_usage: HardwareUsage {
                     total: 8 * 1000 * 1000 * 1000,
@@ -146,7 +132,7 @@ impl NodeGetInfoResponse {
                     available: 5 * 1000 * 1000 * 1000,
                     percentage_used: 0.6,
                 },
-            },
+            }),
             events: vec!["Network connected".to_string(), "Block received".to_string()],
         }
     }
@@ -166,6 +152,7 @@ impl NodeGetInfoResponse {
             env: extra.prev_env.clone(),
             args: extra.prev_args.clone(),
         });
+        dummy.hardware = state.hardware.clone();
         dummy
     }
 }

@@ -3,7 +3,10 @@ use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::net::SocketAddr;
 
-use super::super::common_rpc_types::{BlackList, BlockId, NodeName, NodeStatus, NodeVersion, PendingParcel, WhiteList};
+use super::super::common_rpc_types::{
+    BlackList, BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, PendingParcel, WhiteList,
+};
+
 
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct AgentQueryResult {
@@ -16,6 +19,7 @@ pub struct AgentQueryResult {
     pub pending_parcels: Vec<PendingParcel>,
     pub whitelist: Option<WhiteList>,
     pub blacklist: Option<BlackList>,
+    pub hardware: Option<HardwareInfo>,
 }
 
 #[derive(PartialEq, Clone, Debug, Default)]

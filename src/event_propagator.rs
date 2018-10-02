@@ -37,6 +37,7 @@ impl db::EventSubscriber for EventPropagator {
                     diff["pendingParcels"] = serde_json::to_value(after.pending_parcels).unwrap();
                     diff["whitelist"] = serde_json::to_value(after.whitelist).unwrap();
                     diff["blacklist"] = serde_json::to_value(after.blacklist).unwrap();
+                    diff["hardware"] = serde_json::to_value(after.hardware).unwrap();
                 } else {
                     let before = before.unwrap();
                     if before == after {
@@ -66,6 +67,9 @@ impl db::EventSubscriber for EventPropagator {
                     }
                     if before.blacklist != after.blacklist {
                         diff["blacklist"] = serde_json::to_value(after.blacklist).unwrap();
+                    }
+                    if before.hardware != after.hardware {
+                        diff["hardware"] = serde_json::to_value(after.hardware).unwrap();
                     }
                 }
 

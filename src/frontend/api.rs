@@ -1,12 +1,12 @@
 use super::super::agent::SendAgentRPC;
 use super::super::common_rpc_types::{
-    BlackList, BlockId, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest, WhiteList,
+    BlackList, BlockId, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest,
+    WhiteList,
 };
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
-    Context, DashboardGetNetworkResponse, DashboardNode, HardwareInfo, HardwareUsage, NodeConnection,
-    NodeGetInfoResponse, StartOption,
+    Context, DashboardGetNetworkResponse, DashboardNode, NodeConnection, NodeGetInfoResponse, StartOption,
 };
 
 pub fn add_routing(router: &mut Router<Context>) {
@@ -164,7 +164,7 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
             list: Vec::new(),
             enabled: false,
         }),
-        hardware: HardwareInfo {
+        hardware: Some(HardwareInfo {
             cpu_usage: vec![0.95, 0.03, 0.58],
             disk_usage: HardwareUsage {
                 total: 512 * 1000 * 1000 * 1000,
@@ -176,7 +176,7 @@ fn node_get_info(_: Context) -> RPCResponse<NodeGetInfoResponse> {
                 available: 4 * 1000 * 1000 * 100,
                 percentage_used: 0.6,
             },
-        },
+        }),
         events: vec!["Network connected".to_string(), "Block received".to_string()],
     })
 }

@@ -55,3 +55,19 @@ pub struct WhiteList {
 }
 
 pub type BlackList = WhiteList;
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct HardwareUsage {
+    pub total: i64,
+    pub available: i64,
+    pub percentage_used: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct HardwareInfo {
+    pub cpu_usage: Vec<f64>,
+    pub disk_usage: HardwareUsage,
+    pub memory_usage: HardwareUsage,
+}
