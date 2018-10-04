@@ -4,7 +4,11 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use std::thread;
 use std::time::Duration;
-use systemstat::{CPULoad, DelayedMeasurement, Platform, System};
+
+use sysinfo;
+use sysinfo::{DiskExt, SystemExt};
+use systemstat;
+use systemstat::{CPULoad, DelayedMeasurement, Platform};
 
 #[derive(Clone)]
 pub struct HardwareService {
@@ -64,14 +68,14 @@ impl HardwareService {
             *usage = cpu.iter().map(|core| (core.user + core.system) as f64).collect();
         }
 
-        let sys = System::new();
+        let sys = systemstat::System::new();
         Ok(sys.cpu_load().map_err(|err| err.description().to_string())?)
     }
 
     pub fn get(&self) -> HardwareInfo {
-        let sys = System::new();
-        let disk_usage = get_disk_usage(&sys);
-        let memory_usage = get_memory_usage(&sys);
+        let mut sysinfo_sys = sysinfo::System::new();
+        let disk_usage = get_disk_usage(&mut sysinfo_sys);
+        let memory_usage = get_memory_usage(&mut sysinfo_sys);
         let cpu_usage = self.cpu_usage.read().map(|usage| usage.clone()).unwrap_or(Vec::new());
         HardwareInfo {
             cpu_usage,
@@ -103,50 +107,32 @@ pub struct HardwareInfo {
     pub memory_usage: HardwareUsage,
 }
 
-fn get_disk_usage(sys: &System) -> HardwareUsage {
-    match sys.mounts() {
-        Err(err) => {
-            cwarn!("Cannot get disk usage : {}", err);
-            HardwareUsage {
-                total: 0,
-                available: 0,
-                percentage_used: 0.0,
-            }
-        }
-        Ok(mounts) => {
-            let mut total: i64 = 0;
-            let mut available: i64 = 0;
-            for mount in mounts.iter() {
-                available += mount.avail.as_usize() as i64;
-                total += mount.total.as_usize() as i64;
-            }
-            HardwareUsage {
-                total,
-                available,
-                percentage_used: (total / available) as f64,
-            }
-        }
+fn get_disk_usage(sys: &mut sysinfo::System) -> HardwareUsage {
+    sys.refresh_disk_list();
+    sys.refresh_disks();
+
+    let mut total: i64 = 0;
+    let mut available: i64 = 0;
+    for disk in sys.get_disks() {
+        total += disk.get_total_space() as i64;
+        available += disk.get_available_space() as i64;
+    }
+    HardwareUsage {
+        total,
+        available,
+        percentage_used: ((total - available) as f64 / total as f64),
     }
 }
 
-fn get_memory_usage(sys: &System) -> HardwareUsage {
-    match sys.memory() {
-        Err(err) => {
-            cwarn!("Cannot get memory usage : {}", err);
-            HardwareUsage {
-                total: 0,
-                available: 0,
-                percentage_used: 0.0,
-            }
-        }
-        Ok(mem) => {
-            let total = mem.total.as_usize() as i64;
-            let available = (mem.total - mem.free).as_usize() as i64;
-            HardwareUsage {
-                total,
-                available,
-                percentage_used: (available / total) as f64,
-            }
-        }
+fn get_memory_usage(sys: &mut sysinfo::System) -> HardwareUsage {
+    sys.refresh_system();
+
+    let total = sys.get_total_memory() as i64;
+    let available = sys.get_free_memory() as i64;
+    let used = sys.get_used_memory() as i64;
+    HardwareUsage {
+        total,
+        available,
+        percentage_used: (used as f64 / total as f64),
     }
 }
