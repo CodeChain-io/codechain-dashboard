@@ -14,6 +14,7 @@ use serde_json::Value;
 use subprocess::{Exec, Popen, PopenError, Redirection};
 
 use super::rpc::types::NodeStatus;
+use super::types::CommitHash;
 
 #[derive(Debug)]
 pub enum Error {
@@ -133,7 +134,7 @@ pub enum Message {
         callback: Sender<Result<(), Error>>,
     },
     GetStatus {
-        callback: Sender<Result<(NodeStatus, Option<u16>), Error>>,
+        callback: Sender<Result<(NodeStatus, Option<u16>, CommitHash), Error>>,
     },
     GetLog {
         callback: Sender<Result<String, Error>>,
@@ -202,7 +203,8 @@ impl Process {
                 let codechain_status = &self.codechain_status;
                 let status = codechain_status.to_node_status();
                 let p2p_port = codechain_status.p2p_port();
-                callback.send(Ok((status, p2p_port))).expect("Callback should be success");
+                let commit_hash = self.get_commit_hash().unwrap_or("".to_string());
+                callback.send(Ok((status, p2p_port, commit_hash))).expect("Callback should be success");
             }
             Message::GetLog {
                 callback,
@@ -370,7 +372,7 @@ impl Process {
         Ok(contents)
     }
 
-    fn call_rpc(&mut self, method: String, arguments: Vec<Value>) -> Result<Value, Error> {
+    fn call_rpc(&self, method: String, arguments: Vec<Value>) -> Result<Value, Error> {
         let params = jsonrpc_core::Params::Array(arguments);
 
         let jsonrpc_request = jsonrpc_core::MethodCall {
@@ -393,6 +395,21 @@ impl Process {
         let value = serde_json::to_value(response).expect("Should success jsonrpc type to Value");
 
         Ok(value)
+    }
+
+    fn get_commit_hash(&self) -> Result<String, Error> {
+        if let CodeChainStatus::Run {
+            ..
+        } = self.codechain_status
+        {
+            let response = self.call_rpc("commitHash".to_string(), Vec::new())?;
+            Ok(response["result"].as_str().unwrap_or("").to_string())
+        } else {
+            // "git rev-parse HEAD"
+            let mut exec =
+                Exec::cmd("git").arg("rev-parse").arg("HEAD").cwd(self.option.codechain_dir.clone()).capture()?;
+            Ok(exec.stdout_str())
+        }
     }
 }
 

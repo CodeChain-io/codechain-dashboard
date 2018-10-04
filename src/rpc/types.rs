@@ -121,6 +121,7 @@ pub struct AgentGetInfoResponse {
     pub status: NodeStatus,
     pub name: String,
     pub address: Option<SocketAddr>,
+    pub codechain_commit_hash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -4,6 +4,8 @@ use std::sync::mpsc::Sender;
 use super::hardware_usage::HardwareService;
 use super::process::Message as ProcessMessage;
 
+pub type CommitHash = String;
+
 pub struct AgentArgs<'a> {
     pub codechain_dir: &'a str,
     pub log_file_path: &'a str,

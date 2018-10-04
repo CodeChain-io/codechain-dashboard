@@ -82,11 +82,12 @@ fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoRespons
         callback: tx,
     })?;
     let process_result = rx.recv()?;
-    let (node_status, port) = process_result?;
+    let (node_status, port, commit_hash) = process_result?;
     response(AgentGetInfoResponse {
         name: context.name.clone(),
         status: node_status,
         address: port.map(|port| SocketAddr::new(context.codechain_address, port)),
+        codechain_commit_hash: commit_hash,
     })
 }
 
