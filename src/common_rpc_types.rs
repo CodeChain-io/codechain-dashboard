@@ -4,6 +4,7 @@ use cprimitives::H256;
 use serde_json;
 
 pub type NodeName = String;
+pub type CommitHash = String;
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
 pub enum NodeStatus {
@@ -25,6 +26,14 @@ impl Default for NodeStatus {
 pub struct ShellStartCodeChainRequest {
     pub env: String,
     pub args: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ShellUpdateCodeChainRequest {
+    pub env: String,
+    pub args: String,
+    pub commit_hash: String,
 }
 
 pub type Connection = (NodeName, NodeName);

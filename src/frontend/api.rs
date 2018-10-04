@@ -1,7 +1,7 @@
 use super::super::agent::SendAgentRPC;
 use super::super::common_rpc_types::{
-    BlackList, BlockId, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest,
-    WhiteList,
+    BlackList, BlockId, CommitHash, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion,
+    ShellStartCodeChainRequest, ShellUpdateCodeChainRequest, WhiteList,
 };
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
@@ -29,6 +29,7 @@ pub fn add_routing(router: &mut Router<Context>) {
         Box::new(node_start as fn(Context, (String, ShellStartCodeChainRequest)) -> RPCResponse<()>),
     );
     router.add_route("node_stop", Box::new(node_stop as fn(Context, (String,)) -> RPCResponse<()>));
+    router.add_route("node_update", Box::new(node_update as fn(Context, (NodeName, CommitHash)) -> RPCResponse<()>));
     router.add_route(
         "shell_getCodeChainLog",
         Box::new(shell_get_codechain_log as fn(Context, (String,)) -> RPCResponse<String>),
@@ -205,6 +206,25 @@ fn node_stop(context: Context, args: (String,)) -> RPCResponse<()> {
     }
     let agent = agent.expect("Already checked");
     agent.shell_stop_codechain()?;
+
+    response(())
+}
+
+fn node_update(context: Context, args: (NodeName, CommitHash)) -> RPCResponse<()> {
+    let (name, commit_hash) = args;
+
+    let agent = context.agent_service.get_agent(name.clone());
+    if agent.is_none() {
+        return Err(RPCError::AgentNotFound)
+    }
+    let agent = agent.expect("Already checked");
+
+    let extra = context.db_service.get_agent_extra(&name);
+    agent.shell_update_codechain(ShellUpdateCodeChainRequest {
+        env: extra.as_ref().map(|extra| extra.prev_env.clone()).unwrap_or("".to_string()),
+        args: extra.as_ref().map(|extra| extra.prev_args.clone()).unwrap_or("".to_string()),
+        commit_hash,
+    })?;
 
     response(())
 }

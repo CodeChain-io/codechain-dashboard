@@ -11,7 +11,7 @@ use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
 
 use super::super::common_rpc_types::{
-    BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest,
+    BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest, ShellUpdateCodeChainRequest,
 };
 use super::super::db;
 use super::super::jsonrpc;
@@ -334,6 +334,7 @@ impl Drop for Agent {
 pub trait SendAgentRPC {
     fn shell_start_codechain(&self, _req: ShellStartCodeChainRequest) -> RPCResult<()>;
     fn shell_stop_codechain(&self) -> RPCResult<()>;
+    fn shell_update_codechain(&self, _req: ShellUpdateCodeChainRequest) -> RPCResult<()>;
     fn shell_get_codechain_log(&self) -> RPCResult<String>;
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse>;
     fn codechain_call_rpc_raw(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>;
@@ -349,6 +350,11 @@ impl SendAgentRPC for AgentSender {
 
     fn shell_stop_codechain(&self) -> RPCResult<()> {
         jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "shell_stopCodeChain")?;
+        Ok(())
+    }
+
+    fn shell_update_codechain(&self, args: ShellUpdateCodeChainRequest) -> RPCResult<()> {
+        jsonrpc::call_one_arg(self.jsonrpc_context.clone(), "shell_updateCodeChain", args)?;
         Ok(())
     }
 
