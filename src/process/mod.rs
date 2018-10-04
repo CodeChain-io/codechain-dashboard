@@ -1,11 +1,14 @@
 mod git_update;
+mod git_util;
 
+use std::cell::Cell;
+use std::fmt::Debug;
 use std::fs::File;
 use std::io::Error as IOError;
 use std::io::Read;
 use std::option::Option;
 use std::result::Result;
-use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
+use std::sync::mpsc::{channel, Receiver, RecvTimeoutError, Sender, TryRecvError};
 use std::thread;
 use std::time::Duration;
 
@@ -23,6 +26,8 @@ pub enum Error {
     EnvParseError,
     AlreadyRunning,
     NotRunning,
+    // CodeChain is now updating, cannot run or stop CodeChain when updating
+    Updating,
     SubprocessError(PopenError),
     IO(IOError),
     ShellError {
@@ -52,7 +57,6 @@ pub struct ProcessOption {
     pub log_file_path: String,
 }
 
-#[derive(Debug, PartialEq, Clone)]
 enum CodeChainStatus {
     Starting {
         p2p_port: u16,
@@ -61,6 +65,12 @@ enum CodeChainStatus {
     Run {
         p2p_port: u16,
         rpc_port: u16,
+    },
+    Updating {
+        env: String,
+        args: String,
+        sender: Cell<Option<git_update::Sender>>,
+        rx_callback: Receiver<git_update::CallbackResult>,
     },
     Stop,
     Error {
@@ -79,6 +89,9 @@ impl CodeChainStatus {
                 ..
             } => NodeStatus::Run,
             CodeChainStatus::Stop => NodeStatus::Stop,
+            CodeChainStatus::Updating {
+                ..
+            } => NodeStatus::Updating,
             CodeChainStatus::Error {
                 ..
             } => NodeStatus::Error,
@@ -96,6 +109,9 @@ impl CodeChainStatus {
                 ..
             } => Some(*p2p_port),
             CodeChainStatus::Stop => None,
+            CodeChainStatus::Updating {
+                ..
+            } => None,
             CodeChainStatus::Error {
                 p2p_port,
                 ..
@@ -114,6 +130,9 @@ impl CodeChainStatus {
                 ..
             } => *rpc_port,
             CodeChainStatus::Stop => 0,
+            CodeChainStatus::Updating {
+                ..
+            } => 0,
             CodeChainStatus::Error {
                 rpc_port,
                 ..
@@ -183,6 +202,7 @@ impl Process {
                     process.handle_message(message);
                 }
                 process.ping_to_codechain();
+                process.handle_git_update();
             })
             .expect("Should success running process thread");
         tx
@@ -208,6 +228,17 @@ impl Process {
                 callback,
             } => {
                 let result = self.stop();
+                if let CodeChainStatus::Updating {
+                    sender,
+                    ..
+                } = &mut self.codechain_status
+                {
+                    cinfo!(PROCESS, "Wait until codechain update finish");
+                    let moved_sender = sender.replace(None).expect("Sender should be exist");
+                    if let Err(err) = moved_sender.join() {
+                        cerror!(PROCESS, "Cannot wait for git update closing: {:?}", err);
+                    }
+                }
                 callback.send(result).expect("Callback should be success");
                 return
             }
@@ -221,8 +252,7 @@ impl Process {
                 if self.is_running() {
                     result = self.stop();
                 }
-                let result = result.and_then(|_| self.update(&target_version));
-                let result = result.and_then(|_| self.run(env, args));
+                let result = result.and_then(|_| self.update(&target_version, env, args));
                 callback.send(result).expect("Callback should be success");
             }
             Message::GetStatus {
@@ -252,7 +282,14 @@ impl Process {
     }
 
     pub fn ping_to_codechain(&mut self) {
-        if self.codechain_status == CodeChainStatus::Stop {
+        if let CodeChainStatus::Stop = self.codechain_status {
+            return
+        }
+
+        if let CodeChainStatus::Updating {
+            ..
+        } = self.codechain_status
+        {
             return
         }
 
@@ -305,6 +342,45 @@ impl Process {
                     rpc_port,
                 };
             }
+            CodeChainStatus::Updating {
+                ..
+            } => unreachable!(),
+        }
+    }
+
+    fn handle_git_update(&mut self) {
+        let (success, env, args) = if let CodeChainStatus::Updating {
+            rx_callback,
+            env,
+            args,
+            ..
+        } = &self.codechain_status
+        {
+            match rx_callback.try_recv() {
+                Err(TryRecvError::Empty) => return,
+                Err(_) => {
+                    cerror!(PROCESS, "Invalid state from git_update");
+                    (false, env.to_string(), args.to_string())
+                }
+                Ok(_) => {
+                    cinfo!(PROCESS, "Git update success");
+                    (true, env.to_string(), args.to_string())
+                }
+            }
+        } else {
+            return
+        };
+
+        if success {
+            self.codechain_status = CodeChainStatus::Stop;
+            if let Err(err) = self.run(env.to_string(), args.to_string()) {
+                cerror!(PROCESS, "Cannot run codechain after update : {:?}", err);
+            }
+        } else {
+            self.codechain_status = CodeChainStatus::Error {
+                p2p_port: 0,
+                rpc_port: 0,
+            };
         }
     }
 
@@ -313,6 +389,10 @@ impl Process {
         if self.is_running() {
             cdebug!(PROCESS, "Run codechain failed because it is AlreadyRunning");
             return Err(Error::AlreadyRunning)
+        }
+        if self.is_updating() {
+            cdebug!(PROCESS, "Run codechain failed because it is Updating");
+            return Err(Error::Updating)
         }
 
         let args_iter = args.split_whitespace();
@@ -360,6 +440,17 @@ impl Process {
         }
     }
 
+    fn is_updating(&self) -> bool {
+        if let CodeChainStatus::Updating {
+            ..
+        } = self.codechain_status
+        {
+            true
+        } else {
+            false
+        }
+    }
+
     fn parse_env(env: &str) -> Result<Vec<(&str, &str)>, Error> {
         let env_kvs = env.split_whitespace();
         let mut ret = Vec::new();
@@ -377,6 +468,9 @@ impl Process {
     pub fn stop(&mut self) -> Result<(), Error> {
         if !self.is_running() {
             return Err(Error::NotRunning)
+        }
+        if self.is_updating() {
+            return Err(Error::Updating)
         }
 
         let codechain = &mut self.child.as_mut().expect("Already checked")[0];
@@ -400,16 +494,22 @@ impl Process {
         Ok(())
     }
 
-    fn update(&mut self, commit_hash: &str) -> Result<(), Error> {
-        git_remote_update(self.option.codechain_dir.clone())?;
-        git_reset_hard(self.option.codechain_dir.clone(), commit_hash.to_string())?;
-        let current_hash = git_current_hash(self.option.codechain_dir.clone())?;
-        if commit_hash != current_hash {
-            cwarn!(PROCESS, "Updated commit hash not matched expected {} found {}", commit_hash, current_hash);
-            Err(Error::Unknown(format!("Cannot update to {}", commit_hash)))
-        } else {
-            Ok(())
+    fn update(&mut self, commit_hash: &str, env: String, args: String) -> Result<(), Error> {
+        if self.is_updating() {
+            return Err(Error::Updating)
         }
+
+        let (tx, rx) = channel();
+        let job_sender = git_update::Job::run(self.option.codechain_dir.to_string(), commit_hash.to_string(), tx);
+
+        self.codechain_status = CodeChainStatus::Updating {
+            env,
+            args,
+            sender: Cell::new(Some(job_sender)),
+            rx_callback: rx,
+        };
+
+        Ok(())
     }
 
     fn get_log(&mut self) -> Result<String, Error> {
@@ -453,7 +553,7 @@ impl Process {
             let response = self.call_rpc("commitHash".to_string(), Vec::new())?;
             Ok(response["result"].as_str().unwrap_or("").to_string())
         } else {
-            Ok(git_current_hash(self.option.codechain_dir.clone())?)
+            Ok(git_util::current_hash(self.option.codechain_dir.clone())?)
         }
     }
 }
@@ -470,40 +570,4 @@ fn parse_port(args: &Vec<String>, option_name: &str) -> Option<u16> {
     let interface_pos = option_position.map(|pos| pos + 1);
     let interface_string = interface_pos.and_then(|pos| args.get(pos));
     interface_string.and_then(|port| port.parse().ok())
-}
-
-fn git_remote_update(codechain_dir: String) -> Result<(), Error> {
-    cinfo!(PROCESS, "Run git remote update");
-    let exec = Exec::cmd("git").arg("remote").arg("update").cwd(codechain_dir).capture()?;
-    if exec.exit_status.success() {
-        ctrace!(PROCESS, "git remote update\n  stdout: {}\n  stderr: {}\n", exec.stdout_str(), exec.stderr_str());
-        Ok(())
-    } else {
-        Err(Error::ShellError {
-            exit_code: exec.exit_status,
-            stdout: exec.stdout_str(),
-            stderr: exec.stderr_str(),
-        })
-    }
-}
-
-fn git_reset_hard(codechain_dir: String, target_commit_hash: CommitHash) -> Result<(), Error> {
-    cinfo!(PROCESS, "Run git reset --hard");
-    let exec = Exec::cmd("git").arg("reset").arg("--hard").arg(target_commit_hash).cwd(codechain_dir).capture()?;
-    if exec.exit_status.success() {
-        ctrace!(PROCESS, "git remote update\n  stdout: {}\n  stderr: {}\n", exec.stdout_str(), exec.stderr_str());
-        Ok(())
-    } else {
-        Err(Error::ShellError {
-            exit_code: exec.exit_status,
-            stdout: exec.stdout_str(),
-            stderr: exec.stderr_str(),
-        })
-    }
-}
-
-fn git_current_hash(codechain_dir: String) -> Result<CommitHash, Error> {
-    cdebug!(PROCESS, "Run git rev-parse HEAD at {}", codechain_dir);
-    let exec = Exec::cmd("git").arg("rev-parse").arg("HEAD").cwd(codechain_dir).capture()?;
-    Ok(exec.stdout_str().trim().to_string())
 }

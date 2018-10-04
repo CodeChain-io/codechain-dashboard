@@ -37,6 +37,7 @@ pub fn response<T>(value: T) -> RPCResult<T> {
 
 const ERR_ALREADY_RUNNING: i64 = -10001;
 const ERR_ENV_PARSE: i64 = -10002;
+const ERR_CODECHAIN_UPDATING: i64 = -10003;
 const ERR_PROCESS_INTERNAL: i64 = -32603;
 const ERR_CODECHAIN_NOT_RUNNING: i64 = 0;
 
@@ -57,6 +58,9 @@ impl RPCError {
             }
             RPCError::Process(ProcessError::NotRunning) => {
                 Self::create_rpc_error(ERR_CODECHAIN_NOT_RUNNING, "CodeChain is not running now")
+            }
+            RPCError::Process(ProcessError::Updating) => {
+                Self::create_rpc_error(ERR_CODECHAIN_UPDATING, "CodeChain is not updating now")
             }
             RPCError::Process(ProcessError::IO(err)) => {
                 Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("IO error occured {:?}", err))
@@ -133,6 +137,7 @@ pub enum NodeStatus {
     Starting,
     Run,
     Stop,
+    Updating,
     Error,
     UFO,
 }
