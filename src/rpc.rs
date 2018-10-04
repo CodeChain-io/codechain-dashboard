@@ -46,7 +46,17 @@ impl RPCError {
     pub fn to_jsonrpc_error(&self) -> JSONRPCError {
         match self {
             RPCError::Internal(str) => Self::create_internal_rpc_error(str),
-            RPCError::FromAgent(err) => err.clone(),
+            RPCError::FromAgent(err) => {
+                let mut error = err.clone();
+                error.data = match error.data {
+                    None => Some(json!("Error from agent")),
+                    Some(inner_data) => Some(json!({
+                        "message": "This error is from the agent",
+                        "inner": inner_data,
+                    })),
+                };
+                error
+            }
             RPCError::AgentNotFound => Self::create_rpc_error(ERR_AGENT_NOT_FOUND, &format!("{}", self)),
         }
     }
