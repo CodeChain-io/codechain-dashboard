@@ -1,3 +1,5 @@
+mod git_update;
+
 use std::fs::File;
 use std::io::Error as IOError;
 use std::io::Read;
