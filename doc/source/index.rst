@@ -354,6 +354,7 @@ Response
     status: NodeStatus;
     name: string;
     address?: SocketAddr;
+    codechainCommitHash: String;
   }
 
 links: type-NodeStatus_, type-SocketAddr_
