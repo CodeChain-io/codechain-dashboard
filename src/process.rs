@@ -283,6 +283,12 @@ impl Process {
                         rpc_port,
                     };
                 }
+                if !self.is_running() {
+                    self.codechain_status = CodeChainStatus::Error {
+                        p2p_port,
+                        rpc_port,
+                    };
+                }
             }
             CodeChainStatus::Stop => {
                 cerror!(PROCESS, "Should not reach here");
