@@ -25,7 +25,7 @@ impl Handler for WebSocketHandler {
     }
 
     fn on_message(&mut self, msg: Message) -> Result<()> {
-        ctrace!("Received {}", msg);
+        ctrace!(WEB, "Received {}", msg);
 
         let response: Option<Response> = match msg {
             Message::Text(text) => {
@@ -101,7 +101,7 @@ impl Handler for WebSocketHandler {
 
         if let Some(response) = response {
             let serialized = serde_json::to_string(&response).unwrap();
-            ctrace!("Reply to the Agent Hub {}", serialized);
+            ctrace!(WEB, "Reply to the Agent Hub {}", serialized);
             self.out.send(Message::Text(serialized))
         } else {
             Ok(())
@@ -110,10 +110,12 @@ impl Handler for WebSocketHandler {
 
     fn on_close(&mut self, code: CloseCode, reason: &str) {
         match code {
-            CloseCode::Normal => cinfo!("The client is done with the connection."),
-            CloseCode::Away => cinfo!("The client is leaving the site."),
-            CloseCode::Abnormal => cinfo!("Closing handshake failed! Unable to obtain closing status from client."),
-            _ => cinfo!("The client encountered an error: {}", reason),
+            CloseCode::Normal => cinfo!(WEB, "The client is done with the connection."),
+            CloseCode::Away => cinfo!(WEB, "The client is leaving the site."),
+            CloseCode::Abnormal => {
+                cinfo!(WEB, "Closing handshake failed! Unable to obtain closing status from client.")
+            }
+            _ => cinfo!(WEB, "The client encountered an error: {}", reason),
         }
 
         // The connection is going down, so we need to decrement the count
@@ -121,6 +123,6 @@ impl Handler for WebSocketHandler {
     }
 
     fn on_error(&mut self, err: WSError) {
-        cerror!("The server encountered an error: {:?}", err);
+        cerror!(WEB, "The server encountered an error: {:?}", err);
     }
 }

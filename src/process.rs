@@ -161,7 +161,7 @@ impl Process {
                     Ok(message) => Some(message),
                     Err(RecvTimeoutError::Timeout) => None,
                     Err(RecvTimeoutError::Disconnected) => {
-                        cwarn!("Process's sender has disconnected");
+                        cwarn!(PROCESS, "Process's sender has disconnected");
                         None
                     }
                 };
@@ -228,10 +228,10 @@ impl Process {
             return
         }
 
-        ctrace!("Ping to CodeChain");
+        ctrace!(PROCESS, "Ping to CodeChain");
 
         let result = self.call_rpc("ping".to_string(), Vec::new());
-        cinfo!("{:?}", result);
+        ctrace!(PROCESS, "{:?}", result);
 
         match self.codechain_status {
             CodeChainStatus::Run {
@@ -239,7 +239,7 @@ impl Process {
                 rpc_port,
             } => {
                 if let Err(err) = result {
-                    cinfo!("Codechain ping error {:#?}", err);
+                    cinfo!(PROCESS, "Codechain ping error {:#?}", err);
                     self.codechain_status = CodeChainStatus::Error {
                         p2p_port,
                         rpc_port,
@@ -251,7 +251,7 @@ impl Process {
                 rpc_port,
             } => {
                 if result.is_ok() {
-                    cinfo!("CodeChain is running now");
+                    cinfo!(PROCESS, "CodeChain is running now");
                     self.codechain_status = CodeChainStatus::Run {
                         p2p_port,
                         rpc_port,
@@ -259,13 +259,13 @@ impl Process {
                 }
             }
             CodeChainStatus::Stop => {
-                cerror!("Should not reach here");
+                cerror!(PROCESS, "Should not reach here");
             }
             CodeChainStatus::Error {
                 p2p_port,
                 rpc_port,
             } => {
-                cinfo!("CodeChain comabck to normal");
+                cinfo!(PROCESS, "CodeChain comabck to normal");
                 self.codechain_status = CodeChainStatus::Run {
                     p2p_port,
                     rpc_port,
@@ -344,18 +344,18 @@ impl Process {
         }
 
         let codechain = &mut self.child.as_mut().expect("Already checked")[0];
-        ctrace!("Send SIGTERM to CodeChain");
+        ctrace!(PROCESS, "Send SIGTERM to CodeChain");
         codechain.terminate()?;
 
         let wait_result = codechain.wait_timeout(Duration::new(10, 0))?;
 
         if let Some(exit_code) = wait_result {
-            ctrace!("CodeChain closed with {:?}", exit_code);
+            ctrace!(PROCESS, "CodeChain closed with {:?}", exit_code);
             self.codechain_status = CodeChainStatus::Stop;
             return Ok(())
         }
 
-        cinfo!("CodeChain does not exit after 10 seconds");
+        cinfo!(PROCESS, "CodeChain does not exit after 10 seconds");
 
         codechain.kill()?;
 
@@ -382,7 +382,7 @@ impl Process {
             id: jsonrpc_core::Id::Num(1),
         };
 
-        ctrace!("Send JSONRPC to CodeChain {:#?}", jsonrpc_request);
+        ctrace!(PROCESS, "Send JSONRPC to CodeChain {:#?}", jsonrpc_request);
 
         let url = format!("http://127.0.0.1:{}/", self.codechain_status.rpc_port());
         let client = reqwest::Client::new();
@@ -391,7 +391,7 @@ impl Process {
 
         let response: jsonrpc_core::Response =
             response.json().map_err(|err| Error::CodeChainRPC(format!("JSON parse failed {}", err)))?;
-        ctrace!("Recieve JSONRPC response from CodeChain {:#?}", response);
+        ctrace!(PROCESS, "Recieve JSONRPC response from CodeChain {:#?}", response);
         let value = serde_json::to_value(response).expect("Should success jsonrpc type to Value");
 
         Ok(value)

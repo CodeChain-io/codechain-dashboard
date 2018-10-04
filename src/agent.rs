@@ -35,27 +35,27 @@ pub fn run(args: AgentArgs) {
         hardware_service: hardware_service.clone(),
     });
 
-    cinfo!("Connect to {}", args.hub_url);
+    cinfo!(MAIN, "Connect to {}", args.hub_url);
     if let Err(err) = connect(args.hub_url, move |out| WebSocketHandler {
         out,
         count: count.clone(),
         router: router.clone(),
         context: context.clone(),
     }) {
-        cerror!("Error from websocket {}", err);
+        cerror!(MAIN, "Error from websocket {}", err);
     }
 
-    cinfo!("Close CodeChain");
+    cinfo!(MAIN, "Close CodeChain");
     let (tx, rx) = channel();
     if let Err(err) = process.send(ProcessMessage::Quit {
         callback: tx,
     }) {
-        cerror!("Error while closing CodeChain {}", err);
+        cerror!(MAIN, "Error while closing CodeChain {}", err);
         return
     }
     match rx.recv() {
-        Err(err) => cerror!("Error while closing CodeChain {}", err),
-        Ok(Err(err)) => cerror!("Error while closing CodeChain {:?}", err),
+        Err(err) => cerror!(MAIN, "Error while closing CodeChain {}", err),
+        Ok(Err(err)) => cerror!(MAIN, "Error while closing CodeChain {:?}", err),
         Ok(_) => {}
     }
 

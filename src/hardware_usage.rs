@@ -42,7 +42,7 @@ impl HardwareService {
                     measurement = match hardware_service.update(measurement) {
                         Ok(measurement) => Some(measurement),
                         Err(err) => {
-                            cwarn!("Error get cpu info {}", err);
+                            cwarn!(HARDWARE, "Error get cpu info {}", err);
                             None
                         }
                     };
@@ -50,7 +50,7 @@ impl HardwareService {
                         Err(RecvTimeoutError::Timeout) => {}
                         Err(_) => panic!("Invalid error"),
                         Ok(_) => {
-                            cinfo!("Close hardware thread");
+                            cinfo!(HARDWARE, "Close hardware thread");
                             return
                         }
                     }
@@ -86,7 +86,7 @@ impl HardwareService {
 
     pub fn quit(&self) {
         if let Err(err) = self.quit.send(()) {
-            cerror!("Error while quit hardware {}", err);
+            cerror!(HARDWARE, "Error while quit hardware {}", err);
         }
     }
 }

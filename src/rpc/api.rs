@@ -42,8 +42,6 @@ fn ping(_context: Arc<HandlerContext>) -> RPCResult<String> {
 
 fn shell_start_codechain(context: Arc<HandlerContext>, req: (ShellStartCodeChainRequest,)) -> RPCResult<()> {
     let (req,) = req;
-    cinfo!("{}", req.env);
-    cinfo!("{}", req.args);
 
     let (tx, rx) = channel();
     context.process.send(ProcessMessage::Run {
