@@ -13,6 +13,14 @@ pub struct ShellStartCodeChainRequest {
     pub args: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShellUpdateCodeChainRequest {
+    pub env: String,
+    pub args: String,
+    pub commit_hash: String,
+}
+
 pub type RPCResult<T> = Result<Option<T>, RPCError>;
 
 pub enum RPCError {
@@ -55,6 +63,20 @@ impl RPCError {
             }
             RPCError::Process(ProcessError::CodeChainRPC(err)) => {
                 Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("Sending RPC to ChdeChain failed {}", err))
+            }
+            RPCError::Process(ProcessError::ShellError {
+                exit_code,
+                stdout,
+                stderr,
+            }) => Self::create_rpc_error(
+                ERR_PROCESS_INTERNAL,
+                &format!(
+                    "Shell command has error exit code: {:?}\nstd out: {}\nstd error: {}\n",
+                    exit_code, stdout, stderr
+                ),
+            ),
+            RPCError::Process(ProcessError::Unknown(err)) => {
+                Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("Unknown error from process {}", err))
             }
             RPCError::ErrorResponse(code, message, value) => {
                 Self::create_rpc_error_with_value(*code, message.clone(), value.clone())

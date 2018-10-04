@@ -8,7 +8,10 @@ use super::super::hardware_usage::HardwareInfo;
 use super::super::process::{Error as ProcessError, Message as ProcessMessage};
 use super::super::types::HandlerContext;
 use super::router::Router;
-use super::types::{response, AgentGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellStartCodeChainRequest};
+use super::types::{
+    response, AgentGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellStartCodeChainRequest,
+    ShellUpdateCodeChainRequest,
+};
 use rpc::types::RPCError;
 use rpc::types::ERR_NETWORK_ERROR;
 
@@ -19,6 +22,10 @@ pub fn add_routing(router: &mut Router) {
         Box::new(shell_start_codechain as fn(Arc<HandlerContext>, (ShellStartCodeChainRequest,)) -> RPCResult<()>),
     );
     router.add_route("shell_stopCodeChain", Box::new(shell_stop_codechain as fn(Arc<HandlerContext>) -> RPCResult<()>));
+    router.add_route(
+        "shell_updateCodeChain",
+        Box::new(shell_update_codechain as fn(Arc<HandlerContext>, (ShellUpdateCodeChainRequest,)) -> RPCResult<()>),
+    );
     router.add_route(
         "shell_getCodeChainLog",
         Box::new(shell_get_codechain_log as fn(Arc<HandlerContext>) -> RPCResult<String>),
@@ -57,6 +64,21 @@ fn shell_start_codechain(context: Arc<HandlerContext>, req: (ShellStartCodeChain
 fn shell_stop_codechain(context: Arc<HandlerContext>) -> RPCResult<()> {
     let (tx, rx) = channel();
     context.process.send(ProcessMessage::Stop {
+        callback: tx,
+    })?;
+    let process_result = rx.recv()?;
+    process_result?;
+    response(())
+}
+
+fn shell_update_codechain(context: Arc<HandlerContext>, req: (ShellUpdateCodeChainRequest,)) -> RPCResult<()> {
+    let (req,) = req;
+
+    let (tx, rx) = channel();
+    context.process.send(ProcessMessage::Update {
+        env: req.env,
+        args: req.args,
+        target_version: req.commit_hash,
         callback: tx,
     })?;
     let process_result = rx.recv()?;

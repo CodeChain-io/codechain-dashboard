@@ -11,7 +11,7 @@ use jsonrpc_core;
 use reqwest;
 use serde_json;
 use serde_json::Value;
-use subprocess::{Exec, Popen, PopenError, Redirection};
+use subprocess::{Exec, ExitStatus, Popen, PopenError, Redirection};
 
 use super::rpc::types::NodeStatus;
 use super::types::CommitHash;
@@ -23,8 +23,14 @@ pub enum Error {
     NotRunning,
     SubprocessError(PopenError),
     IO(IOError),
+    ShellError {
+        exit_code: ExitStatus,
+        stdout: String,
+        stderr: String,
+    },
     // This error caused when sending HTTP request to the codechain
     CodeChainRPC(String),
+    Unknown(String),
 }
 
 impl From<PopenError> for Error {
@@ -133,6 +139,12 @@ pub enum Message {
     Quit {
         callback: Sender<Result<(), Error>>,
     },
+    Update {
+        env: String,
+        args: String,
+        target_version: CommitHash,
+        callback: Sender<Result<(), Error>>,
+    },
     GetStatus {
         callback: Sender<Result<(NodeStatus, Option<u16>, CommitHash), Error>>,
     },
@@ -196,6 +208,20 @@ impl Process {
                 let result = self.stop();
                 callback.send(result).expect("Callback should be success");
                 return
+            }
+            Message::Update {
+                env,
+                args,
+                target_version,
+                callback,
+            } => {
+                let mut result = Ok(());
+                if self.is_running() {
+                    result = self.stop();
+                }
+                let result = result.and_then(|_| self.update(&target_version));
+                let result = result.and_then(|_| self.run(env, args));
+                callback.send(result).expect("Callback should be success");
             }
             Message::GetStatus {
                 callback,
@@ -275,7 +301,9 @@ impl Process {
     }
 
     pub fn run(&mut self, env: String, args: String) -> Result<(), Error> {
+        cdebug!(PROCESS, "Run codechain");
         if self.is_running() {
+            cdebug!(PROCESS, "Run codechain failed because it is AlreadyRunning");
             return Err(Error::AlreadyRunning)
         }
 
@@ -364,6 +392,18 @@ impl Process {
         Ok(())
     }
 
+    fn update(&mut self, commit_hash: &str) -> Result<(), Error> {
+        git_remote_update(self.option.codechain_dir.clone())?;
+        git_reset_hard(self.option.codechain_dir.clone(), commit_hash.to_string())?;
+        let current_hash = git_current_hash(self.option.codechain_dir.clone())?;
+        if commit_hash != current_hash {
+            cwarn!(PROCESS, "Updated commit hash not matched expected {} found {}", commit_hash, current_hash);
+            Err(Error::Unknown(format!("Cannot update to {}", commit_hash)))
+        } else {
+            Ok(())
+        }
+    }
+
     fn get_log(&mut self) -> Result<String, Error> {
         let file_name = self.option.log_file_path.clone();
         let mut file = File::open(file_name)?;
@@ -405,10 +445,7 @@ impl Process {
             let response = self.call_rpc("commitHash".to_string(), Vec::new())?;
             Ok(response["result"].as_str().unwrap_or("").to_string())
         } else {
-            // "git rev-parse HEAD"
-            let mut exec =
-                Exec::cmd("git").arg("rev-parse").arg("HEAD").cwd(self.option.codechain_dir.clone()).capture()?;
-            Ok(exec.stdout_str())
+            Ok(git_current_hash(self.option.codechain_dir.clone())?)
         }
     }
 }
@@ -425,4 +462,40 @@ fn parse_port(args: &Vec<String>, option_name: &str) -> Option<u16> {
     let interface_pos = option_position.map(|pos| pos + 1);
     let interface_string = interface_pos.and_then(|pos| args.get(pos));
     interface_string.and_then(|port| port.parse().ok())
+}
+
+fn git_remote_update(codechain_dir: String) -> Result<(), Error> {
+    cinfo!(PROCESS, "Run git remote update");
+    let exec = Exec::cmd("git").arg("remote").arg("update").cwd(codechain_dir).capture()?;
+    if exec.exit_status.success() {
+        ctrace!(PROCESS, "git remote update\n  stdout: {}\n  stderr: {}\n", exec.stdout_str(), exec.stderr_str());
+        Ok(())
+    } else {
+        Err(Error::ShellError {
+            exit_code: exec.exit_status,
+            stdout: exec.stdout_str(),
+            stderr: exec.stderr_str(),
+        })
+    }
+}
+
+fn git_reset_hard(codechain_dir: String, target_commit_hash: CommitHash) -> Result<(), Error> {
+    cinfo!(PROCESS, "Run git reset --hard");
+    let exec = Exec::cmd("git").arg("reset").arg("--hard").arg(target_commit_hash).cwd(codechain_dir).capture()?;
+    if exec.exit_status.success() {
+        ctrace!(PROCESS, "git remote update\n  stdout: {}\n  stderr: {}\n", exec.stdout_str(), exec.stderr_str());
+        Ok(())
+    } else {
+        Err(Error::ShellError {
+            exit_code: exec.exit_status,
+            stdout: exec.stdout_str(),
+            stderr: exec.stderr_str(),
+        })
+    }
+}
+
+fn git_current_hash(codechain_dir: String) -> Result<CommitHash, Error> {
+    cdebug!(PROCESS, "Run git rev-parse HEAD at {}", codechain_dir);
+    let exec = Exec::cmd("git").arg("rev-parse").arg("HEAD").cwd(codechain_dir).capture()?;
+    Ok(exec.stdout_str().trim().to_string())
 }
