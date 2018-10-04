@@ -28,6 +28,10 @@ enum NodeStartErrors {
   EnvParseError = -10002
 }
 
+enum NodeUpdateErrors {
+  NoSuchCommitHash = -10001
+}
+
 const getGBNumber = (byte: number) => {
   return Math.floor((byte / 1000 / 1000 / 1000) * 100) / 100;
 };
@@ -130,6 +134,7 @@ export default class NodeDetail extends React.Component<Props, State> {
             isOpen={isUpgradeNodeModalOpen}
             currentCommitHash={nodeInfo.version.hash}
             onClose={this.handleOnCloseUpgradeModal}
+            onUpdateNode={this.handleOnUpdateNode}
           />
         )}
         <div className="left-panel">
@@ -435,6 +440,7 @@ export default class NodeDetail extends React.Component<Props, State> {
     const name = this.props.nodeInfo.name;
     try {
       await Apis.startNode(name, env, args);
+      this.setState({ isStartNodeModalOpen: false });
     } catch (e) {
       const error = e as JsonRPCError;
       if (error.code === NodeStartErrors.AlreadyRunning) {
@@ -443,7 +449,6 @@ export default class NodeDetail extends React.Component<Props, State> {
         toast.error("Env parsing error.");
       }
     }
-    this.setState({ isStartNodeModalOpen: false });
   };
   private handleOnAfterOpen = () => {
     console.log("Get starting env history");
@@ -459,6 +464,18 @@ export default class NodeDetail extends React.Component<Props, State> {
   };
   private openUpgradeNodeModal = () => {
     this.setState({ isUpgradeNodeModalOpen: true });
+  };
+  private handleOnUpdateNode = async (hash: string) => {
+    const name = this.props.nodeInfo.name;
+    try {
+      await Apis.updateNode(name, hash);
+      this.setState({ isUpgradeNodeModalOpen: false });
+    } catch (e) {
+      const error = e as JsonRPCError;
+      if (error.code === NodeUpdateErrors.NoSuchCommitHash) {
+        toast.error("Invalid commit hash");
+      }
+    }
   };
   private getButtonByStatus = (status: NodeStatus) => {
     switch (status) {

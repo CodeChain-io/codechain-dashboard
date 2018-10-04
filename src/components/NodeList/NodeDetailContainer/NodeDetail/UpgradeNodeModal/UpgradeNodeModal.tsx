@@ -4,6 +4,7 @@ import * as React from "react";
 import * as Modal from "react-modal";
 import { Label } from "reactstrap";
 import "./UpgradeNodeModal.css";
+
 const customStyles = {
   content: {
     top: "50%",
@@ -19,6 +20,7 @@ interface Props {
   onClose: () => void;
   currentCommitHash: string;
   isOpen: boolean;
+  onUpdateNode: (hash: string) => void;
 }
 
 interface State {
@@ -38,6 +40,9 @@ interface State {
     };
   }[];
   isTagEmpty: boolean;
+  inputCommit: string;
+  selectedBranchName?: string;
+  selectedTagName?: string;
 }
 
 export default class UpgradeNodeModal extends React.Component<Props, State> {
@@ -47,14 +52,20 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
       selectedType: "upgrade-by-branch",
       branchList: [],
       tagList: [],
-      isTagEmpty: false
+      isTagEmpty: false,
+      inputCommit: "",
+      selectedBranchName: undefined,
+      selectedTagName: undefined
     };
   }
   public componentDidMount() {
     axios
       .get("https://api.github.com/repos/CodeChain-io/CodeChain/branches")
       .then((response: any) => {
-        this.setState({ branchList: response.data });
+        this.setState({
+          branchList: response.data,
+          selectedBranchName: response.data[0].name
+        });
       })
       .catch(err => console.log(err));
     axios
@@ -63,13 +74,24 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
         if (response.data.length === 0) {
           this.setState({ isTagEmpty: true });
         }
-        this.setState({ tagList: response.data });
+        this.setState({
+          tagList: response.data,
+          selectedTagName: response.data[0].name
+        });
       })
       .catch(err => console.log(err));
   }
   public render() {
     const { isOpen, onClose } = this.props;
-    const { selectedType, branchList, tagList, isTagEmpty } = this.state;
+    const {
+      selectedType,
+      branchList,
+      tagList,
+      isTagEmpty,
+      inputCommit,
+      selectedBranchName,
+      selectedTagName
+    } = this.state;
     return (
       <div>
         <Modal
@@ -101,19 +123,24 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
                 </div>
                 {selectedType === "upgrade-by-branch" && (
                   <div className="mt-3 mb-3">
-                    <select id="inputState" className="form-control">
-                      {branchList.length === 0 ? (
-                        <option selected={true}>Loading...</option>
-                      ) : (
-                        _.map(branchList, branch => {
+                    {branchList.length === 0 ? (
+                      <span>Loading ... </span>
+                    ) : (
+                      <select
+                        id="inputState"
+                        className="form-control"
+                        onChange={this.handleSelectingBranch}
+                        value={selectedBranchName}
+                      >
+                        {_.map(branchList, branch => {
                           return (
                             <option key={branch.commit.sha}>
                               {branch.name}
                             </option>
                           );
-                        })
-                      )}
-                    </select>
+                        })}
+                      </select>
+                    )}
                   </div>
                 )}
               </div>
@@ -137,19 +164,24 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
                 </div>
                 {selectedType === "upgrade-by-tag" && (
                   <div className="mt-3 mb-3">
-                    <select id="inputState" className="form-control">
-                      {!isTagEmpty && tagList.length === 0 ? (
-                        <option selected={true}>Loading...</option>
-                      ) : isTagEmpty ? (
-                        <option selected={true}>Empty</option>
-                      ) : (
-                        _.map(tagList, tag => {
+                    {!isTagEmpty && tagList.length === 0 ? (
+                      <span>Loading...</span>
+                    ) : isTagEmpty ? (
+                      <span>The tag does not exist.</span>
+                    ) : (
+                      <select
+                        id="inputState"
+                        className="form-control"
+                        value={selectedTagName}
+                        onChange={this.handleSelectingTag}
+                      >
+                        {_.map(tagList, tag => {
                           return (
                             <option key={tag.commit.sha}>{tag.name}</option>
                           );
-                        })
-                      )}
-                    </select>
+                        })}
+                      </select>
+                    )}
                   </div>
                 )}
               </div>
@@ -178,6 +210,8 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
                     type="text"
                     className="form-control"
                     placeholder="Commit hash"
+                    value={inputCommit}
+                    onChange={this.handleCommitInput}
                   />
                 </div>
               )}
@@ -192,8 +226,9 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
               </button>
               <button
                 type="submit"
-                onClick={this.onCloseClick}
+                onClick={this.onUpgradeClick}
                 className="btn btn-primary mt-3"
+                disabled={this.getSelectedCommitHash() === ""}
               >
                 Upgrade
               </button>
@@ -204,6 +239,54 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
     );
   }
 
+  private onUpgradeClick = (e: any) => {
+    e.preventDefault();
+    this.props.onUpdateNode(this.getSelectedCommitHash());
+  };
+
+  private getSelectedCommitHash = () => {
+    const selectedType = this.state.selectedType;
+    let commitHash = "";
+    switch (selectedType) {
+      case "upgrade-by-commit":
+        commitHash = this.state.inputCommit;
+        break;
+      case "upgrade-by-branch":
+        {
+          const selectedBranchName = this.state.selectedBranchName;
+          const selectedBranch = _.find(
+            this.state.branchList,
+            branch => branch.name === selectedBranchName
+          );
+          if (selectedBranch) {
+            commitHash = selectedBranch.commit.sha;
+          }
+        }
+        break;
+      case "upgrade-by-tag":
+        {
+          const selectedTagName = this.state.selectedTagName;
+          const selectedTag = _.find(
+            this.state.tagList,
+            tag => tag.name === selectedTagName
+          );
+          if (selectedTag) {
+            commitHash = selectedTag.commit.sha;
+          }
+        }
+        break;
+    }
+    return commitHash;
+  };
+  private handleCommitInput = (e: any) => {
+    this.setState({ inputCommit: e.target.value });
+  };
+  private handleSelectingBranch = (e: any) => {
+    this.setState({ selectedBranchName: e.target.value });
+  };
+  private handleSelectingTag = (e: any) => {
+    this.setState({ selectedTagName: e.target.value });
+  };
   private onCloseClick = (e: any) => {
     e.preventDefault();
     this.props.onClose();
