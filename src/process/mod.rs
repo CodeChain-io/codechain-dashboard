@@ -2,7 +2,6 @@ mod git_update;
 mod git_util;
 
 use std::cell::Cell;
-use std::fmt::Debug;
 use std::fs::File;
 use std::io::Error as IOError;
 use std::io::Read;
