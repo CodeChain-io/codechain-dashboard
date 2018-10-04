@@ -210,6 +210,10 @@ impl Agent {
                 name: info.name.clone(),
                 status: info.status,
                 address: info.address,
+                version: Some(NodeVersion {
+                    version: String::new(),
+                    hash: info.codechain_commit_hash,
+                }),
                 ..Default::default()
             });
 
@@ -237,6 +241,10 @@ impl Agent {
                 hash,
             })
         });
+        let version = version.or(Some(NodeVersion {
+            version: String::new(),
+            hash: info.codechain_commit_hash,
+        }));
         let pending_parcels = self.codechain_rpc.get_pending_parcels(info.status)?;
         let whitelist = self.codechain_rpc.get_whitelist(info.status)?;
         let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
