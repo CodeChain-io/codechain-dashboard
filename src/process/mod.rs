@@ -335,11 +335,13 @@ impl Process {
                 p2p_port,
                 rpc_port,
             } => {
-                cinfo!(PROCESS, "CodeChain comabck to normal");
-                self.codechain_status = CodeChainStatus::Run {
-                    p2p_port,
-                    rpc_port,
-                };
+                if result.is_ok() {
+                    cinfo!(PROCESS, "CodeChain comback to normal");
+                    self.codechain_status = CodeChainStatus::Run {
+                        p2p_port,
+                        rpc_port,
+                    };
+                }
             }
             CodeChainStatus::Updating {
                 ..
@@ -357,11 +359,15 @@ impl Process {
         {
             match rx_callback.try_recv() {
                 Err(TryRecvError::Empty) => return,
-                Err(_) => {
+                Err(TryRecvError::Disconnected) => {
                     cerror!(PROCESS, "Invalid state from git_update");
                     (false, env.to_string(), args.to_string())
                 }
-                Ok(_) => {
+                Ok(Err(err)) => {
+                    cinfo!(PROCESS, "Git update update failed : {:?}", err);
+                    (false, env.to_string(), args.to_string())
+                }
+                Ok(Ok(_)) => {
                     cinfo!(PROCESS, "Git update success");
                     (true, env.to_string(), args.to_string())
                 }
