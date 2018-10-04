@@ -127,8 +127,9 @@ fn get_disk_usage(sys: &mut sysinfo::System) -> HardwareUsage {
 fn get_memory_usage(sys: &mut sysinfo::System) -> HardwareUsage {
     sys.refresh_system();
 
-    let total = sys.get_total_memory() as i64;
-    let available = sys.get_free_memory() as i64;
+    // sysinfo library returns data in kB unit
+    let total = (sys.get_total_memory() * 1024) as i64;
+    let available = (sys.get_free_memory() * 1024) as i64;
     let used = sys.get_used_memory() as i64;
     HardwareUsage {
         total,
