@@ -11,6 +11,7 @@ pub enum NodeStatus {
     Starting,
     Run,
     Stop,
+    Updating,
     Error,
     UFO,
 }
