@@ -80,10 +80,13 @@ export default class RequestAgent {
   private handleCommonError = (e: JsonRPCError) => {
     switch (e.code) {
       case CommonError.AgentNotFound:
-        toast.error("Agent not found.");
+        toast.error("Agent not found");
         return true;
       case CommonError.CodeChainIsNotRunning:
         toast.error("CodeChain is not running.");
+        return true;
+      case CommonError.InternalError:
+        toast.error("Internal error");
         return true;
     }
     return false;

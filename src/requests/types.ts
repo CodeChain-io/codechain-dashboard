@@ -1,5 +1,11 @@
 import { Parcel } from "codechain-sdk/lib/core/classes";
-export type NodeStatus = "Run" | "Starting" | "Stop" | "Error" | "UFO";
+export type NodeStatus =
+  | "Run"
+  | "Starting"
+  | "Stop"
+  | "Error"
+  | "UFO"
+  | "Updating";
 export type SocketAddr = string;
 export type IpAddr = string;
 export type Tag = string;
@@ -10,7 +16,8 @@ export interface WhiteList {
 }
 export enum CommonError {
   CodeChainIsNotRunning = 0,
-  AgentNotFound = -1
+  AgentNotFound = -1,
+  InternalError = -32603
 }
 export interface NetworkNodeInfo {
   status: NodeStatus;

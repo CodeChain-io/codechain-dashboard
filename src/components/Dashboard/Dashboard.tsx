@@ -108,6 +108,23 @@ class Dashboard extends React.Component<Props, State> {
                     <div className="d-flex align-items-center mb-1">
                       <FontAwesomeIcon
                         icon={faCircle}
+                        className="text-warning mr-2"
+                      />
+                      <span className="mr-auto">Updating</span>
+                      <span>
+                        {
+                          _.filter(
+                            chainNetworks.nodes,
+                            node => node.status === "Updating"
+                          ).length
+                        }
+                      </span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="d-flex align-items-center mb-1">
+                      <FontAwesomeIcon
+                        icon={faCircle}
                         className="text-secondary mr-2"
                       />
                       <span className="mr-auto">Stop</span>

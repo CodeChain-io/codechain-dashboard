@@ -97,6 +97,7 @@ export class ConnectionGraph extends React.Component<Props, States> {
       case "Stop":
         return "#868e96";
       case "Starting":
+      case "Updating":
         return "#ffc107";
       case "UFO":
         return "#17a2b8";

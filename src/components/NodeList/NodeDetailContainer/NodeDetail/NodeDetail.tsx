@@ -28,12 +28,8 @@ enum NodeStartErrors {
   EnvParseError = -10002
 }
 
-enum NodeUpdateErrors {
-  NoSuchCommitHash = -10001
-}
-
 const getGBNumber = (byte: number) => {
-  return Math.floor((byte / 1000 / 1000 / 1000) * 100) / 100;
+  return Math.floor((byte / 1024 / 1024 / 1024) * 100) / 100;
 };
 
 const getDistUsage = (diskUsage: {
@@ -65,10 +61,10 @@ const getMemoryUsage = (memoryUsage: {
   percentageUsed: number;
 }) => {
   const availableGB =
-    Math.floor((memoryUsage.available / 1000 / 1000 / 1000) * 100) / 100;
+    Math.floor((memoryUsage.available / 1024 / 1024 / 1024) * 100) / 100;
   const usedGB =
     Math.floor(
-      ((memoryUsage.total - memoryUsage.available) / 1000 / 1000 / 1000) * 100
+      ((memoryUsage.total - memoryUsage.available) / 1024 / 1024 / 1024) * 100
     ) / 100;
   return {
     datasets: [
@@ -143,9 +139,10 @@ export default class NodeDetail extends React.Component<Props, State> {
               <h4>
                 Status:{" "}
                 <span className={`mr-3 ${getStatusClass(nodeInfo.status)}`}>
-                  {nodeInfo.status === "Starting" && (
-                    <FontAwesomeIcon className="mr-1 spin" icon={faSpinner} />
-                  )}
+                  {nodeInfo.status === "Starting" ||
+                    (nodeInfo.status === "Updating" && (
+                      <FontAwesomeIcon className="mr-1 spin" icon={faSpinner} />
+                    ))}
                   {nodeInfo.status}
                 </span>
                 {this.getButtonByStatus(nodeInfo.status)}
@@ -467,15 +464,8 @@ export default class NodeDetail extends React.Component<Props, State> {
   };
   private handleOnUpdateNode = async (hash: string) => {
     const name = this.props.nodeInfo.name;
-    try {
-      await Apis.updateNode(name, hash);
-      this.setState({ isUpgradeNodeModalOpen: false });
-    } catch (e) {
-      const error = e as JsonRPCError;
-      if (error.code === NodeUpdateErrors.NoSuchCommitHash) {
-        toast.error("Invalid commit hash");
-      }
-    }
+    await Apis.updateNode(name, hash);
+    this.setState({ isUpgradeNodeModalOpen: false });
   };
   private getButtonByStatus = (status: NodeStatus) => {
     switch (status) {
@@ -501,6 +491,8 @@ export default class NodeDetail extends React.Component<Props, State> {
             Start
           </button>
         );
+      case "Updating":
+        return null;
     }
     throw Error("Invalid status");
   };

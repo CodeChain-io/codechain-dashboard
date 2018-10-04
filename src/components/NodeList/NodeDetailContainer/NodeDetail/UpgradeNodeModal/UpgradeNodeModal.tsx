@@ -62,9 +62,18 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
     axios
       .get("https://api.github.com/repos/CodeChain-io/CodeChain/branches")
       .then((response: any) => {
+        let selectedBranchName = "";
+        if (
+          _.find(response.data, (data: any) => data.name === "master") !==
+          undefined
+        ) {
+          selectedBranchName = "master";
+        } else {
+          selectedBranchName = response.data[0].name;
+        }
         this.setState({
           branchList: response.data,
-          selectedBranchName: response.data[0].name
+          selectedBranchName
         });
       })
       .catch(err => console.log(err));

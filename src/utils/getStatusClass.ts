@@ -9,6 +9,7 @@ export const getStatusClass = (status: NodeStatus) => {
     case "Error":
       return "text-danger";
     case "Starting":
+    case "Updating":
       return "text-warning";
     case "UFO":
       return "text-info";
