@@ -220,8 +220,9 @@ export default class NodeDetail extends React.Component<Props, State> {
           </div>
           <div className="data-container mb-3">
             {nodeInfo.pendingParcels
-              ? _.map(nodeInfo.pendingParcels, pendingParcel =>
-                  Parcel.fromJSON(pendingParcel).hash()
+              ? _.map(
+                  nodeInfo.pendingParcels,
+                  pendingParcel => Parcel.fromJSON(pendingParcel).hash().value
                 ).join(" ")
               : ""}
           </div>

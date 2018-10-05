@@ -82,11 +82,12 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
       .then((response: any) => {
         if (response.data.length === 0) {
           this.setState({ isTagEmpty: true });
+        } else {
+          this.setState({
+            tagList: response.data,
+            selectedTagName: response.data[0].name
+          });
         }
-        this.setState({
-          tagList: response.data,
-          selectedTagName: response.data[0].name
-        });
       })
       .catch(err => console.log(err));
   }
