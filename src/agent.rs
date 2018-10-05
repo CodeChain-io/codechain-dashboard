@@ -1,14 +1,15 @@
 use std::cell::Cell;
 use std::rc::Rc;
-use std::sync::mpsc::channel;
 use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
 
 use ws::connect;
 
 use super::handler::WebSocketHandler;
 use super::hardware_usage::HardwareService;
 use super::logger::init as logger_init;
-use super::process::{Message as ProcessMessage, Process, ProcessOption};
+use super::process::{Process, ProcessOption};
 use super::rpc::api::add_routing;
 use super::rpc::router::Router;
 use super::types::{AgentArgs, HandlerContext};
@@ -35,29 +36,36 @@ pub fn run(args: AgentArgs) {
         hardware_service: hardware_service.clone(),
     });
 
-    cinfo!(MAIN, "Connect to {}", args.hub_url);
-    if let Err(err) = connect(args.hub_url, move |out| WebSocketHandler {
-        out,
-        count: count.clone(),
-        router: router.clone(),
-        context: context.clone(),
-    }) {
-        cerror!(MAIN, "Error from websocket {}", err);
+    loop {
+        let count = count.clone();
+        let router = router.clone();
+        let context = context.clone();
+        cinfo!(MAIN, "Connect to {}", args.hub_url);
+        if let Err(err) = connect(args.hub_url, move |out| WebSocketHandler {
+            out,
+            count: count.clone(),
+            router: router.clone(),
+            context: context.clone(),
+        }) {
+            cerror!(MAIN, "Error from websocket {}", err);
+        }
+        cinfo!(MAIN, "Unconnected from Hub");
+        thread::sleep(Duration::new(1, 0));
     }
 
-    cinfo!(MAIN, "Close CodeChain");
-    let (tx, rx) = channel();
-    if let Err(err) = process.send(ProcessMessage::Quit {
-        callback: tx,
-    }) {
-        cerror!(MAIN, "Error while closing CodeChain {}", err);
-        return
-    }
-    match rx.recv() {
-        Err(err) => cerror!(MAIN, "Error while closing CodeChain {}", err),
-        Ok(Err(err)) => cerror!(MAIN, "Error while closing CodeChain {:?}", err),
-        Ok(_) => {}
-    }
-
-    hardware_service.quit();
+    //    cinfo!(MAIN, "Close CodeChain");
+    //    let (tx, rx) = channel();
+    //    if let Err(err) = process.send(ProcessMessage::Quit {
+    //        callback: tx,
+    //    }) {
+    //        cerror!(MAIN, "Error while closing CodeChain {}", err);
+    //        return
+    //    }
+    //    match rx.recv() {
+    //        Err(err) => cerror!(MAIN, "Error while closing CodeChain {}", err),
+    //        Ok(Err(err)) => cerror!(MAIN, "Error while closing CodeChain {:?}", err),
+    //        Ok(_) => {}
+    //    }
+    //
+    //    hardware_service.quit();
 }
