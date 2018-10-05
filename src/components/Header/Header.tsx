@@ -30,6 +30,9 @@ export const Header = withRouter(props => {
           {getTitle(props.location.pathname)}
         </h3>
       </div>
+      <div>
+        <span>{process.env.REACT_APP_TITLE}</span>
+      </div>
       <div className="option-container" />
     </div>
   );
