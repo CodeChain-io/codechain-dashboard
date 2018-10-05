@@ -117,10 +117,15 @@ fn get_disk_usage(sys: &mut sysinfo::System) -> HardwareUsage {
         total += disk.get_total_space() as i64;
         available += disk.get_available_space() as i64;
     }
+    let percentage_used = if total == 0 {
+        0f64
+    } else {
+        (total - available) as f64 / total as f64
+    };
     HardwareUsage {
         total,
         available,
-        percentage_used: ((total - available) as f64 / total as f64),
+        percentage_used,
     }
 }
 
@@ -131,9 +136,14 @@ fn get_memory_usage(sys: &mut sysinfo::System) -> HardwareUsage {
     let total = (sys.get_total_memory() * 1024) as i64;
     let available = (sys.get_free_memory() * 1024) as i64;
     let used = sys.get_used_memory() as i64;
+    let percentage_used = if total == 0 {
+        0f64
+    } else {
+        used as f64 / total as f64
+    };
     HardwareUsage {
         total,
         available,
-        percentage_used: (used as f64 / total as f64),
+        percentage_used,
     }
 }
