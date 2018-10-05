@@ -20,12 +20,12 @@ export default class RequestAgent {
   private static instance: RequestAgent = new RequestAgent();
   private ws: any;
   private dispatch: Dispatch;
-  private serverHost = process.env.REACT_APP_SERVER_HOST
-    ? process.env.REACT_APP_SERVER_HOST
-    : "localhost:3012";
+  private agentHubHost = process.env.REACT_APP_AGENT_HUB_HOST
+    ? process.env.REACT_APP_AGENT_HUB_HOST
+    : "ws://localhost:3012";
   private isConnected: boolean = false;
   constructor() {
-    this.ws = new WebSocket(`ws://${this.serverHost}`);
+    this.ws = new WebSocket(this.agentHubHost);
     this.ws.on("open", () => {
       console.log("connected");
       this.isConnected = true;

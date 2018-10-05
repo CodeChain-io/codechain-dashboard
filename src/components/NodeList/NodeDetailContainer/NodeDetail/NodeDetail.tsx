@@ -102,8 +102,8 @@ const getCpuUsage = (cpuUsage: number[]) => {
 
 export default class NodeDetail extends React.Component<Props, State> {
   private logFileHost = `${
-    process.env.REACT_APP_LOG_HOST
-      ? process.env.REACT_APP_LOG_HOST
+    process.env.REACT_APP_LOG_SERVER_HOST
+      ? process.env.REACT_APP_LOG_SERVER_HOST
       : "http://localhost:5012"
   }`;
   public constructor(props: Props) {
@@ -139,10 +139,10 @@ export default class NodeDetail extends React.Component<Props, State> {
               <h4>
                 Status:{" "}
                 <span className={`mr-3 ${getStatusClass(nodeInfo.status)}`}>
-                  {nodeInfo.status === "Starting" ||
-                    (nodeInfo.status === "Updating" && (
-                      <FontAwesomeIcon className="mr-1 spin" icon={faSpinner} />
-                    ))}
+                  {(nodeInfo.status === "Starting" ||
+                    nodeInfo.status === "Updating") && (
+                    <FontAwesomeIcon className="mr-1 spin" icon={faSpinner} />
+                  )}
                   {nodeInfo.status}
                 </span>
                 {this.getButtonByStatus(nodeInfo.status)}
