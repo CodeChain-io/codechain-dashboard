@@ -1,4 +1,3 @@
-import { Parcel } from "codechain-sdk/lib/core/classes";
 export type NodeStatus =
   | "Run"
   | "Starting"
@@ -49,7 +48,7 @@ export interface NodeInfo {
   status: NodeStatus;
   version?: { version: string; hash: string };
   bestBlockId?: { blockNumber: number; hash: string };
-  pendingParcels?: Parcel[];
+  pendingParcels?: object[];
   peers?: SocketAddr[];
   whitelist?: WhiteList;
   blacklist?: BlackList;
@@ -68,7 +67,7 @@ export interface NodeUpdateInfo {
   status?: NodeStatus;
   version?: { version: string; hash: string };
   bestBlockId?: { blockNumber: number; hash: string };
-  pendingParcels?: Parcel[];
+  pendingParcels?: object[];
   peers?: SocketAddr[];
   whitelist?: { list: SocketAddr[]; enabled: boolean };
   blacklist?: { list: SocketAddr[]; enabled: boolean };
