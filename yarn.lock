@@ -1141,9 +1141,9 @@ big.js@^3.1.3:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/big.js/-/big.js-3.2.0.tgz#a5fc298b81b9e0dca2e458824784b65c52ba588e"
 
-bignumber.js@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-6.0.0.tgz#bbfa047644609a5af093e9cbd83b0461fa3f6002"
+bignumber.js@^7.2.1:
+  version "7.2.1"
+  resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-7.2.1.tgz#80c048759d826800807c4bfd521e50edbba57a5f"
 
 binary-extensions@^1.0.0:
   version "1.11.0"
@@ -1356,6 +1356,13 @@ buffer@^4.3.0:
     base64-js "^1.0.2"
     ieee754 "^1.1.4"
     isarray "^1.0.0"
+
+buffer@^5.2.1:
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/buffer/-/buffer-5.2.1.tgz#dd57fa0f109ac59c602479044dca7b8b3d0b71d6"
+  dependencies:
+    base64-js "^1.0.2"
+    ieee754 "^1.1.4"
 
 builtin-modules@^1.0.0, builtin-modules@^1.1.1:
   version "1.1.1"
@@ -1653,47 +1660,39 @@ code-point-at@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
 
-codechain-keystore@^0.1.0, "codechain-keystore@git://github.com/CodeChain-io/codechain-keystore.git#7c2f06b7a8885d385e6bb92ff6406a4537977a7a":
-  version "0.1.0"
-  resolved "git://github.com/CodeChain-io/codechain-keystore.git#7c2f06b7a8885d385e6bb92ff6406a4537977a7a"
+codechain-keystore@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/codechain-keystore/-/codechain-keystore-0.4.0.tgz#a8a35b1555b07c49d6456e7e2430c721e13d3a0f"
   dependencies:
-    codechain-sdk "^0.1.0-alpha.18"
+    codechain-primitives "^0.3.0"
     config "^2.0.1"
+    lodash "^4.17.10"
     lowdb "^1.0.0"
     uuid "^3.3.2"
 
-codechain-sdk@^0.1.0-alpha.18:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/codechain-sdk/-/codechain-sdk-0.1.0.tgz#ff04c55af076b994514d6e42bc7816c89edfad84"
+codechain-primitives@^0.3.0, codechain-primitives@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/codechain-primitives/-/codechain-primitives-0.3.1.tgz#b3a86fdbdf6e95aa5b0313091eff8b65080da9c2"
   dependencies:
-    bignumber.js "^6.0.0"
+    bignumber.js "^7.2.1"
     blakejs "^1.1.0"
-    buffer "5.1.0"
-    codechain-keystore "^0.1.0"
-    elliptic "^6.4.0"
-    jayson "^2.0.6"
-    lodash "^4.17.10"
-    node-fetch "^2.1.2"
-    request "^2.88.0"
-    request-promise "^4.2.2"
+    buffer "^5.2.1"
+    elliptic "^6.4.1"
+    lodash "^4.17.11"
     ripemd160 "^2.0.2"
-    rlp "^2.0.0"
+    rlp "^2.1.0"
 
-codechain-sdk@^0.1.1-alpha.4:
-  version "0.1.1-alpha.4"
-  resolved "https://registry.yarnpkg.com/codechain-sdk/-/codechain-sdk-0.1.1-alpha.4.tgz#e6f0d81716c9f2be72eafb6304a609abac0822fa"
+codechain-sdk@^0.4.0-rc3:
+  version "0.4.0-rc3"
+  resolved "https://registry.yarnpkg.com/codechain-sdk/-/codechain-sdk-0.4.0-rc3.tgz#8eba4a74297b176d0aecb090005364c854393a44"
   dependencies:
-    bignumber.js "^6.0.0"
-    blakejs "^1.1.0"
     buffer "5.1.0"
-    codechain-keystore "git://github.com/CodeChain-io/codechain-keystore.git#7c2f06b7a8885d385e6bb92ff6406a4537977a7a"
-    elliptic "^6.4.0"
+    codechain-keystore "^0.4.0"
+    codechain-primitives "^0.3.1"
     jayson "^2.0.6"
     lodash "^4.17.10"
     node-fetch "^2.1.2"
-    request "^2.88.0"
     request-promise "^4.2.2"
-    ripemd160 "^2.0.2"
     rlp "^2.0.0"
 
 collection-visit@^1.0.0:
@@ -2447,7 +2446,7 @@ electron-to-chromium@^1.2.7, electron-to-chromium@^1.3.30:
   version "1.3.65"
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.65.tgz#0655c238e45fea7e0e0e81fd0cac62b8186129c2"
 
-elliptic@^6.0.0, elliptic@^6.4.0:
+elliptic@^6.0.0, elliptic@^6.4.1:
   version "6.4.1"
   resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.4.1.tgz#c2d0b7776911b86722c632c3c06c60f2f819939a"
   dependencies:
@@ -6615,7 +6614,7 @@ request@2.87.0:
     tunnel-agent "^0.6.0"
     uuid "^3.1.0"
 
-request@^2.87.0, request@^2.88.0:
+request@^2.87.0:
   version "2.88.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.0.tgz#9c2fca4f7d35b592efe57c7f0a55e81052124fef"
   dependencies:
@@ -6727,7 +6726,7 @@ ripemd160@^2.0.0, ripemd160@^2.0.1, ripemd160@^2.0.2:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
-rlp@^2.0.0:
+rlp@^2.0.0, rlp@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/rlp/-/rlp-2.1.0.tgz#e4f9886d5a982174f314543831e36e1a658460f9"
   dependencies:
