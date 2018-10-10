@@ -7,6 +7,12 @@ The following are the software dependencies required to install and run CodeChai
 - [CodeChain](https://github.com/CodeChain-io/codechain)
 - [CodeChain-agent-hub](https://github.com/CodeChain-io/codechain-agent-hub)
 
+### Install dependencies (Ubuntu)
+
+```
+sudo apt install pkg-config libssl-dev
+```
+
 ## Run
 
 To run CodeChain-agent, just run
