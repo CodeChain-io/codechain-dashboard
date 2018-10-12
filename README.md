@@ -12,6 +12,24 @@ You should set up a rust toolchain.
 
 You can install codechain-agent-hub by running `cargo install`
 
+Install Postgres and create schema
+-----------------
+
+Ubuntu
+```
+sudo apt install postgresql postgresql-contrib
+sudo -u postgres psql -f create_user_and_db.sql
+generate-schema
+```
+
+Mac (brew)
+```
+brew install postgresql
+brew services start postgresql
+psql postgres -f create_user_and_db.sql
+generate-schama
+```
+
 Run
 ----
 
