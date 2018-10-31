@@ -36,14 +36,16 @@ impl Handler for WebSocketHandler {
                             jsonrpc: Some(Version::V2),
                             id: Id::Null,
                             error: JSONRPCError::new(ErrorCode::ParseError),
-                        }.into(),
+                        }
+                        .into(),
                     ),
                     Ok(Call::Invalid(id)) => Some(
                         Failure {
                             jsonrpc: Some(Version::V2),
                             id,
                             error: JSONRPCError::new(ErrorCode::ParseError),
-                        }.into(),
+                        }
+                        .into(),
                     ),
                     Ok(Call::MethodCall(MethodCall {
                         id,
@@ -58,7 +60,8 @@ impl Handler for WebSocketHandler {
                                     jsonrpc: Some(Version::V2),
                                     result: value,
                                     id,
-                                }.into(),
+                                }
+                                .into(),
                             ),
                             Ok(None) => {
                                 let mut error = JSONRPCError::new(ErrorCode::InternalError);
@@ -68,7 +71,8 @@ impl Handler for WebSocketHandler {
                                         jsonrpc: Some(Version::V2),
                                         id,
                                         error,
-                                    }.into(),
+                                    }
+                                    .into(),
                                 )
                             }
                             Err(RouterError::MethodNotFound) => Some(
@@ -76,14 +80,16 @@ impl Handler for WebSocketHandler {
                                     jsonrpc: Some(Version::V2),
                                     id,
                                     error: JSONRPCError::new(ErrorCode::MethodNotFound),
-                                }.into(),
+                                }
+                                .into(),
                             ),
                             Err(RouterError::RPC(err)) => Some(
                                 Failure {
                                     jsonrpc: Some(Version::V2),
                                     id,
                                     error: err.to_jsonrpc_error(),
-                                }.into(),
+                                }
+                                .into(),
                             ),
                         }
                     }
@@ -95,7 +101,8 @@ impl Handler for WebSocketHandler {
                     jsonrpc: Some(Version::V2),
                     id: Id::Null,
                     error: JSONRPCError::new(ErrorCode::ServerError(3)),
-                }.into(),
+                }
+                .into(),
             ),
         };
 
