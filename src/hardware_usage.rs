@@ -38,16 +38,27 @@ impl HardwareService {
         thread::Builder::new()
             .name("hardware".to_string())
             .spawn(move || {
-                let mut measurement = None;
                 loop {
-                    measurement = match hardware_service.update(measurement) {
+                    let measurement = match hardware_service.prepare_cpu_usage() {
                         Ok(measurement) => Some(measurement),
-                        Err(err) => {
-                            cwarn!(HARDWARE, "Error get cpu info {}", err);
+                        Err(_) => {
+                            // Do not print error.
+                            // There will be too many error if cpu usage is not supported
                             None
                         }
                     };
-                    let timeout = Duration::new(1, 0);
+
+                    thread::sleep(Duration::new(0, 100 * 1000));
+
+                    match hardware_service.update(measurement) {
+                        Ok(_) => {}
+                        Err(_) => {
+                            // Do not print error.
+                            // There will be too many error if cpu usage is not supported
+                        }
+                    }
+
+                    let timeout = Duration::new(10, 0);
                     select! {
                         recv(quit_rx, _msg) => {
                             cinfo!(HARDWARE, "Close hardware thread");
@@ -62,15 +73,19 @@ impl HardwareService {
         hardware_service_ret
     }
 
-    fn update(&mut self, cpu_measure: Option<CpuMeasurement>) -> Result<CpuMeasurement, String> {
+    fn prepare_cpu_usage(&self) -> Result<CpuMeasurement, String> {
+        let sys = systemstat::System::new();
+        Ok(sys.cpu_load().map_err(|err| err.description().to_string())?)
+    }
+
+    fn update(&mut self, cpu_measure: Option<CpuMeasurement>) -> Result<(), String> {
         if let Some(measure) = cpu_measure {
             let cpu = measure.done().map_err(|err| err.description().to_string())?;
             let mut usage = self.cpu_usage.write().map_err(|err| err.description().to_string())?;
             *usage = cpu.iter().map(|core| (core.user + core.system) as f64).collect();
         }
 
-        let sys = systemstat::System::new();
-        Ok(sys.cpu_load().map_err(|err| err.description().to_string())?)
+        Ok(())
     }
 
     pub fn get(&self) -> HardwareInfo {
