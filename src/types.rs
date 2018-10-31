@@ -1,5 +1,6 @@
 use std::net::IpAddr;
-use std::sync::mpsc::Sender;
+
+use crossbeam::Sender;
 
 use super::hardware_usage::HardwareService;
 use super::process::Message as ProcessMessage;

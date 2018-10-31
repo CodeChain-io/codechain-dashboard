@@ -1,5 +1,3 @@
-use std::sync::mpsc::{RecvError, SendError};
-
 use jsonrpc_core::types::{Error as JSONRPCError, ErrorCode};
 use serde_json::{Error as SerdeError, Value};
 
@@ -117,18 +115,6 @@ impl From<ProcessError> for RPCError {
 impl From<SerdeError> for RPCError {
     fn from(err: SerdeError) -> Self {
         RPCError::Internal(format!("Internal error about JSON serialize/deserialize : {:?}", err))
-    }
-}
-
-impl From<RecvError> for RPCError {
-    fn from(err: RecvError) -> Self {
-        RPCError::Internal(format!("Internal error about thread : {:?}", err))
-    }
-}
-
-impl<T> From<SendError<T>> for RPCError {
-    fn from(err: SendError<T>) -> Self {
-        RPCError::Internal(format!("Internal error about thread : {:?}", err))
     }
 }
 

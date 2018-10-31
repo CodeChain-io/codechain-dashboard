@@ -7,10 +7,11 @@ use std::io::Error as IOError;
 use std::io::Read;
 use std::option::Option;
 use std::result::Result;
-use std::sync::mpsc::{channel, Receiver, RecvTimeoutError, Sender, TryRecvError};
 use std::thread;
 use std::time::Duration;
 
+use crossbeam::channel;
+use crossbeam::channel::{Receiver, Sender};
 use jsonrpc_core;
 use reqwest;
 use serde_json;
@@ -185,20 +186,21 @@ impl Process {
             child: None,
             codechain_status: CodeChainStatus::Stop,
         };
-        let (tx, rx) = channel();
+        let (tx, rx) = channel::unbounded();
         thread::Builder::new()
             .name("process".to_string())
             .spawn(move || loop {
-                let message = match rx.recv_timeout(Duration::new(1, 0)) {
-                    Ok(message) => Some(message),
-                    Err(RecvTimeoutError::Timeout) => None,
-                    Err(RecvTimeoutError::Disconnected) => {
-                        cwarn!(PROCESS, "Process's sender has disconnected");
+                let timeout = Duration::new(1, 0);
+                let message = select! {
+                    recv(rx, message) => {
+                        message
+                    },
+                    recv(channel::after(timeout)) => {
                         None
                     }
                 };
-                if let Some(message) = message {
-                    process.handle_message(message);
+                if let Some(m) = message {
+                    process.handle_message(m);
                 }
                 process.ping_to_codechain();
                 process.handle_git_update();
@@ -215,13 +217,13 @@ impl Process {
                 callback,
             } => {
                 let result = self.run(env, args);
-                callback.send(result).expect("Callback should be success");
+                callback.send(result);
             }
             Message::Stop {
                 callback,
             } => {
                 let result = self.stop();
-                callback.send(result).expect("Callback should be success");
+                callback.send(result);
             }
             Message::Quit {
                 callback,
@@ -238,7 +240,7 @@ impl Process {
                         cerror!(PROCESS, "Cannot wait for git update closing: {:?}", err);
                     }
                 }
-                callback.send(result).expect("Callback should be success");
+                callback.send(result);
                 return
             }
             Message::Update {
@@ -252,7 +254,7 @@ impl Process {
                     result = self.stop();
                 }
                 let result = result.and_then(|_| self.update(&target_version, env, args));
-                callback.send(result).expect("Callback should be success");
+                callback.send(result);
             }
             Message::GetStatus {
                 callback,
@@ -261,13 +263,13 @@ impl Process {
                 let status = codechain_status.to_node_status();
                 let p2p_port = codechain_status.p2p_port();
                 let commit_hash = self.get_commit_hash().unwrap_or("".to_string());
-                callback.send(Ok((status, p2p_port, commit_hash))).expect("Callback should be success");
+                callback.send(Ok((status, p2p_port, commit_hash)));
             }
             Message::GetLog {
                 callback,
             } => {
                 let result = self.get_log();
-                callback.send(result).expect("Callback should be success");
+                callback.send(result);
             }
             Message::CallRPC {
                 method,
@@ -275,7 +277,7 @@ impl Process {
                 callback,
             } => {
                 let result = self.call_rpc(method, arguments);
-                callback.send(result).expect("Callback should be success")
+                callback.send(result);
             }
         }
     }
@@ -358,16 +360,12 @@ impl Process {
         } = &self.codechain_status
         {
             match rx_callback.try_recv() {
-                Err(TryRecvError::Empty) => return,
-                Err(TryRecvError::Disconnected) => {
-                    cerror!(PROCESS, "Invalid state from git_update");
-                    (false, env.to_string(), args.to_string())
-                }
-                Ok(Err(err)) => {
+                None => return,
+                Some(Err(err)) => {
                     cinfo!(PROCESS, "Git update update failed : {:?}", err);
                     (false, env.to_string(), args.to_string())
                 }
-                Ok(Ok(_)) => {
+                Some(Ok(_)) => {
                     cinfo!(PROCESS, "Git update success");
                     (true, env.to_string(), args.to_string())
                 }
@@ -504,7 +502,7 @@ impl Process {
             return Err(Error::Updating)
         }
 
-        let (tx, rx) = channel();
+        let (tx, rx) = channel::unbounded();
         let job_sender = git_update::Job::run(self.option.codechain_dir.to_string(), commit_hash.to_string(), tx);
 
         self.codechain_status = CodeChainStatus::Updating {

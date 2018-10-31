@@ -1,10 +1,11 @@
 use std::error::Error;
-use std::sync::mpsc::{channel, Receiver, RecvTimeoutError, Sender};
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::thread;
 use std::time::Duration;
 
+use crossbeam::channel;
+use crossbeam::channel::{Receiver, Sender};
 use sysinfo;
 use sysinfo::{DiskExt, SystemExt};
 use systemstat;
@@ -20,7 +21,7 @@ type CpuMeasurement = DelayedMeasurement<Vec<CPULoad>>;
 
 impl HardwareService {
     pub fn new() -> (Self, Receiver<()>) {
-        let (tx, rx) = channel();
+        let (tx, rx) = channel::unbounded();
         (
             Self {
                 cpu_usage: Arc::new(RwLock::new(Vec::new())),
@@ -46,13 +47,13 @@ impl HardwareService {
                             None
                         }
                     };
-                    match quit_rx.recv_timeout(Duration::new(1, 0)) {
-                        Err(RecvTimeoutError::Timeout) => {}
-                        Err(_) => panic!("Invalid error"),
-                        Ok(_) => {
+                    let timeout = Duration::new(1, 0);
+                    select! {
+                        recv(quit_rx, _msg) => {
                             cinfo!(HARDWARE, "Close hardware thread");
                             return
-                        }
+                        },
+                        recv(channel::after(timeout)) => {}
                     }
                 }
             })
@@ -85,9 +86,7 @@ impl HardwareService {
     }
 
     pub fn quit(&self) {
-        if let Err(err) = self.quit.send(()) {
-            cerror!(HARDWARE, "Error while quit hardware {}", err);
-        }
+        self.quit.send(());
     }
 }
 

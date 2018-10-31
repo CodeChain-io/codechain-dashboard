@@ -6,6 +6,8 @@ extern crate log;
 extern crate serde_derive;
 
 extern crate core;
+#[macro_use]
+extern crate crossbeam;
 extern crate jsonrpc_core;
 extern crate reqwest;
 extern crate serde;

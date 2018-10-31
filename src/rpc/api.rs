@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
-use std::sync::mpsc::channel;
 use std::sync::Arc;
 
+use crossbeam::channel;
 use serde_json::Value;
 
 use super::super::hardware_usage::HardwareInfo;
@@ -50,58 +50,58 @@ fn ping(_context: Arc<HandlerContext>) -> RPCResult<String> {
 fn shell_start_codechain(context: Arc<HandlerContext>, req: (ShellStartCodeChainRequest,)) -> RPCResult<()> {
     let (req,) = req;
 
-    let (tx, rx) = channel();
+    let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::Run {
         env: req.env,
         args: req.args,
         callback: tx,
-    })?;
-    let process_result = rx.recv()?;
-    process_result?;
+    });
+    let process_result = rx.recv();
+    process_result.ok_or(RPCError::Internal("Cannot receive  process result".to_string()))??;
     response(())
 }
 
 fn shell_stop_codechain(context: Arc<HandlerContext>) -> RPCResult<()> {
-    let (tx, rx) = channel();
+    let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::Stop {
         callback: tx,
-    })?;
-    let process_result = rx.recv()?;
-    process_result?;
+    });
+    let process_result = rx.recv();
+    process_result.ok_or(RPCError::Internal("Cannot receive  process result".to_string()))??;
     response(())
 }
 
 fn shell_update_codechain(context: Arc<HandlerContext>, req: (ShellUpdateCodeChainRequest,)) -> RPCResult<()> {
     let (req,) = req;
 
-    let (tx, rx) = channel();
+    let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::Update {
         env: req.env,
         args: req.args,
         target_version: req.commit_hash,
         callback: tx,
-    })?;
-    let process_result = rx.recv()?;
-    process_result?;
+    });
+    let process_result = rx.recv();
+    process_result.ok_or(RPCError::Internal("Cannot receive  process result".to_string()))??;
     response(())
 }
 
 fn shell_get_codechain_log(context: Arc<HandlerContext>) -> RPCResult<String> {
-    let (tx, rx) = channel();
+    let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::GetLog {
         callback: tx,
-    })?;
-    let process_result = rx.recv()?;
-    let result = process_result?;
+    });
+    let process_result = rx.recv();
+    let result = process_result.ok_or(RPCError::Internal("Cannot receive  process result".to_string()))??;
     response(result)
 }
 
 fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoResponse> {
-    let (tx, rx) = channel();
+    let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::GetStatus {
         callback: tx,
-    })?;
-    let process_result = rx.recv()?;
+    });
+    let process_result = rx.recv().ok_or(RPCError::Internal("Cannot get process result".to_string()))?;
     let (node_status, port, commit_hash) = process_result?;
     response(AgentGetInfoResponse {
         name: context.name.clone(),
@@ -113,13 +113,14 @@ fn agent_get_info(context: Arc<HandlerContext>) -> RPCResult<AgentGetInfoRespons
 
 fn codechain_call_rpc(context: Arc<HandlerContext>, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse> {
     let (method, arguments) = args;
-    let (tx, rx) = channel();
+    let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::CallRPC {
         method,
         arguments,
         callback: tx,
-    })?;
-    let process_result = rx.recv()?;
+    });
+    let process_result = rx.recv().ok_or(RPCError::Internal("Cannot receive  process result".to_string()))?;
+
     let value = match process_result {
         Ok(value) => value,
         Err(ProcessError::CodeChainRPC(_)) => {
