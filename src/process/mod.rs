@@ -145,6 +145,7 @@ pub struct Process {
     option: ProcessOption,
     child: Option<Popen>,
     codechain_status: CodeChainStatus,
+    http_client: reqwest::Client,
 }
 
 pub enum Message {
@@ -184,6 +185,7 @@ impl Process {
             option,
             child: None,
             codechain_status: CodeChainStatus::Stop,
+            http_client: reqwest::Client::new(),
         };
         let (tx, rx) = channel::unbounded();
         thread::Builder::new()
@@ -535,9 +537,12 @@ impl Process {
         ctrace!(PROCESS, "Send JSONRPC to CodeChain {:#?}", jsonrpc_request);
 
         let url = format!("http://127.0.0.1:{}/", self.codechain_status.rpc_port());
-        let client = reqwest::Client::new();
-        let mut response =
-            client.post(&url).json(&jsonrpc_request).send().map_err(|err| Error::CodeChainRPC(format!("{}", err)))?;
+        let mut response = self
+            .http_client
+            .post(&url)
+            .json(&jsonrpc_request)
+            .send()
+            .map_err(|err| Error::CodeChainRPC(format!("{}", err)))?;
 
         let response: jsonrpc_core::Response =
             response.json().map_err(|err| Error::CodeChainRPC(format!("JSON parse failed {}", err)))?;
