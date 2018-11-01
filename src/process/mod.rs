@@ -143,8 +143,7 @@ impl CodeChainStatus {
 
 pub struct Process {
     option: ProcessOption,
-    // first element is CodeChain second element is `tee` command
-    child: Option<Vec<Popen>>,
+    child: Option<Popen>,
     codechain_status: CodeChainStatus,
 }
 
@@ -420,7 +419,7 @@ impl Process {
         }
 
         let child = exec.popen()?;
-        self.child = Some(vec![child]);
+        self.child = Some(child);
 
         self.codechain_status = CodeChainStatus::Starting {
             p2p_port,
@@ -436,7 +435,7 @@ impl Process {
         }
 
         let child = self.child.as_mut().unwrap();
-        if child[0].poll().is_none() {
+        if child.poll().is_none() {
             return true
         } else {
             return false
@@ -476,7 +475,7 @@ impl Process {
             return Err(Error::Updating)
         }
 
-        let codechain = &mut self.child.as_mut().expect("Already checked")[0];
+        let codechain = &mut self.child.as_mut().expect("Already checked");
         ctrace!(PROCESS, "Send SIGTERM to CodeChain");
         codechain.terminate()?;
 
