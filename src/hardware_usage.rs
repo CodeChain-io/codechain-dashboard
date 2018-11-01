@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::sync::Arc;
-use std::sync::RwLock;
+use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
@@ -11,10 +11,22 @@ use sysinfo::{DiskExt, SystemExt};
 use systemstat;
 use systemstat::{CPULoad, DelayedMeasurement, Platform};
 
+/**
+ * We use both sysinfo and systemstat
+ * sysinfo is slow on single core machine when calculating cpu usage.
+ * But sysinfo gives disk usage by disk(not by mount)
+ *
+ * systemstat is fast when calculating cpu usage.
+ *
+ * cpu : systemstat
+ * memory : systemstat
+ * disk : sysinfo
+ */
+
 #[derive(Clone)]
 pub struct HardwareService {
-    cpu_usage: Arc<RwLock<Vec<f64>>>,
     quit: Sender<()>,
+    hardware_info: Arc<Mutex<HardwareInfo>>,
 }
 
 type CpuMeasurement = DelayedMeasurement<Vec<CPULoad>>;
@@ -24,8 +36,8 @@ impl HardwareService {
         let (tx, rx) = channel::unbounded();
         (
             Self {
-                cpu_usage: Arc::new(RwLock::new(Vec::new())),
                 quit: tx,
+                hardware_info: Arc::new(Mutex::new(HardwareInfo::default())),
             },
             rx,
         )
@@ -38,6 +50,8 @@ impl HardwareService {
         thread::Builder::new()
             .name("hardware".to_string())
             .spawn(move || {
+                let mut sysinfo_sys = sysinfo::System::new();
+
                 loop {
                     let measurement = match hardware_service.prepare_cpu_usage() {
                         Ok(measurement) => Some(measurement),
@@ -48,23 +62,21 @@ impl HardwareService {
                         }
                     };
 
-                    thread::sleep(Duration::new(0, 100 * 1000));
-
-                    match hardware_service.update(measurement) {
-                        Ok(_) => {}
-                        Err(_) => {
-                            // Do not print error.
-                            // There will be too many error if cpu usage is not supported
-                        }
-                    }
-
-                    let timeout = Duration::new(10, 0);
+                    let timeout = Duration::new(1, 0);
                     select! {
                         recv(quit_rx, _msg) => {
                             cinfo!(HARDWARE, "Close hardware thread");
                             return
                         },
                         recv(channel::after(timeout)) => {}
+                    }
+
+                    match hardware_service.update(measurement, &mut sysinfo_sys) {
+                        Ok(_) => {}
+                        Err(_) => {
+                            // Do not print error.
+                            // There will be too many error if cpu usage is not supported
+                        }
                     }
                 }
             })
@@ -78,25 +90,36 @@ impl HardwareService {
         Ok(sys.cpu_load().map_err(|err| err.description().to_string())?)
     }
 
-    fn update(&mut self, cpu_measure: Option<CpuMeasurement>) -> Result<(), String> {
-        if let Some(measure) = cpu_measure {
+    fn update(&mut self, cpu_measure: Option<CpuMeasurement>, sysinfo_sys: &mut sysinfo::System) -> Result<(), String> {
+        let cpu_usage = if let Some(measure) = cpu_measure {
             let cpu = measure.done().map_err(|err| err.description().to_string())?;
-            let mut usage = self.cpu_usage.write().map_err(|err| err.description().to_string())?;
-            *usage = cpu.iter().map(|core| (core.user + core.system) as f64).collect();
-        }
+            cpu.iter().map(|core| (core.user + core.system) as f64).collect()
+        } else {
+            Vec::new()
+        };
 
+        let disk_usage = get_disk_usage(sysinfo_sys);
+        let mut systemstat_sys = systemstat::System::new();
+        let memory_usage = get_memory_usage(&mut systemstat_sys);
+
+        match self.hardware_info.try_lock() {
+            Ok(mut hardware_info) => {
+                *hardware_info = HardwareInfo {
+                    cpu_usage,
+                    disk_usage,
+                    memory_usage,
+                };
+            }
+            Err(err) => cdebug!(HARDWARE, "Cannot acquire hardware_info lock : {}", err),
+        }
         Ok(())
     }
 
     pub fn get(&self) -> HardwareInfo {
-        let mut sysinfo_sys = sysinfo::System::new();
-        let disk_usage = get_disk_usage(&mut sysinfo_sys);
-        let memory_usage = get_memory_usage(&mut sysinfo_sys);
-        let cpu_usage = self.cpu_usage.read().map(|usage| usage.clone()).unwrap_or(Vec::new());
-        HardwareInfo {
-            cpu_usage,
-            disk_usage,
-            memory_usage,
+        if let Ok(hardware_info) = self.hardware_info.try_lock() {
+            hardware_info.clone()
+        } else {
+            Default::default()
         }
     }
 
@@ -105,7 +128,7 @@ impl HardwareService {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct HardwareUsage {
     pub total: i64,
@@ -113,7 +136,7 @@ pub struct HardwareUsage {
     pub percentage_used: f64,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct HardwareInfo {
     pub cpu_usage: Vec<f64>,
@@ -143,18 +166,21 @@ fn get_disk_usage(sys: &mut sysinfo::System) -> HardwareUsage {
     }
 }
 
-fn get_memory_usage(sys: &mut sysinfo::System) -> HardwareUsage {
-    sys.refresh_system();
+fn get_memory_usage(sys: &mut systemstat::System) -> HardwareUsage {
+    let mem = match sys.memory() {
+        Ok(mem) => mem,
+        Err(_) => return HardwareUsage::default(),
+    };
 
-    // sysinfo library returns data in kB unit
-    let total = (sys.get_total_memory() * 1024) as i64;
-    let available = (sys.get_free_memory() * 1024) as i64;
-    let used = sys.get_used_memory() as i64;
+    let total = mem.total.as_usize() as i64;
+    let available = mem.free.as_usize() as i64;
+    let used = total - available;
     let percentage_used = if total == 0 {
         0f64
     } else {
         used as f64 / total as f64
     };
+
     HardwareUsage {
         total,
         available,
