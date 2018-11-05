@@ -104,7 +104,7 @@ class RPCRightPanel extends React.Component<Props, State> {
                   onChange={this.handleCheckOnNodeList}
                 >
                   {chainNetworks ? (
-                    _.map(this.getAvailableNodeList(), node => (
+                    _.map(this.getRemainAvailableNodeList(), node => (
                       <option key={node.name} value={node.name}>
                         {node.name}
                       </option>
@@ -232,6 +232,16 @@ class RPCRightPanel extends React.Component<Props, State> {
   };
 
   private getAvailableNodeList = () => {
+    if (!this.props.chainNetworks) {
+      return [];
+    }
+    return _.filter(
+      this.props.chainNetworks.nodes,
+      node => node.status === "Run"
+    );
+  };
+
+  private getRemainAvailableNodeList = () => {
     if (!this.props.chainNetworks) {
       return [];
     }
