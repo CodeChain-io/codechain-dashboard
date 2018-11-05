@@ -1,10 +1,8 @@
 import * as _ from "lodash";
 import * as React from "react";
 import { connect } from "react-redux";
-import { Dispatch } from "redux";
-import { setChainNetworks } from "../../../actions/chainNetworks";
+import { fetchChainNetworksIfNeeded } from "../../../actions/chainNetworks";
 import { ReducerConfigure } from "../../../reducers";
-import { Apis } from "../../../requests";
 import { ChainNetworks, NetworkNodeInfo } from "../../../requests/types";
 import NodeItem from "./NodeItem/NodeItem";
 import "./NodeListContainer.css";
@@ -18,9 +16,7 @@ interface DispatchProps {
 type Props = DispatchProps & OwnProps;
 class NodeListContainer extends React.Component<Props> {
   public componentDidMount() {
-    if (!this.props.chainNetworks) {
-      this.props.getChainNetworks();
-    }
+    this.props.getChainNetworks();
   }
   public render() {
     const { chainNetworks } = this.props;
@@ -46,10 +42,9 @@ class NodeListContainer extends React.Component<Props> {
 const mapStateToProps = (state: ReducerConfigure) => ({
   chainNetworks: state.chainNetworksReducer.chainNetworks
 });
-const mapDispatchToProps = (dispatch: Dispatch) => ({
+const mapDispatchToProps = (dispatch: any) => ({
   getChainNetworks: async () => {
-    const chainNetworks = await Apis.getChainNetworks();
-    dispatch(setChainNetworks(chainNetworks));
+    dispatch(fetchChainNetworksIfNeeded());
   }
 });
 export default connect(

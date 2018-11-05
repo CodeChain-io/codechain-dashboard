@@ -10,10 +10,13 @@ const overwriteMerge = (
 
 export interface ChainNetworksState {
   chainNetworks: ChainNetworks | undefined;
+  isFetching: boolean;
+  lastUpdated?: number | null;
 }
 
 const initialState: ChainNetworksState = {
-  chainNetworks: undefined
+  chainNetworks: undefined,
+  isFetching: false
 };
 
 export const chainNetworksReducer = (
@@ -21,11 +24,18 @@ export const chainNetworksReducer = (
   action: ChainNetworksAction
 ) => {
   switch (action.type) {
-    case "SetChainNetworks": {
-      const chainNetworks = action.data;
+    case "RequestChainNetworks": {
       return {
         ...state,
-        chainNetworks
+        isFetching: true
+      };
+    }
+    case "SetChainNetworks": {
+      return {
+        ...state,
+        chainNetworks: action.data,
+        isFetching: false,
+        lastUpdated: action.receivedAt
       };
     }
     case "UpdateChainNetworks": {

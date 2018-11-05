@@ -1,9 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Dispatch } from "redux";
-import { setNodeInfo } from "../../../actions/nodeInfo";
+import { fetchNodeInfoIfNeeded } from "../../../actions/nodeInfo";
 import { ReducerConfigure } from "../../../reducers";
-import { Apis } from "../../../requests";
 import { NodeInfo } from "../../../requests/types";
 import NodeDetail from "./NodeDetail/NodeDetail";
 import "./NodeDetailContainer.css";
@@ -17,7 +15,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  nodeInfo: NodeInfo | undefined;
+  nodeInfo?: NodeInfo;
 }
 
 interface DispatchProps {
@@ -45,13 +43,14 @@ class NodeDetailContainer extends React.Component<Props> {
 }
 const mapStateToProps = (state: ReducerConfigure, ownProps: OwnProps) => ({
   nodeInfo:
-    state.nodeInfoReducer.nodeInfo[decodeURI(ownProps.match.params.nodeId)]
+    state.nodeInfoReducer.nodeInfos[decodeURI(ownProps.match.params.nodeId)] &&
+    state.nodeInfoReducer.nodeInfos[decodeURI(ownProps.match.params.nodeId)]
+      .info
 });
-const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps) => ({
+const mapDispatchToProps = (dispatch: any, ownProps: OwnProps) => ({
   getNodeInfo: async () => {
     const nodeId = decodeURI(ownProps.match.params.nodeId);
-    const nodeInfo = await Apis.getNodeInfo(nodeId);
-    dispatch(setNodeInfo(nodeId, nodeInfo));
+    dispatch(fetchNodeInfoIfNeeded(nodeId));
   }
 });
 export default connect(

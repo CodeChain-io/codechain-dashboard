@@ -8,10 +8,8 @@ import * as _ from "lodash";
 import * as React from "react";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
-import { Dispatch } from "redux";
-import { setChainNetworks } from "../../actions/chainNetworks";
+import { fetchChainNetworksIfNeeded } from "../../actions/chainNetworks";
 import { ReducerConfigure } from "../../reducers";
-import { Apis } from "../../requests";
 import { ChainNetworks, NetworkNodeInfo } from "../../requests/types";
 import { getStatusClass } from "../../utils/getStatusClass";
 import { ConnectionGraphContainer } from "./ConnectGraphContainer/ConnectionGraphContainer";
@@ -39,9 +37,7 @@ class Dashboard extends React.Component<Props, State> {
     };
   }
   public componentDidMount() {
-    if (!this.props.chainNetworks) {
-      this.props.getChainNetworks();
-    }
+    this.props.getChainNetworks();
   }
   public render() {
     const { chainNetworks } = this.props;
@@ -323,10 +319,9 @@ class Dashboard extends React.Component<Props, State> {
 const mapStateToProps = (state: ReducerConfigure) => ({
   chainNetworks: state.chainNetworksReducer.chainNetworks
 });
-const mapDispatchToProps = (dispatch: Dispatch) => ({
+const mapDispatchToProps = (dispatch: any) => ({
   getChainNetworks: async () => {
-    const chainNetworks = await Apis.getChainNetworks();
-    dispatch(setChainNetworks(chainNetworks));
+    dispatch(fetchChainNetworksIfNeeded());
   }
 });
 export default connect(

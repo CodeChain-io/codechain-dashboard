@@ -9,10 +9,8 @@ import * as _ from "lodash";
 import * as React from "react";
 import { connect } from "react-redux";
 import { Col, Label, Row } from "reactstrap";
-import { Dispatch } from "redux";
-import { setChainNetworks } from "../../../actions/chainNetworks";
+import { fetchChainNetworksIfNeeded } from "../../../actions/chainNetworks";
 import { ReducerConfigure } from "../../../reducers";
-import { Apis } from "../../../requests";
 import { ChainNetworks } from "../../../requests/types";
 import "./RPCRightPanel.css";
 
@@ -59,9 +57,7 @@ class RPCRightPanel extends React.Component<Props, State> {
     }
   }
   public componentDidMount() {
-    if (!this.props.chainNetworks) {
-      this.props.getChainNetworks();
-    }
+    this.props.getChainNetworks();
   }
   public render() {
     const { className, chainNetworks } = this.props;
@@ -325,10 +321,9 @@ class RPCRightPanel extends React.Component<Props, State> {
 const mapStateToProps = (state: ReducerConfigure) => ({
   chainNetworks: state.chainNetworksReducer.chainNetworks
 });
-const mapDispatchToProps = (dispatch: Dispatch) => ({
+const mapDispatchToProps = (dispatch: any) => ({
   getChainNetworks: async () => {
-    const chainNetworks = await Apis.getChainNetworks();
-    dispatch(setChainNetworks(chainNetworks));
+    dispatch(fetchChainNetworksIfNeeded());
   }
 });
 

@@ -1,4 +1,3 @@
-import { Dispatch } from "redux";
 import {
   ChainNetworksUpdate,
   CommonError,
@@ -20,7 +19,7 @@ export default class RequestAgent {
   };
   private static instance: RequestAgent = new RequestAgent();
   private ws: any;
-  private dispatch: Dispatch;
+  private dispatch: any;
   private agentHubHost = process.env.REACT_APP_AGENT_HUB_HOST
     ? process.env.REACT_APP_AGENT_HUB_HOST
     : "ws://localhost:3012";
@@ -52,7 +51,7 @@ export default class RequestAgent {
       console.log("closed");
     });
   }
-  public setDispatch = (dispatch: Dispatch) => {
+  public setDispatch = (dispatch: any) => {
     this.dispatch = dispatch;
   };
   public call = async <T>(

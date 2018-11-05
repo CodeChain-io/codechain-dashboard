@@ -9,13 +9,17 @@ const overwriteMerge = (
 ) => sourceArray;
 
 export interface NodeState {
-  nodeInfo: {
-    [name: string]: NodeInfo;
+  nodeInfos: {
+    [name: string]: {
+      info?: NodeInfo | null;
+      isFetching: boolean;
+      lastUpdated?: number | null;
+    };
   };
 }
 
 const initialState: NodeState = {
-  nodeInfo: {}
+  nodeInfos: {}
 };
 
 export const nodeInfoReducer = (
@@ -23,31 +27,50 @@ export const nodeInfoReducer = (
   action: NodeInfoAction
 ) => {
   switch (action.type) {
-    case "SetNodeInfo": {
-      const nodeInfo = {
-        ...state.nodeInfo,
-        [action.name]: action.data
+    case "RequestNodeInfo": {
+      const nodeInfos = {
+        ...state.nodeInfos,
+        [action.name]: {
+          isFetching: true
+        }
       };
       return {
         ...state,
-        nodeInfo
+        nodeInfos
+      };
+    }
+    case "SetNodeInfo": {
+      const nodeInfos = {
+        ...state.nodeInfos,
+        [action.name]: {
+          info: action.data,
+          isFetching: false,
+          lastUpdated: action.receivedAt
+        }
+      };
+      return {
+        ...state,
+        nodeInfos
       };
     }
     case "UpdateNodeInfo":
-      if (!state.nodeInfo[action.name]) {
+      if (!state.nodeInfos[action.name]) {
         return {
           ...state
         };
       }
-      const updatedNodeInfo = {
-        ...state.nodeInfo,
-        [action.name]: merge(state.nodeInfo[action.name], action.data, {
-          arrayMerge: overwriteMerge
-        })
+      const updatedNodeInfos = {
+        ...state.nodeInfos,
+        [action.name]: {
+          ...state.nodeInfos[action.name],
+          info: merge(state.nodeInfos[action.name].info, action.data, {
+            arrayMerge: overwriteMerge
+          })
+        }
       };
       return {
         ...state,
-        nodeInfo: updatedNodeInfo
+        nodeInfos: updatedNodeInfos
       };
   }
   return state;

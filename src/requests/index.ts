@@ -1,18 +1,5 @@
 import RequestAgent from "../RequestAgent";
-import { ChainNetworks, NodeInfo } from "./types";
-
-const getChainNetworks = async () => {
-  return await RequestAgent.getInstance().call<ChainNetworks>(
-    "real_dashboard_getNetwork",
-    []
-  );
-};
-
-const getNodeInfo = async (nodeName: string) => {
-  return await RequestAgent.getInstance().call<NodeInfo>("real_node_getInfo", [
-    nodeName
-  ]);
-};
+import { NodeInfo } from "./types";
 
 const startNode = async (nodeName: string, env: string, args: string) => {
   return await RequestAgent.getInstance().call<NodeInfo>("node_start", [
@@ -38,8 +25,6 @@ const updateNode = async (nodeName: string, commitHash: string) => {
 };
 
 export const Apis = {
-  getChainNetworks,
-  getNodeInfo,
   startNode,
   stopNode,
   updateNode

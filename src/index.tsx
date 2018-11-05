@@ -3,14 +3,21 @@ import * as React from "react";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import * as ReactDOM from "react-dom";
 import { Provider } from "react-redux";
-import { createStore } from "redux";
-import { devToolsEnhancer } from "redux-devtools-extension/logOnlyInProduction";
+import { applyMiddleware, createStore } from "redux";
+import { composeWithDevTools } from "redux-devtools-extension/logOnlyInProduction";
+import { createLogger } from "redux-logger";
+import thunkMiddleware from "redux-thunk";
 import App from "./components/App/App";
 import appReducer from "./reducers";
 import registerServiceWorker from "./registerServiceWorker";
 import "./styles/index.css";
 
-const store = createStore(appReducer, devToolsEnhancer({}));
+const composeEnhancers = composeWithDevTools({});
+const loggerMiddleware = createLogger();
+const store = createStore(
+  appReducer,
+  composeEnhancers(applyMiddleware(thunkMiddleware, loggerMiddleware))
+);
 
 ReactDOM.render(
   <Provider store={store}>

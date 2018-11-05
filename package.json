@@ -28,6 +28,8 @@
     "react-vis-force": "^0.3.1",
     "reactstrap": "^6.4.0",
     "redux-devtools-extension": "^2.13.5",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "2.2.0",
     "rpc-websockets": "^4.3.2"
   },
   "scripts": {
@@ -52,6 +54,7 @@
     "@types/react-modal": "^3.2.1",
     "@types/react-redux": "^6.0.7",
     "@types/react-router-dom": "^4.3.0",
+    "@types/redux-logger": "^3.0.6",
     "prettier": "^1.14.2",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
