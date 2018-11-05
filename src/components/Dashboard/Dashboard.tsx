@@ -9,8 +9,8 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
 import { Dispatch } from "redux";
-import { Actions } from "../../actions";
-import { RootState } from "../../reducers";
+import { setChainNetworks } from "../../actions/chainNetworks";
+import { ReducerConfigure } from "../../reducers";
 import { Apis } from "../../requests";
 import { ChainNetworks, NetworkNodeInfo } from "../../requests/types";
 import { getStatusClass } from "../../utils/getStatusClass";
@@ -320,13 +320,13 @@ class Dashboard extends React.Component<Props, State> {
   };
 }
 
-const mapStateToProps = (state: RootState) => ({
-  chainNetworks: state.chainNetworks
+const mapStateToProps = (state: ReducerConfigure) => ({
+  chainNetworks: state.chainNetworksReducer.chainNetworks
 });
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   getChainNetworks: async () => {
     const chainNetworks = await Apis.getChainNetworks();
-    dispatch(Actions.setChainNetworks(chainNetworks));
+    dispatch(setChainNetworks(chainNetworks));
   }
 });
 export default connect(

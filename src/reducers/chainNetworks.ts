@@ -1,6 +1,6 @@
 import * as _ from "lodash";
-import { Action } from "./actions";
-import { ChainNetworks, NodeInfo } from "./requests/types";
+import { ChainNetworksAction } from "../actions/chainNetworks";
+import { ChainNetworks } from "../requests/types";
 const merge = require("deepmerge").default;
 const overwriteMerge = (
   destinationArray: any,
@@ -8,35 +8,24 @@ const overwriteMerge = (
   options: any
 ) => sourceArray;
 
-export interface RootState {
-  nodeInfo: {
-    [name: string]: NodeInfo;
-  };
+export interface ChainNetworksState {
   chainNetworks: ChainNetworks | undefined;
 }
 
-const initialState: RootState = {
-  nodeInfo: {},
+const initialState: ChainNetworksState = {
   chainNetworks: undefined
 };
 
-export const appReducer = (state = initialState, action: Action) => {
+export const chainNetworksReducer = (
+  state = initialState,
+  action: ChainNetworksAction
+) => {
   switch (action.type) {
     case "SetChainNetworks": {
       const chainNetworks = action.data;
       return {
         ...state,
         chainNetworks
-      };
-    }
-    case "SetNodeInfo": {
-      const nodeInfo = {
-        ...state.nodeInfo,
-        [action.name]: action.data
-      };
-      return {
-        ...state,
-        nodeInfo
       };
     }
     case "UpdateChainNetworks": {
@@ -87,22 +76,6 @@ export const appReducer = (state = initialState, action: Action) => {
         }
       };
     }
-    case "UpdateNodeInfo":
-      if (!state.nodeInfo[action.name]) {
-        return {
-          ...state
-        };
-      }
-      const updatedNodeInfo = {
-        ...state.nodeInfo,
-        [action.name]: merge(state.nodeInfo[action.name], action.data, {
-          arrayMerge: overwriteMerge
-        })
-      };
-      return {
-        ...state,
-        nodeInfo: updatedNodeInfo
-      };
   }
   return state;
 };

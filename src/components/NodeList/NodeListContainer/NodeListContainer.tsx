@@ -2,8 +2,8 @@ import * as _ from "lodash";
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
-import { Actions } from "../../../actions";
-import { RootState } from "../../../reducers";
+import { setChainNetworks } from "../../../actions/chainNetworks";
+import { ReducerConfigure } from "../../../reducers";
 import { Apis } from "../../../requests";
 import { ChainNetworks, NetworkNodeInfo } from "../../../requests/types";
 import NodeItem from "./NodeItem/NodeItem";
@@ -43,13 +43,13 @@ class NodeListContainer extends React.Component<Props> {
   }
 }
 
-const mapStateToProps = (state: RootState) => ({
-  chainNetworks: state.chainNetworks
+const mapStateToProps = (state: ReducerConfigure) => ({
+  chainNetworks: state.chainNetworksReducer.chainNetworks
 });
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   getChainNetworks: async () => {
     const chainNetworks = await Apis.getChainNetworks();
-    dispatch(Actions.setChainNetworks(chainNetworks));
+    dispatch(setChainNetworks(chainNetworks));
   }
 });
 export default connect(

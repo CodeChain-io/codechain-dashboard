@@ -6,7 +6,7 @@ import { Provider } from "react-redux";
 import { createStore } from "redux";
 import { devToolsEnhancer } from "redux-devtools-extension/logOnlyInProduction";
 import App from "./components/App/App";
-import { appReducer } from "./reducers";
+import appReducer from "./reducers";
 import registerServiceWorker from "./registerServiceWorker";
 import "./styles/index.css";
 

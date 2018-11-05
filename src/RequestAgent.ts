@@ -1,5 +1,4 @@
 import { Dispatch } from "redux";
-import { Actions } from "./actions";
 import {
   ChainNetworksUpdate,
   CommonError,
@@ -7,6 +6,8 @@ import {
 } from "./requests/types";
 const WebSocket = require("rpc-websockets").Client;
 import { toast } from "react-toastify";
+import { updateChainNetworks } from "./actions/chainNetworks";
+import { updateNodeInfo } from "./actions/nodeInfo";
 
 export interface JsonRPCError {
   code: number;
@@ -36,11 +37,11 @@ export default class RequestAgent {
         });
 
       this.ws.on("dashboard_updated", (e: ChainNetworksUpdate) => {
-        this.dispatch(Actions.updateChainNetworks(e));
+        this.dispatch(updateChainNetworks(e));
       });
 
       this.ws.on("node_updated", (e: NodeUpdateInfo) => {
-        this.dispatch(Actions.updateNodeInfo(e.name, e));
+        this.dispatch(updateNodeInfo(e.name, e));
       });
     });
     this.ws.on("error", (e: any) => {

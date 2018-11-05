@@ -1,8 +1,8 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
-import { Actions } from "../../../actions";
-import { RootState } from "../../../reducers";
+import { setNodeInfo } from "../../../actions/nodeInfo";
+import { ReducerConfigure } from "../../../reducers";
 import { Apis } from "../../../requests";
 import { NodeInfo } from "../../../requests/types";
 import NodeDetail from "./NodeDetail/NodeDetail";
@@ -43,14 +43,15 @@ class NodeDetailContainer extends React.Component<Props> {
     );
   }
 }
-const mapStateToProps = (state: RootState, ownProps: OwnProps) => ({
-  nodeInfo: state.nodeInfo[decodeURI(ownProps.match.params.nodeId)]
+const mapStateToProps = (state: ReducerConfigure, ownProps: OwnProps) => ({
+  nodeInfo:
+    state.nodeInfoReducer.nodeInfo[decodeURI(ownProps.match.params.nodeId)]
 });
 const mapDispatchToProps = (dispatch: Dispatch, ownProps: OwnProps) => ({
   getNodeInfo: async () => {
     const nodeId = decodeURI(ownProps.match.params.nodeId);
     const nodeInfo = await Apis.getNodeInfo(nodeId);
-    dispatch(Actions.setNodeInfo(nodeId, nodeInfo));
+    dispatch(setNodeInfo(nodeId, nodeInfo));
   }
 });
 export default connect(
