@@ -8,6 +8,7 @@ import RequestAgent from "../../RequestAgent";
 import Dashboard from "../Dashboard/Dashboard";
 import { GlobalNavigationBar } from "../GlobalNavigationBar/GlobalNavigationBar";
 import { Header } from "../Header/Header";
+import Log from "../Log/Log";
 import NodeList from "../NodeList/NodeList";
 import RPC from "../RPC/RPC";
 import "./App.css";
@@ -32,6 +33,7 @@ class App extends React.Component<DispatchProp> {
             <Route exact={true} path="/" component={Dashboard} />
             <Route path="/nodelist" component={NodeList} />
             <Route path="/rpc" component={RPC} />
+            <Route path="/log" component={Log} />
           </div>
           <ToastContainer autoClose={false} />
         </div>

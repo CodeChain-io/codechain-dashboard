@@ -1,5 +1,6 @@
 import {
   faCoins,
+  faHistory,
   faRetweet,
   faTachometerAlt,
   IconDefinition
@@ -46,6 +47,7 @@ export const GlobalNavigationBar = withRouter(props => {
           /^\/nodelist/.test(pathname)
         )}
         {getGnbMenu("rpc", "RPC", faRetweet, pathname === "/rpc")}
+        {getGnbMenu("log", "Log", faHistory, pathname === "/log")}
       </ul>
     </div>
   );

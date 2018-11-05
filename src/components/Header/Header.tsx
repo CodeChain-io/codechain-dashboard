@@ -12,8 +12,10 @@ const getTitle = (pathName: string) => {
     } else {
       return "CodeChain Node Details";
     }
-  } else if ("/rpc") {
+  } else if (pathName === "/rpc") {
     return "CodeChain RPC";
+  } else if (pathName === "/log") {
+    return "CodeChain Log";
   } else {
     return "CodeChain";
   }
