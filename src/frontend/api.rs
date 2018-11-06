@@ -1,8 +1,17 @@
+use std::cell::RefCell;
+
+use chrono;
+use rand;
+use rand::Rng;
+
 use super::super::agent::SendAgentRPC;
 use super::super::common_rpc_types::{CommitHash, NodeName, ShellStartCodeChainRequest, ShellUpdateCodeChainRequest};
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
-use super::types::{Context, DashboardGetNetworkResponse, DashboardNode, NodeConnection, NodeGetInfoResponse};
+use super::types::{
+    Context, DashboardGetNetworkResponse, DashboardNode, Log, LogGetRequest, LogGetResponse, LogGetTypesResponse,
+    NodeConnection, NodeGetInfoResponse,
+};
 
 pub fn add_routing(router: &mut Router<Context>) {
     router.add_route("ping", Box::new(ping as fn(Context) -> RPCResponse<String>));
@@ -24,6 +33,8 @@ pub fn add_routing(router: &mut Router<Context>) {
         "shell_getCodeChainLog",
         Box::new(shell_get_codechain_log as fn(Context, (String,)) -> RPCResponse<String>),
     );
+    router.add_route("log_getTypes", Box::new(log_get_types as fn(Context) -> RPCResponse<LogGetTypesResponse>));
+    router.add_route("log_get", Box::new(log_get as fn(Context, (LogGetRequest,)) -> RPCResponse<LogGetResponse>));
 }
 
 fn ping(_: Context) -> RPCResponse<String> {
@@ -105,4 +116,36 @@ fn shell_get_codechain_log(context: Context, args: (String,)) -> RPCResponse<Str
     let result = agent.shell_get_codechain_log()?;
 
     response(result)
+}
+
+fn log_get_types(_context: Context) -> RPCResponse<LogGetTypesResponse> {
+    response(LogGetTypesResponse {
+        types: vec!["miner".to_string(), "tendermint".to_string(), "engine".to_string()],
+    })
+}
+
+fn log_get(_context: Context, args: (LogGetRequest,)) -> RPCResponse<LogGetResponse> {
+    let (req,) = args;
+    let item_per_page = req.item_per_page.unwrap_or(100);
+    let logs = (1..item_per_page).map(|_| create_dummy_log()).collect();
+    response(LogGetResponse {
+        logs,
+    })
+}
+
+thread_local!(static dummy_id: RefCell<i32> = RefCell::new(0));
+
+fn create_dummy_log() -> Log {
+    dummy_id.with(|id_cell| {
+        *id_cell.borrow_mut() += 1;
+        let mut rng = rand::thread_rng();
+        Log {
+            id: format!("{}", *id_cell.borrow()),
+            node_name: rng.choose(&vec!["node1".to_string(), "node2".to_string()]).unwrap().clone(),
+            level: rng.choose(&vec!["error".to_string(), "warn".to_string()]).unwrap().clone(),
+            r#type: rng.choose(&vec!["miner".to_string(), "tendermint".to_string()]).unwrap().clone(),
+            time: chrono::Local::now(),
+            data: rng.choose(&vec!["Log example".to_string(), "Log another example".to_string()]).unwrap().clone(),
+        }
+    })
 }

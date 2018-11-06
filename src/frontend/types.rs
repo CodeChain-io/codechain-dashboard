@@ -1,5 +1,7 @@
 use std::net::SocketAddr;
 
+use chrono;
+
 use super::super::agent;
 use super::super::common_rpc_types;
 use super::super::common_rpc_types::{
@@ -155,4 +157,68 @@ impl NodeGetInfoResponse {
         dummy.hardware = state.hardware.clone();
         dummy
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LogGetTypesResponse {
+    pub types: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LogGetRequest {
+    pub filter: Option<LogFilter>,
+    pub search: Option<String>,
+    pub time: Option<LogDuration>,
+    pub page: Option<i32>,
+    pub item_per_page: Option<i32>,
+    pub order_by: Option<OrderBy>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LogFilter {
+    pub node_names: Vec<String>,
+    pub levels: Vec<LogLevel>,
+    pub types: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum LogLevel {
+    error,
+    warn,
+    info,
+    debug,
+    trace,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LogDuration {
+    pub from_time: chrono::DateTime<chrono::Local>,
+    pub to_time: chrono::DateTime<chrono::Local>,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum OrderBy {
+    ASC,
+    DESC,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LogGetResponse {
+    pub logs: Vec<Log>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Log {
+    pub id: String,
+    pub node_name: String,
+    pub level: String,
+    pub r#type: String,
+    pub time: chrono::DateTime<chrono::Local>,
+    pub data: String,
 }
