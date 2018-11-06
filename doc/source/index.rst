@@ -863,10 +863,10 @@ links: type-CodeChainCallRPCResponse_
 Log Page
 ========
 
-log_getTypes ➡️ ⬅️ 
+log_getTargets ➡️ ⬅️ 
 --------------------
 
-Get types of log data. The Agent Hub get types from DB and sends them to the Dashboard.
+Get targets of log data. The Agent Hub get targets from DB and sends them to the Dashboard.
 
 Request
 """""""""
@@ -878,8 +878,8 @@ Response
 
 ::
 
-  interface LogGetTypesResponse {
-    types: string[];
+  interface LogGetTargetsResponse {
+    targets: string[];
   }
 
 
