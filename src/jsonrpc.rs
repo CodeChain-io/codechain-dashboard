@@ -32,14 +32,16 @@ where
                 jsonrpc: None,
                 id: Id::Null,
                 error: JSONRPCError::new(ErrorCode::ParseError),
-            }.into(),
+            }
+            .into(),
         ),
         Ok(Call::Invalid(id)) => Some(
             Failure {
                 jsonrpc: None,
                 id,
                 error: JSONRPCError::new(ErrorCode::ParseError),
-            }.into(),
+            }
+            .into(),
         ),
         Ok(Call::MethodCall(MethodCall {
             id,
@@ -54,7 +56,8 @@ where
                         jsonrpc: None,
                         result: value,
                         id,
-                    }.into(),
+                    }
+                    .into(),
                 ),
                 Ok(None) => {
                     let mut error = JSONRPCError::new(ErrorCode::InternalError);
@@ -64,7 +67,8 @@ where
                             jsonrpc: None,
                             id,
                             error,
-                        }.into(),
+                        }
+                        .into(),
                     )
                 }
                 Err(RouterError::MethodNotFound) => Some(
@@ -72,14 +76,16 @@ where
                         jsonrpc: None,
                         id,
                         error: JSONRPCError::new(ErrorCode::MethodNotFound),
-                    }.into(),
+                    }
+                    .into(),
                 ),
                 Err(RouterError::RPC(err)) => Some(
                     Failure {
                         jsonrpc: None,
                         id,
                         error: err.to_jsonrpc_error(),
-                    }.into(),
+                    }
+                    .into(),
                 ),
             }
         }
@@ -93,7 +99,8 @@ pub fn invalid_format() -> String {
         jsonrpc: None,
         id: Id::Null,
         error: JSONRPCError::new(ErrorCode::ParseError),
-    }).expect("Should success serialize")
+    })
+    .expect("Should success serialize")
 }
 
 #[derive(Clone)]
@@ -235,7 +242,8 @@ fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
         Id::Null => Err(id),
         Id::Str(_) => Err(id),
         Id::Num(id) => Ok(id),
-    }.map_err(|id| format!("Invalid id {:#?}", id))?;
+    }
+    .map_err(|id| format!("Invalid id {:#?}", id))?;
 
     let ws_callback = context
         .ws_callback

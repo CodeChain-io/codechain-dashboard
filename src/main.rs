@@ -76,7 +76,8 @@ fn main() {
                 context: frontend_context.clone(),
                 router: frontend_router.clone(),
                 frontend_service: frontend_service_sender.clone(),
-            }).unwrap();
+            })
+            .unwrap();
         })
         .expect("Should success listening frontend");
 
@@ -86,7 +87,8 @@ fn main() {
             let count = Rc::new(Cell::new(0));
             listen("0.0.0.0:4012", |out| {
                 agent::WebSocketHandler::new(out, count.clone(), agent_service_sender.clone())
-            }).unwrap();
+            })
+            .unwrap();
         })
         .expect("Should success listening agent");
 

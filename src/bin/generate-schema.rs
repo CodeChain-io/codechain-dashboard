@@ -29,5 +29,6 @@ fn create_agent_extra_schema(conn: &Connection) {
         prev_args VARCHAR NOT NULL
     )",
         &[],
-    ).unwrap();
+    )
+    .unwrap();
 }
