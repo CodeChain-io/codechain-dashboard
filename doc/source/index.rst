@@ -859,6 +859,84 @@ Response
 links: type-CodeChainCallRPCResponse_
 
 
+
+Log Page
+========
+
+log_getTypes ➡️ ⬅️ 
+--------------------
+
+Get types of log data. The Agent Hub get types from DB and sends them to the Dashboard.
+
+Request
+"""""""""
+
+No request arguments
+
+Response
+"""""""""
+
+::
+
+  interface LogGetTypesResponse {
+    types: string[];
+  }
+
+
+log_get ➡️ ⬅️ 
+--------------------
+
+Get logs with query parameter.
+
+Request
+"""""""""
+
+::
+
+  type LogGetRequest = [
+    {
+      // If you do not want to filter logs, omit "filter" field.
+      filter?: {
+        nodeNames: string[];
+        levels: ("error" | "warn" | "info" | "debug" | "trace")[];
+        types: string[];
+      };
+      // If "search" field is ommited or empty, log is not filtered by keyword.
+      search?: string;
+      // If "time" field is ommitted, all log will be returned.
+      time?: {
+        fromTime: ISO8601;
+        toTime: ISO8601;
+      };
+      // Page starts from 1. If ommitted, default value is 1.
+      page?: number;
+      // If ommitted, default value is 100.
+      itemPerPage?: number;
+      // If ommitted, default value is "ASC".
+      orderBy?: "ASC" | "DESC";
+    }
+  ]
+
+links: type-ISO8601_
+
+Response
+"""""""""
+
+::
+
+  interface LogGetResponse = {
+    logs: {
+      id: string;
+      nodeName: string;
+      level: string;
+      type: string;
+      time: ISO8601;
+      data: string;
+    }[]
+  }
+
+links: type-ISO8601_
+
 ..
   rpc_name
   -----------
