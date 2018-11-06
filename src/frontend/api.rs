@@ -143,9 +143,9 @@ fn create_dummy_log() -> Log {
             id: format!("{}", *id_cell.borrow()),
             node_name: rng.choose(&vec!["node1".to_string(), "node2".to_string()]).unwrap().clone(),
             level: rng.choose(&vec!["error".to_string(), "warn".to_string()]).unwrap().clone(),
-            r#type: rng.choose(&vec!["miner".to_string(), "tendermint".to_string()]).unwrap().clone(),
-            time: chrono::Local::now(),
-            data: rng.choose(&vec!["Log example".to_string(), "Log another example".to_string()]).unwrap().clone(),
+            target: rng.choose(&vec!["miner".to_string(), "tendermint".to_string()]).unwrap().clone(),
+            timestamp: chrono::Local::now(),
+            message: rng.choose(&vec!["Log example".to_string(), "Log another example".to_string()]).unwrap().clone(),
         }
     })
 }

@@ -181,7 +181,7 @@ pub struct LogGetRequest {
 pub struct LogFilter {
     pub node_names: Vec<String>,
     pub levels: Vec<LogLevel>,
-    pub types: Vec<String>,
+    pub targets: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -218,7 +218,7 @@ pub struct Log {
     pub id: String,
     pub node_name: String,
     pub level: String,
-    pub r#type: String,
-    pub time: chrono::DateTime<chrono::Local>,
-    pub data: String,
+    pub target: String,
+    pub timestamp: chrono::DateTime<chrono::Local>,
+    pub message: String,
 }
