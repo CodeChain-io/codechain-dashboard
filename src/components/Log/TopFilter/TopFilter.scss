@@ -1,0 +1,18 @@
+.top-filter {
+  background-color: white;
+  padding: 18px;
+
+  .date-picker {
+    height: 40px;
+    text-align: center;
+  }
+
+  .search-container {
+    input {
+      height: 40px;
+      width: 300px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+  }
+}
