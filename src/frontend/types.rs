@@ -161,8 +161,8 @@ impl NodeGetInfoResponse {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LogGetTypesResponse {
-    pub types: Vec<String>,
+pub struct LogGetTargetsResponse {
+    pub targets: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]

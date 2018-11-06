@@ -9,7 +9,7 @@ use super::super::common_rpc_types::{CommitHash, NodeName, ShellStartCodeChainRe
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
-    Context, DashboardGetNetworkResponse, DashboardNode, Log, LogGetRequest, LogGetResponse, LogGetTypesResponse,
+    Context, DashboardGetNetworkResponse, DashboardNode, Log, LogGetRequest, LogGetResponse, LogGetTargetsResponse,
     NodeConnection, NodeGetInfoResponse,
 };
 
@@ -33,7 +33,7 @@ pub fn add_routing(router: &mut Router<Context>) {
         "shell_getCodeChainLog",
         Box::new(shell_get_codechain_log as fn(Context, (String,)) -> RPCResponse<String>),
     );
-    router.add_route("log_getTypes", Box::new(log_get_types as fn(Context) -> RPCResponse<LogGetTypesResponse>));
+    router.add_route("log_getTargets", Box::new(log_get_targets as fn(Context) -> RPCResponse<LogGetTargetsResponse>));
     router.add_route("log_get", Box::new(log_get as fn(Context, (LogGetRequest,)) -> RPCResponse<LogGetResponse>));
 }
 
@@ -118,9 +118,9 @@ fn shell_get_codechain_log(context: Context, args: (String,)) -> RPCResponse<Str
     response(result)
 }
 
-fn log_get_types(_context: Context) -> RPCResponse<LogGetTypesResponse> {
-    response(LogGetTypesResponse {
-        types: vec!["miner".to_string(), "tendermint".to_string(), "engine".to_string()],
+fn log_get_targets(_context: Context) -> RPCResponse<LogGetTargetsResponse> {
+    response(LogGetTargetsResponse {
+        targets: vec!["miner".to_string(), "tendermint".to_string(), "engine".to_string()],
     })
 }
 
