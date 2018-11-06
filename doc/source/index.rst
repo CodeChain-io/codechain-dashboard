@@ -899,7 +899,7 @@ Request
       filter?: {
         nodeNames: string[];
         levels: ("error" | "warn" | "info" | "debug" | "trace")[];
-        types: string[];
+        targets: string[];
       };
       // If "search" field is ommited or empty, log is not filtered by keyword.
       search?: string;
@@ -929,9 +929,9 @@ Response
       id: string;
       nodeName: string;
       level: string;
-      type: string;
-      time: ISO8601;
-      data: string;
+      target: string;
+      timestamp: ISO8601;
+      message: string;
     }[]
   }
 
