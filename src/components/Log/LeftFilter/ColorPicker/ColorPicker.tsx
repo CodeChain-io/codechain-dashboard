@@ -6,38 +6,34 @@ import "./ColorPicker.css";
 interface Props {
   onColorSelected: (hex: string) => void;
   className?: string;
+  color: string;
 }
 
 interface State {
   isColorPickerOpen: boolean;
-  currentSelectedColor: string;
 }
 
 export default class ColorPicker extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
     this.state = {
-      isColorPickerOpen: false,
-      currentSelectedColor: "#ffffff"
+      isColorPickerOpen: false
     };
   }
   public render() {
-    const { isColorPickerOpen, currentSelectedColor } = this.state;
-    const { className } = this.props;
+    const { isColorPickerOpen } = this.state;
+    const { className, color } = this.props;
     return (
       <div className={`color-picker ${className}`}>
         <div
           className={`color-picker-button`}
-          style={{ backgroundColor: currentSelectedColor }}
+          style={{ backgroundColor: color }}
           onClick={this.togglePicker}
         />
 
         {isColorPickerOpen && [
           <div className="block-picker-container" key="picker">
-            <GithubPicker
-              onChange={this.handleOnChangeColor}
-              color={currentSelectedColor}
-            />
+            <GithubPicker onChange={this.handleOnChangeColor} color={color} />
           </div>,
           <div key="cover" className="cover" onClick={this.handleClose} />
         ]}
@@ -52,7 +48,6 @@ export default class ColorPicker extends React.Component<Props, State> {
   };
   public handleOnChangeColor = (color: ColorResult) => {
     this.setState({
-      currentSelectedColor: color.hex,
       isColorPickerOpen: false
     });
     this.props.onColorSelected(color.hex);

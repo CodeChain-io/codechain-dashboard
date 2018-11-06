@@ -5,7 +5,6 @@ import * as ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { applyMiddleware, createStore } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension/logOnlyInProduction";
-import { createLogger } from "redux-logger";
 import thunkMiddleware from "redux-thunk";
 import App from "./components/App/App";
 import appReducer from "./reducers";
@@ -13,10 +12,9 @@ import registerServiceWorker from "./registerServiceWorker";
 import "./styles/index.css";
 
 const composeEnhancers = composeWithDevTools({});
-const loggerMiddleware = createLogger();
 const store = createStore(
   appReducer,
-  composeEnhancers(applyMiddleware(thunkMiddleware, loggerMiddleware))
+  composeEnhancers(applyMiddleware(thunkMiddleware))
 );
 
 ReactDOM.render(

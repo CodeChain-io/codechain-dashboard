@@ -1,7 +1,18 @@
 .log-viewer {
   background-color: white;
+  table {
+    table-layout: fixed;
 
+    td {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+  }
   .date-table-header {
+    cursor: pointer;
+  }
+  .load-more {
     cursor: pointer;
   }
 }

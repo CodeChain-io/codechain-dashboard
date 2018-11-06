@@ -55,7 +55,7 @@ export const fetchNodeInfoIfNeeded = (nodeName: string) => {
     if (shouldFetchNodeInfo(getState().nodeInfoReducer, nodeName)) {
       dispatch(requestNodeInfo(nodeName));
       const nodeInfo = await RequestAgent.getInstance().call<NodeInfo>(
-        "real_node_getInfo",
+        "node_getInfo",
         [nodeName]
       );
       dispatch(setNodeInfo(nodeName, nodeInfo));

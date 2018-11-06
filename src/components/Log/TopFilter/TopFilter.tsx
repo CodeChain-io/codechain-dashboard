@@ -4,22 +4,28 @@ import * as moment from "moment";
 import * as React from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { connect } from "react-redux";
+import { changeDate, changeSearchText } from "../../../actions/log";
+import { ReducerConfigure } from "../../../reducers";
 import "./TopFilter.css";
 
-interface State {
+interface StateProps {
   startDate: moment.Moment;
   endDate: moment.Moment;
+  search: string;
 }
-export default class TopFilter extends React.Component<any, State> {
+
+interface DispatchProps {
+  dispatch: any;
+}
+
+type Props = StateProps & DispatchProps;
+class TopFilter extends React.Component<Props, any> {
   constructor(props: any) {
     super(props);
-    this.state = {
-      startDate: moment().subtract("days", 7),
-      endDate: moment()
-    };
   }
   public render() {
-    const { startDate, endDate } = this.state;
+    const { startDate, endDate, search } = this.props;
     return (
       <div className="top-filter">
         <div className="d-flex align-items-center">
@@ -47,7 +53,11 @@ export default class TopFilter extends React.Component<any, State> {
               <div className="mr-2">
                 <FontAwesomeIcon icon={faSearch} />
               </div>
-              <input type="text" />
+              <input
+                type="text"
+                value={search}
+                onChange={this.handleChangeSearch}
+              />
             </div>
           </div>
         </div>
@@ -55,9 +65,18 @@ export default class TopFilter extends React.Component<any, State> {
     );
   }
   private handleChangeStartDate = (date: moment.Moment) => {
-    this.setState({ startDate: date });
+    this.props.dispatch(changeDate(date, this.props.endDate));
   };
   private handleChangeEndDate = (date: moment.Moment) => {
-    this.setState({ endDate: date });
+    this.props.dispatch(changeDate(this.props.startDate, date));
+  };
+  private handleChangeSearch = (event: any) => {
+    this.props.dispatch(changeSearchText(event.target.value));
   };
 }
+const mapStateToProps = (state: ReducerConfigure) => ({
+  startDate: state.logReducer.time.fromTime,
+  endDate: state.logReducer.time.toTime,
+  search: state.logReducer.search
+});
+export default connect(mapStateToProps)(TopFilter);

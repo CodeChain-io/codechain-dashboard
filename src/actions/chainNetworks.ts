@@ -1,7 +1,9 @@
+import * as _ from "lodash";
 import { ReducerConfigure } from "../reducers";
 import { ChainNetworksState } from "../reducers/chainNetworks";
 import RequestAgent from "../RequestAgent";
 import { ChainNetworks, ChainNetworksUpdate } from "../requests/types";
+import { changeNodes } from "./log";
 export type ChainNetworksAction =
   | SetChainNetworks
   | UpdateChainNetworks
@@ -52,8 +54,9 @@ export const fetchChainNetworksIfNeeded = () => {
       dispatch(requestChainNetworks());
       const chainNetworks = await RequestAgent.getInstance().call<
         ChainNetworks
-      >("real_dashboard_getNetwork", []);
+      >("dashboard_getNetwork", []);
       dispatch(setChainNetworks(chainNetworks));
+      dispatch(changeNodes(_.map(chainNetworks.nodes, node => node.name)));
     }
   };
 };

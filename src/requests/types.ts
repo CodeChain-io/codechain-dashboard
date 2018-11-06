@@ -78,3 +78,12 @@ export interface NodeUpdateInfo {
   };
   events?: string[];
 }
+
+export interface Log {
+  id: string;
+  nodeName: string;
+  level: string;
+  target: string;
+  timestamp: string;
+  message: string;
+}

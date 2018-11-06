@@ -1,29 +1,46 @@
 import { faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as _ from "lodash";
+import * as moment from "moment";
 import * as React from "react";
+import { connect } from "react-redux";
 import Table from "reactstrap/lib/Table";
+import { changeOrder } from "../../../actions/log";
+import { ReducerConfigure } from "../../../reducers";
+import { Log } from "../../../requests/types";
 import "./LogViewer.css";
 
-interface State {
-  orderBy: string;
+interface StateProps {
+  orderBy: "DESC" | "ASC";
+  logs?: Log[] | null;
+  isFetchingLog: boolean;
+  nodeColors: {
+    [nodeName: string]: string;
+  };
 }
 
-export default class LogViewer extends React.Component<any, State> {
+interface DispatchProps {
+  dispatch: any;
+}
+
+type Props = StateProps & DispatchProps;
+class LogViewer extends React.Component<Props, any> {
   public constructor(props: any) {
     super(props);
-    this.state = {
-      orderBy: "DESC"
-    };
   }
   public render() {
-    const { orderBy } = this.state;
+    const { orderBy, isFetchingLog, logs, nodeColors } = this.props;
+    console.log(this.props.nodeColors);
     return (
       <div className="log-viewer">
         <Table>
           <thead>
             <tr>
-              <th onClick={this.toggleOrder} className="date-table-header">
+              <th
+                style={{ width: "180px" }}
+                onClick={this.toggleOrder}
+                className="date-table-header"
+              >
                 Date{" "}
                 {orderBy === "DESC" ? (
                   <FontAwesomeIcon icon={faArrowDown} />
@@ -31,28 +48,62 @@ export default class LogViewer extends React.Component<any, State> {
                   <FontAwesomeIcon icon={faArrowUp} />
                 )}
               </th>
-              <th>Node</th>
-              <th>Status</th>
-              <th>Type</th>
+              <th style={{ width: "120px" }}>Node</th>
+              <th style={{ width: "80px" }}>Status</th>
+              <th style={{ width: "120px" }}>Target</th>
               <th>Body</th>
             </tr>
           </thead>
           <tbody>
-            {_.map(_.range(10), item => (
-              <tr key={item}>
-                <td>2018-11-05 09:00</td>
-                <td>Node {item}</td>
-                <td>Error</td>
-                <td>Type1</td>
-                <td>Log Log Log Log Log Log Log Log Log Log</td>
+            {logs &&
+              _.map(logs, log => (
+                <tr
+                  key={log.id}
+                  style={
+                    nodeColors[log.nodeName]
+                      ? {
+                          backgroundColor: nodeColors[log.nodeName]
+                        }
+                      : {
+                          backgroundColor: "#ffffff"
+                        }
+                  }
+                >
+                  <td>{moment(log.timestamp).format("YYYY-MM-DD HH:mm:ss")}</td>
+                  <td>{log.nodeName}</td>
+                  <td>{log.level}</td>
+                  <td>{log.target}</td>
+                  <td>{log.message}</td>
+                </tr>
+              ))}
+            {isFetchingLog ? (
+              <tr>
+                <td colSpan={5} className="text-center">
+                  Loading...
+                </td>
               </tr>
-            ))}
+            ) : (
+              <tr>
+                <td colSpan={5} className="text-center load-more">
+                  Load More
+                </td>
+              </tr>
+            )}
           </tbody>
         </Table>
       </div>
     );
   }
   private toggleOrder = () => {
-    this.setState({ orderBy: this.state.orderBy === "DESC" ? "ASC" : "DESC" });
+    this.props.dispatch(
+      changeOrder(this.props.orderBy === "DESC" ? "ASC" : "DESC")
+    );
   };
 }
+const mapStateToProps = (state: ReducerConfigure) => ({
+  logs: state.logReducer.logs,
+  orderBy: state.logReducer.orderBy,
+  isFetchingLog: state.logReducer.isFetchingLog,
+  nodeColors: state.logReducer.nodeColor
+});
+export default connect(mapStateToProps)(LogViewer);
