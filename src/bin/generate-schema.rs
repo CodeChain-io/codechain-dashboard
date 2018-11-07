@@ -37,12 +37,13 @@ fn create_agent_extra_schema(conn: &Connection) {
 fn create_logs_schema(conn: &Connection) {
     cinfo!("Create logs table");
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS logs (\
+        "CREATE TABLE IF NOT EXISTS logs (
         id SERIAL PRIMARY KEY,
         name VARCHAR NOT NULL,
+        level VARCHAR NOT NULL,
         target VARCHAR NOT NULL,
         message VARCHAR NOT NULL,
-        timestamp TIME WITH TIME ZONE NOT NULL
+        timestamp TIMESTAMP WITH TIME ZONE NOT NULL
     )",
         &[],
     )

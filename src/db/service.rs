@@ -8,7 +8,7 @@ use postgres;
 use postgres::TlsMode;
 
 use super::super::common_rpc_types as rpc_type;
-use super::super::common_rpc_types::{NodeName, NodeStatus};
+use super::super::common_rpc_types::{NodeName, NodeStatus, StructuredLog};
 use super::event::{Event, EventSubscriber};
 use super::queries;
 use super::types::{AgentExtra, AgentQueryResult, Connection, Connections};
@@ -23,6 +23,7 @@ pub enum Message {
     GetConnections(Sender<Vec<rpc_type::Connection>>),
     SaveStartOption(NodeName, String, String),
     GetAgentExtra(NodeName, Sender<Option<AgentExtra>>),
+    WriteLogs(NodeName, Vec<StructuredLog>),
 }
 
 #[derive(Clone)]
@@ -83,15 +84,15 @@ impl Service {
             .name("db service".to_string())
             .spawn(move || {
                 for message in rx {
-                    match &message {
+                    match message {
                         Message::InitializeAgent(agent_query_result, callback) => {
-                            service.initialize_agent(agent_query_result, callback.clone());
+                            service.initialize_agent(&agent_query_result, callback.clone());
                         }
                         Message::UpdateAgent(agent_query_result) => {
                             service.update_agent(agent_query_result.clone());
                         }
                         Message::GetAgent(node_name, callback) => {
-                            service.get_agent(node_name, callback.clone());
+                            service.get_agent(&node_name, callback.clone());
                         }
                         Message::GetAgents(callback) => {
                             service.get_agents(callback.clone());
@@ -100,10 +101,16 @@ impl Service {
                             service.get_connections(callback.clone());
                         }
                         Message::SaveStartOption(node_name, env, args) => {
-                            util::log_error(message.clone(), service.save_start_option(node_name, env, args));
+                            util::log_error(&node_name, service.save_start_option(&node_name, &env, &args));
                         }
                         Message::GetAgentExtra(node_name, callback) => {
-                            util::log_error(message.clone(), service.get_agent_extra(node_name, callback.clone()));
+                            util::log_error(&node_name, service.get_agent_extra(&node_name, callback.clone()));
+                        }
+                        Message::WriteLogs(node_name, logs) => {
+                            let result = service.write_logs(&node_name, logs);
+                            if let Err(err) = result {
+                                cerror!("Error at {}", err);
+                            }
                         }
                     }
                 }
@@ -247,6 +254,11 @@ impl Service {
         }
         Ok(())
     }
+
+    fn write_logs(&self, node_name: &NodeName, logs: Vec<StructuredLog>) -> Result<(), Box<error::Error>> {
+        queries::logs::insert(&self.db_conn, node_name, logs)?;
+        Ok(())
+    }
 }
 
 impl ServiceSender {
@@ -299,5 +311,9 @@ impl ServiceSender {
         self.sender.send(Message::GetAgentExtra(node_name.clone(), tx)).expect("Should success send request");
         let agent_extra = rx.recv().expect("Should success");
         agent_extra
+    }
+
+    pub fn write_logs(&self, node_name: &NodeName, logs: Vec<StructuredLog>) {
+        self.sender.send(Message::WriteLogs(node_name.clone(), logs)).expect("Should success send request");
     }
 }

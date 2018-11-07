@@ -81,3 +81,12 @@ pub struct HardwareInfo {
     pub disk_usage: HardwareUsage,
     pub memory_usage: HardwareUsage,
 }
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct StructuredLog {
+    pub level: String,
+    pub target: String,
+    pub message: String,
+    pub timestamp: String,
+}

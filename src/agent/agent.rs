@@ -252,7 +252,7 @@ impl Agent {
 
         ctrace!("Update state from {:?} to {:?}", state, new_state);
         self.db_service.update_agent_query_result(db::AgentQueryResult {
-            name: info.name,
+            name: info.name.clone(),
             status: info.status,
             address: info.address,
             peers,
@@ -264,6 +264,11 @@ impl Agent {
             hardware: Some(hardware),
         });
         *state = new_state;
+
+        let logs = self.codechain_rpc.get_logs(info.status)?;
+        if let Some(logs) = logs {
+            self.db_service.write_logs(&info.name, logs);
+        }
 
         Ok(())
     }
