@@ -28,8 +28,14 @@ pub struct AgentExtra {
     pub prev_args: String,
 }
 
+/**
+ * The Connection type shows which codechain node connects to whom.
+ */
 pub type Connection = (SocketAddr, SocketAddr);
 
+/**
+ * Connections type shows which codechain node connects to whom in whole netowrk's
+ */
 pub struct Connections {
     data: HashSet<Connection>,
 }
