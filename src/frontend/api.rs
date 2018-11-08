@@ -6,10 +6,11 @@ use rand::Rng;
 
 use super::super::agent::SendAgentRPC;
 use super::super::common_rpc_types::{CommitHash, NodeName, ShellStartCodeChainRequest, ShellUpdateCodeChainRequest};
+use super::super::db;
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
-    Context, DashboardGetNetworkResponse, DashboardNode, Log, LogGetRequest, LogGetResponse, LogGetTargetsResponse,
+    Context, DashboardGetNetworkResponse, DashboardNode, LogGetRequest, LogGetResponse, LogGetTargetsResponse,
     NodeConnection, NodeGetInfoResponse,
 };
 
@@ -124,28 +125,10 @@ fn log_get_targets(_context: Context) -> RPCResponse<LogGetTargetsResponse> {
     })
 }
 
-fn log_get(_context: Context, args: (LogGetRequest,)) -> RPCResponse<LogGetResponse> {
+fn log_get(context: Context, args: (LogGetRequest,)) -> RPCResponse<LogGetResponse> {
     let (req,) = args;
-    let item_per_page = req.item_per_page.unwrap_or(100);
-    let logs = (1..item_per_page).map(|_| create_dummy_log()).collect();
+    let logs = context.db_service.get_logs(req);
     response(LogGetResponse {
         logs,
-    })
-}
-
-thread_local!(static dummy_id: RefCell<i32> = RefCell::new(0));
-
-fn create_dummy_log() -> Log {
-    dummy_id.with(|id_cell| {
-        *id_cell.borrow_mut() += 1;
-        let mut rng = rand::thread_rng();
-        Log {
-            id: format!("{}", *id_cell.borrow()),
-            node_name: rng.choose(&vec!["node1".to_string(), "node2".to_string()]).unwrap().clone(),
-            level: rng.choose(&vec!["error".to_string(), "warn".to_string()]).unwrap().clone(),
-            target: rng.choose(&vec!["miner".to_string(), "tendermint".to_string()]).unwrap().clone(),
-            timestamp: chrono::Local::now(),
-            message: rng.choose(&vec!["Log example".to_string(), "Log another example".to_string()]).unwrap().clone(),
-        }
     })
 }

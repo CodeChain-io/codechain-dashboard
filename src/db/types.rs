@@ -1,5 +1,6 @@
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::net::SocketAddr;
 
@@ -116,4 +117,63 @@ impl Connections {
     pub fn get_all(&self) -> Vec<Connection> {
         self.data.iter().map(|connection| *connection).collect()
     }
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct LogQueryParams {
+    pub filter: Option<LogFilter>,
+    pub search: Option<String>,
+    pub time: Option<LogDuration>,
+    pub page: Option<i32>,
+    pub item_per_page: Option<i32>,
+    pub order_by: Option<OrderBy>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct LogFilter {
+    pub node_names: Vec<String>,
+    pub levels: Vec<LogLevel>,
+    pub targets: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum LogLevel {
+    Error,
+    Warn,
+    Info,
+    Debug,
+    Trace,
+}
+
+impl fmt::Display for LogLevel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct LogDuration {
+    pub from_time: chrono::DateTime<chrono::Local>,
+    pub to_time: chrono::DateTime<chrono::Local>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub enum OrderBy {
+    ASC,
+    DESC,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Log {
+    pub id: i32,
+    pub node_name: String,
+    pub level: String,
+    pub target: String,
+    pub timestamp: chrono::DateTime<chrono::Local>,
+    pub message: String,
 }
