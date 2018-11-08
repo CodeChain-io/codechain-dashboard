@@ -51,4 +51,7 @@ fn create_logs_schema(conn: &Connection) {
 
     cinfo!("Create logs_timestamp index");
     conn.execute("CREATE INDEX IF NOT EXISTS logs_timestamp ON logs (timestamp)", &[]).unwrap();
+
+    cinfo!("Create logs_target index");
+    conn.execute("CREATE INDEX IF NOT EXISTS logs_targets ON logs (target)", &[]).unwrap();
 }

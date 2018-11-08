@@ -25,6 +25,7 @@ pub enum Message {
     GetAgentExtra(NodeName, Sender<Option<AgentExtra>>),
     GetLogs(LogQueryParams, Sender<Vec<Log>>),
     WriteLogs(NodeName, Vec<StructuredLog>),
+    GetLogTargets(Sender<Vec<String>>),
 }
 
 #[derive(Clone)]
@@ -115,6 +116,12 @@ impl Service {
                         }
                         Message::WriteLogs(node_name, logs) => {
                             let result = service.write_logs(&node_name, logs);
+                            if let Err(err) = result {
+                                cerror!("Error at {}", err);
+                            }
+                        }
+                        Message::GetLogTargets(callback) => {
+                            let result = service.get_log_targets(callback);
                             if let Err(err) = result {
                                 cerror!("Error at {}", err);
                             }
@@ -272,6 +279,12 @@ impl Service {
         queries::logs::insert(&self.db_conn, node_name, logs)?;
         Ok(())
     }
+
+    fn get_log_targets(&self, callback: Sender<Vec<String>>) -> Result<(), Box<error::Error>> {
+        let targets = queries::logs::get_targets(&self.db_conn)?;
+        callback.send(targets)?;
+        Ok(())
+    }
 }
 
 impl ServiceSender {
@@ -335,5 +348,12 @@ impl ServiceSender {
 
     pub fn write_logs(&self, node_name: &NodeName, logs: Vec<StructuredLog>) {
         self.sender.send(Message::WriteLogs(node_name.clone(), logs)).expect("Should success send request");
+    }
+
+    pub fn get_log_targets(&self) -> Vec<String> {
+        let (tx, rx) = channel();
+        self.sender.send(Message::GetLogTargets(tx)).expect("Should success");
+        let targets = rx.recv().expect("Should success receiv");
+        targets
     }
 }

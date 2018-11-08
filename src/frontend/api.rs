@@ -1,12 +1,5 @@
-use std::cell::RefCell;
-
-use chrono;
-use rand;
-use rand::Rng;
-
 use super::super::agent::SendAgentRPC;
 use super::super::common_rpc_types::{CommitHash, NodeName, ShellStartCodeChainRequest, ShellUpdateCodeChainRequest};
-use super::super::db;
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
@@ -119,9 +112,10 @@ fn shell_get_codechain_log(context: Context, args: (String,)) -> RPCResponse<Str
     response(result)
 }
 
-fn log_get_targets(_context: Context) -> RPCResponse<LogGetTargetsResponse> {
+fn log_get_targets(context: Context) -> RPCResponse<LogGetTargetsResponse> {
+    let targets = context.db_service.get_log_targets();
     response(LogGetTargetsResponse {
-        targets: vec!["miner".to_string(), "tendermint".to_string(), "engine".to_string()],
+        targets,
     })
 }
 

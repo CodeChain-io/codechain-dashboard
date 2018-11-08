@@ -23,8 +23,6 @@ pub fn insert(conn: &postgres::Connection, node_name: &NodeName, logs: Vec<Struc
 
 pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::Result<Vec<Log>> {
     ctrace!("Search log with {:?}", params);
-    let mut query = "SELECT * FROM logs WHERE ";
-
     let mut parameters = Parameters::new();
     let mut where_conditions = Vec::new();
     if let Some(filter) = params.filter {
@@ -112,4 +110,11 @@ impl Parameters {
     pub fn get(&self) -> &Vec<Rc<ToSql>> {
         &self.parameters
     }
+}
+
+pub fn get_targets(conn: &postgres::Connection) -> postgres::Result<Vec<String>> {
+    ctrace!("Query targets");
+
+    let rows = conn.query("SELECT DISTINCT target FROM logs", &[])?;
+    Ok(rows.iter().map(|row| row.get("target")).collect())
 }
