@@ -4,7 +4,12 @@ import * as _ from "lodash";
 import * as React from "react";
 import { connect } from "react-redux";
 import Table from "reactstrap/lib/Table";
-import { changeOrder, loadMoreLog, setAutoRefresh } from "../../../actions/log";
+import {
+  changeItemPerPage,
+  changeOrder,
+  loadMoreLog,
+  setAutoRefresh
+} from "../../../actions/log";
 import { ReducerConfigure } from "../../../reducers";
 import { Log } from "../../../requests/types";
 import LogItem from "./LogItem/LogItem";
@@ -15,6 +20,7 @@ interface StateProps {
   logs?: Log[] | null;
   isFetchingLog: boolean;
   noMoreData: boolean;
+  itemPerPage: number;
 }
 
 interface DispatchProps {
@@ -27,7 +33,13 @@ class LogViewer extends React.Component<Props, any> {
     super(props);
   }
   public render() {
-    const { orderBy, isFetchingLog, logs, noMoreData } = this.props;
+    const {
+      orderBy,
+      isFetchingLog,
+      logs,
+      noMoreData,
+      itemPerPage
+    } = this.props;
     return (
       <div className="log-viewer animated fadeIn">
         <Table>
@@ -54,7 +66,23 @@ class LogViewer extends React.Component<Props, any> {
               <th style={{ width: "120px" }} className="text-center">
                 Target
               </th>
-              <th>Message</th>
+              <th>
+                Message{" "}
+                <span className="float-right">
+                  Show{" "}
+                  <select
+                    value={itemPerPage}
+                    onChange={this.handleChangeItemPerpage}
+                  >
+                    <option value={15}>15</option>
+                    <option value={30}>30</option>
+                    <option value={50}>50</option>
+                    <option value={75}>75</option>
+                    <option value={100}>100</option>
+                  </select>{" "}
+                  Items
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -74,7 +102,7 @@ class LogViewer extends React.Component<Props, any> {
             ) : (
               <tr onClick={this.handleLoadMore}>
                 <td colSpan={5} className="text-center load-more">
-                  Load More
+                  Load More {itemPerPage} items
                 </td>
               </tr>
             )}
@@ -83,6 +111,9 @@ class LogViewer extends React.Component<Props, any> {
       </div>
     );
   }
+  private handleChangeItemPerpage = (event: any) => {
+    this.props.dispatch(changeItemPerPage(parseInt(event.target.value, 10)));
+  };
   private toggleOrder = () => {
     this.props.dispatch(
       changeOrder(this.props.orderBy === "DESC" ? "ASC" : "DESC")
@@ -97,6 +128,7 @@ const mapStateToProps = (state: ReducerConfigure) => ({
   logs: state.logReducer.logs,
   orderBy: state.logReducer.orderBy,
   isFetchingLog: state.logReducer.isFetchingLog,
-  noMoreData: state.logReducer.noMoreData
+  noMoreData: state.logReducer.noMoreData,
+  itemPerPage: state.logReducer.itemPerPage
 });
 export default connect(mapStateToProps)(LogViewer);

@@ -43,7 +43,11 @@ const initialState: LogState = {
   },
   search: "",
   page: 1,
-  itemPerPage: 15,
+  itemPerPage:
+    ((getObjectFromStorage("itemPerPage") as { itemPerPage: number }) &&
+      (getObjectFromStorage("itemPerPage") as { itemPerPage: number })
+        .itemPerPage) ||
+    15,
   isFetchingLog: false,
   isFetchingTarget: false,
   orderBy: "DESC",
@@ -121,6 +125,13 @@ export const logReducer = (state = initialState, action: LogAction) => {
       return {
         ...state,
         setAutoRefresh: action.data
+      };
+    }
+    case "ChangeItemPerPage": {
+      saveObjectToStorage("itemPerPage", { itemPerPage: action.data });
+      return {
+        ...state,
+        itemPerPage: action.data
       };
     }
   }

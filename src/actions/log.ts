@@ -19,7 +19,8 @@ export type LogAction =
   | SetNodeColor
   | LoadMore
   | SetNoMoreData
-  | SetAutoRefresh;
+  | SetAutoRefresh
+  | ChangeItemPerPage;
 
 export interface ChangeNodes {
   type: "ChangeNodes";
@@ -93,6 +94,11 @@ export interface SetNoMoreData {
 export interface SetAutoRefresh {
   type: "SetAutoRefresh";
   data: boolean;
+}
+
+export interface ChangeItemPerPage {
+  type: "ChangeItemPerPage";
+  data: number;
 }
 
 export const changeDate = (
@@ -284,5 +290,15 @@ export const setAutoRefresh = (isOn: boolean) => {
       type: "SetAutoRefresh",
       data: isOn
     });
+  };
+};
+
+export const changeItemPerPage = (itemPerPage: number) => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    dispatch({
+      type: "ChangeItemPerPage",
+      data: itemPerPage
+    });
+    dispatch(fetchLogsIfNeeded());
   };
 };
