@@ -46,6 +46,7 @@ class TopFilter extends React.Component<Props, any> {
               className="date-picker"
               selected={startDate}
               onChange={this.handleChangeStartDate}
+              onChangeRaw={this.handleChangeStartRawDate}
               timeIntervals={10}
               showTimeSelect={true}
               dateFormat="YYYY-MM-DD HH:mm:ssZ"
@@ -60,6 +61,7 @@ class TopFilter extends React.Component<Props, any> {
               timeIntervals={10}
               disabledKeyboardNavigation={false}
               showTimeSelect={true}
+              onChangeRaw={this.handleChangeEndRawDate}
               dateFormat="YYYY-MM-DD HH:mm:ssZ"
             />
           </div>
@@ -93,6 +95,19 @@ class TopFilter extends React.Component<Props, any> {
       </div>
     );
   }
+  private handleChangeStartRawDate = (event: any) => {
+    const newDate = moment(event.target.value);
+    if (newDate.isValid()) {
+      this.props.dispatch(changeDate(newDate, this.props.endDate));
+    }
+  };
+  private handleChangeEndRawDate = (event: any) => {
+    const newDate = moment(event.target.value);
+    if (newDate.isValid()) {
+      this.props.dispatch(setAutoRefresh(false));
+      this.props.dispatch(changeDate(this.props.startDate, newDate));
+    }
+  };
   private handleChangeStartDate = (date: moment.Moment) => {
     this.props.dispatch(changeDate(date, this.props.endDate));
   };
