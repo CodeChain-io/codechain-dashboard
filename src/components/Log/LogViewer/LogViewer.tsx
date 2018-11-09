@@ -1,4 +1,4 @@
-import { faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons";
+import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as _ from "lodash";
 import * as React from "react";
@@ -40,9 +40,9 @@ class LogViewer extends React.Component<Props, any> {
               >
                 Date{" "}
                 {orderBy === "DESC" ? (
-                  <FontAwesomeIcon icon={faArrowDown} />
+                  <FontAwesomeIcon icon={faCaretDown} />
                 ) : (
-                  <FontAwesomeIcon icon={faArrowUp} />
+                  <FontAwesomeIcon icon={faCaretUp} />
                 )}
               </th>
               <th style={{ width: "100px" }} className="text-center">
