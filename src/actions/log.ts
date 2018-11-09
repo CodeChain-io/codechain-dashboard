@@ -16,7 +16,10 @@ export type LogAction =
   | RequestTargets
   | SetLogs
   | RequestLogs
-  | SetNodeColor;
+  | SetNodeColor
+  | LoadMore
+  | SetNoMoreData
+  | SetAutoRefresh;
 
 export interface ChangeNodes {
   type: "ChangeNodes";
@@ -76,6 +79,20 @@ export interface SetNodeColor {
     nodeName: string;
     color: string;
   };
+}
+
+export interface LoadMore {
+  type: "LoadMore";
+  data: number;
+}
+
+export interface SetNoMoreData {
+  type: "SetNoMoreData";
+}
+
+export interface SetAutoRefresh {
+  type: "SetAutoRefresh";
+  data: boolean;
 }
 
 export const changeDate = (
@@ -185,7 +202,7 @@ const setLogs = (data: Log[]) => ({
   data
 });
 
-export const fetchLogsIfNeeded = () => {
+export const fetchLogsIfNeeded = (haveToAppend?: boolean) => {
   return async (dispatch: any, getState: () => ReducerConfigure) => {
     const uuid = uuidv1();
     dispatch(requestLogs(uuid));
@@ -203,7 +220,16 @@ export const fetchLogsIfNeeded = () => {
       }
     ]);
     if (getState().logReducer.fetchingUUIDForLog === uuid) {
-      dispatch(setLogs(response.logs));
+      dispatch(
+        setLogs(
+          haveToAppend && logReducer.logs
+            ? logReducer.logs.concat(response.logs)
+            : response.logs
+        )
+      );
+      if (response.logs.length < logReducer.itemPerPage) {
+        dispatch(setNoMoreData());
+      }
     }
   };
 };
@@ -225,3 +251,38 @@ export const setNodeColor = (nodeName: string, color: string) => ({
     color
   }
 });
+
+export const loadMoreLog = () => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    const logReducer = getState().logReducer;
+    dispatch({
+      type: "LoadMore",
+      data: logReducer.page + 1
+    });
+    dispatch(fetchLogsIfNeeded(true));
+  };
+};
+
+export const setNoMoreData = () => ({
+  type: "SetNoMoreData"
+});
+
+let refresher: any;
+export const setAutoRefresh = (isOn: boolean) => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    if (isOn) {
+      refresher = setInterval(() => {
+        const logReducer = getState().logReducer;
+        dispatch(changeDate(logReducer.time.fromTime, moment()));
+      }, 3000);
+    } else {
+      if (refresher) {
+        clearInterval(refresher);
+      }
+    }
+    dispatch({
+      type: "SetAutoRefresh",
+      data: isOn
+    });
+  };
+};

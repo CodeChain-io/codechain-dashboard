@@ -26,6 +26,8 @@ export interface LogState {
   nodeColor: {
     [nodeName: string]: string;
   };
+  noMoreData: boolean;
+  setAutoRefresh: boolean;
 }
 
 const initialState: LogState = {
@@ -44,28 +46,30 @@ const initialState: LogState = {
   isFetchingLog: false,
   isFetchingTarget: false,
   orderBy: "DESC",
-  nodeColor: {}
+  nodeColor: {},
+  noMoreData: false,
+  setAutoRefresh: false
 };
 
 export const logReducer = (state = initialState, action: LogAction) => {
   switch (action.type) {
     case "ChangeDate":
-      return { ...state, time: action.data };
+      return { ...state, time: action.data, noMoreData: false, page: 1 };
     case "ChagneSearchText":
-      return { ...state, search: action.data };
+      return { ...state, search: action.data, noMoreData: false, page: 1 };
     case "ChangeNodes": {
       const newFilter = {
         ...state.filter,
         nodeNames: action.data
       };
-      return { ...state, filter: newFilter };
+      return { ...state, filter: newFilter, noMoreData: false, page: 1 };
     }
     case "ChangeDebugLevel": {
       const newFilter = {
         ...state.filter,
         levels: action.data
       };
-      return { ...state, filter: newFilter };
+      return { ...state, filter: newFilter, noMoreData: false, page: 1 };
     }
     case "RequestTargets": {
       return { ...state, isFetchingTarget: true };
@@ -84,7 +88,7 @@ export const logReducer = (state = initialState, action: LogAction) => {
         ...state.filter,
         targets: action.data
       };
-      return { ...state, filter: newFilter };
+      return { ...state, filter: newFilter, noMoreData: false, page: 1 };
     }
     case "ChangeOrder": {
       return { ...state, orderBy: action.data };
@@ -97,6 +101,24 @@ export const logReducer = (state = initialState, action: LogAction) => {
       return {
         ...state,
         nodeColor: newNodeColor
+      };
+    }
+    case "LoadMore": {
+      return {
+        ...state,
+        page: action.data
+      };
+    }
+    case "SetNoMoreData": {
+      return {
+        ...state,
+        noMoreData: true
+      };
+    }
+    case "SetAutoRefresh": {
+      return {
+        ...state,
+        setAutoRefresh: action.data
       };
     }
   }

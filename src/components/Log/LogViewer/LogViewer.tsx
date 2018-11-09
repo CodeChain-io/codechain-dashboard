@@ -5,7 +5,7 @@ import * as moment from "moment";
 import * as React from "react";
 import { connect } from "react-redux";
 import Table from "reactstrap/lib/Table";
-import { changeOrder } from "../../../actions/log";
+import { changeOrder, loadMoreLog, setAutoRefresh } from "../../../actions/log";
 import { ReducerConfigure } from "../../../reducers";
 import { Log } from "../../../requests/types";
 import "./LogViewer.css";
@@ -17,6 +17,7 @@ interface StateProps {
   nodeColors: {
     [nodeName: string]: string;
   };
+  noMoreData: boolean;
 }
 
 interface DispatchProps {
@@ -29,7 +30,7 @@ class LogViewer extends React.Component<Props, any> {
     super(props);
   }
   public render() {
-    const { orderBy, isFetchingLog, logs, nodeColors } = this.props;
+    const { orderBy, isFetchingLog, logs, nodeColors, noMoreData } = this.props;
     return (
       <div className="log-viewer animated fadeIn">
         <Table>
@@ -85,8 +86,14 @@ class LogViewer extends React.Component<Props, any> {
                   Loading...
                 </td>
               </tr>
-            ) : (
+            ) : noMoreData ? (
               <tr>
+                <td colSpan={5} className="text-center">
+                  No more log
+                </td>
+              </tr>
+            ) : (
+              <tr onClick={this.handleLoadMore}>
                 <td colSpan={5} className="text-center load-more">
                   Load More
                 </td>
@@ -126,11 +133,16 @@ class LogViewer extends React.Component<Props, any> {
         0.114 * Math.pow(B, 2.2)
     );
   };
+  private handleLoadMore = () => {
+    this.props.dispatch(setAutoRefresh(false));
+    this.props.dispatch(loadMoreLog());
+  };
 }
 const mapStateToProps = (state: ReducerConfigure) => ({
   logs: state.logReducer.logs,
   orderBy: state.logReducer.orderBy,
   isFetchingLog: state.logReducer.isFetchingLog,
-  nodeColors: state.logReducer.nodeColor
+  nodeColors: state.logReducer.nodeColor,
+  noMoreData: state.logReducer.noMoreData
 });
 export default connect(mapStateToProps)(LogViewer);
