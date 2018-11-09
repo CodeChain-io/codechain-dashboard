@@ -2,6 +2,7 @@ import * as _ from "lodash";
 import * as moment from "moment";
 import { LogAction } from "../actions/log";
 import Log from "../components/Log/Log";
+import { getObjectFromStorage, saveObjectToStorage } from "../utils/storage";
 
 export interface LogState {
   filter: {
@@ -46,7 +47,7 @@ const initialState: LogState = {
   isFetchingLog: false,
   isFetchingTarget: false,
   orderBy: "DESC",
-  nodeColor: {},
+  nodeColor: getObjectFromStorage("nodeColor") || {},
   noMoreData: false,
   setAutoRefresh: false
 };
@@ -98,6 +99,7 @@ export const logReducer = (state = initialState, action: LogAction) => {
         ...state.nodeColor,
         [action.data.nodeName]: action.data.color
       };
+      saveObjectToStorage("nodeColor", newNodeColor);
       return {
         ...state,
         nodeColor: newNodeColor
