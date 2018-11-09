@@ -46,8 +46,9 @@ class TopFilter extends React.Component<Props, any> {
               className="date-picker"
               selected={startDate}
               onChange={this.handleChangeStartDate}
+              timeIntervals={10}
               showTimeSelect={true}
-              dateFormat="YYYY-MM-DD HH:mm:ss"
+              dateFormat="YYYY-MM-DD HH:mm:ssZ"
             />
           </div>
           <div className="mr-3 ml-3">-</div>
@@ -56,8 +57,10 @@ class TopFilter extends React.Component<Props, any> {
               className={`date-picker`}
               selected={endDate}
               onChange={this.handleChangeEndDate}
+              timeIntervals={10}
+              disabledKeyboardNavigation={false}
               showTimeSelect={true}
-              dateFormat="YYYY-MM-DD HH:mm:ss"
+              dateFormat="YYYY-MM-DD HH:mm:ssZ"
             />
           </div>
           <div className="ml-3">

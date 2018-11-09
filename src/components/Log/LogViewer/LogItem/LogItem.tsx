@@ -79,7 +79,7 @@ class LogItem extends React.Component<Props, State> {
     const getExpendText = () => {
       return `${log.nodeName}, ${log.level}, ${log.target}, ${moment(
         log.timestamp
-      ).format("YYYY-MM-DD HH:mm:ss")} content is\r\n\r\n${log.message}`;
+      ).format("YYYY-MM-DD HH:mm:ssZ")} content is\r\n\r\n${log.message}`;
     };
     if (isExpended) {
       return [
