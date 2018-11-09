@@ -30,9 +30,8 @@ class LogViewer extends React.Component<Props, any> {
   }
   public render() {
     const { orderBy, isFetchingLog, logs, nodeColors } = this.props;
-    console.log(this.props.nodeColors);
     return (
-      <div className="log-viewer">
+      <div className="log-viewer animated fadeIn">
         <Table>
           <thead>
             <tr>
@@ -48,10 +47,10 @@ class LogViewer extends React.Component<Props, any> {
                   <FontAwesomeIcon icon={faArrowUp} />
                 )}
               </th>
-              <th style={{ width: "120px" }}>Node</th>
+              <th style={{ width: "100px" }}>Node</th>
               <th style={{ width: "80px" }}>Status</th>
               <th style={{ width: "120px" }}>Target</th>
-              <th>Body</th>
+              <th>Message</th>
             </tr>
           </thead>
           <tbody>
@@ -77,7 +76,7 @@ class LogViewer extends React.Component<Props, any> {
                   <td>{log.nodeName}</td>
                   <td>{log.level}</td>
                   <td>{log.target}</td>
-                  <td>{log.message}</td>
+                  <td className="message-col">{log.message}</td>
                 </tr>
               ))}
             {isFetchingLog ? (

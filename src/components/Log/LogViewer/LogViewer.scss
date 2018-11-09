@@ -2,11 +2,15 @@
   background-color: white;
   table {
     table-layout: fixed;
-
+    th {
+      padding: 7px;
+    }
     td {
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
+      font-size: 0.8rem;
+      padding: 7px;
     }
   }
   .date-table-header {

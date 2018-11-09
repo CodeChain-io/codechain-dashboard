@@ -40,7 +40,7 @@ const initialState: LogState = {
   },
   search: "",
   page: 1,
-  itemPerPage: 10,
+  itemPerPage: 15,
   isFetchingLog: false,
   isFetchingTarget: false,
   orderBy: "DESC",
