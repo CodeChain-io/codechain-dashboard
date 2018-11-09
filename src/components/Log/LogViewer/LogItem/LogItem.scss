@@ -1,0 +1,33 @@
+.log-item {
+  cursor: pointer;
+  td {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 7px;
+  }
+}
+
+.expended-item {
+  background-color: #f1f1f1;
+  td {
+    font-size: 0.8rem;
+    padding: 18px;
+
+    .expend-text {
+      white-space: pre-wrap;
+      background-color: white;
+      padding: 9px;
+      border: 1px solid #dfdfdf;
+    }
+
+    .btn {
+      font-size: 0.8rem;
+      padding-left: 15px;
+      padding-right: 15px;
+      padding-top: 3px;
+      padding-bottom: 3px;
+    }
+  }
+}
