@@ -11,7 +11,7 @@ use super::super::common_rpc_types as rpc_type;
 use super::super::common_rpc_types::{NodeName, NodeStatus, StructuredLog};
 use super::event::{Event, EventSubscriber};
 use super::queries;
-use super::types::{AgentExtra, AgentQueryResult, Connection, Connections, Log, LogQueryParams};
+use super::types::{AgentExtra, AgentQueryResult, Connection, Connections, Error as DBError, Log, LogQueryParams};
 use util;
 
 #[derive(Debug, Clone)]
@@ -68,7 +68,10 @@ impl Service {
         }: ServiceNewArg,
     ) -> Self {
         let conn_uri = format!("postgres://{}:{}@localhost", db_user, db_password);
+
         let conn = postgres::Connection::connect(conn_uri, TlsMode::None).unwrap();
+        queries::config::set_query_timeout(&conn).unwrap();
+
         Self {
             state: State::new(),
             event_subscriber,
@@ -294,36 +297,36 @@ impl ServiceSender {
         }
     }
 
-    pub fn initialize_agent_query_result(&self, agent_query_result: AgentQueryResult) -> bool {
+    pub fn initialize_agent_query_result(&self, agent_query_result: AgentQueryResult) -> Result<bool, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::InitializeAgent(agent_query_result, tx)).expect("Should success update agent");
-        let result = rx.recv().expect("Should success initialize_agent_query_result");
-        result
+        let result = rx.recv().map_err(|_| DBError::Timeout)?;
+        Ok(result)
     }
 
     pub fn update_agent_query_result(&self, agent_query_result: AgentQueryResult) {
         self.sender.send(Message::UpdateAgent(agent_query_result)).expect("Should success update agent");
     }
 
-    pub fn get_agent_query_result(&self, name: &str) -> Option<AgentQueryResult> {
+    pub fn get_agent_query_result(&self, name: &str) -> Result<Option<AgentQueryResult>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetAgent(name.to_string(), tx)).expect("Should success send request");
-        let agent_query_result = rx.recv().expect("Should success get_agent_query_result");
-        agent_query_result
+        let agent_query_result = rx.recv().map_err(|_| DBError::Timeout)?;
+        Ok(agent_query_result)
     }
 
-    pub fn get_agents_state(&self) -> Vec<AgentQueryResult> {
+    pub fn get_agents_state(&self) -> Result<Vec<AgentQueryResult>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetAgents(tx)).expect("Should success send request");
-        let agents_state = rx.recv().expect("Should success get_agents_state");
-        agents_state
+        let agents_state = rx.recv().map_err(|_| DBError::Timeout)?;
+        Ok(agents_state)
     }
 
-    pub fn get_connections(&self) -> Vec<rpc_type::Connection> {
+    pub fn get_connections(&self) -> Result<Vec<rpc_type::Connection>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetConnections(tx)).expect("Should success send request");
-        let connections = rx.recv().expect("Should success get_connections");
-        connections
+        let connections = rx.recv().map_err(|_| DBError::Timeout)?;
+        Ok(connections)
     }
 
     pub fn save_start_option(&self, node_name: &NodeName, env: &str, args: &str) {
@@ -332,28 +335,28 @@ impl ServiceSender {
             .expect("Should success send request");
     }
 
-    pub fn get_agent_extra(&self, node_name: &NodeName) -> Option<AgentExtra> {
+    pub fn get_agent_extra(&self, node_name: &NodeName) -> Result<Option<AgentExtra>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetAgentExtra(node_name.clone(), tx)).expect("Should success send request");
-        let agent_extra = rx.recv().expect("Should success");
-        agent_extra
+        let agent_extra = rx.recv().map_err(|_| DBError::Timeout)?;
+        Ok(agent_extra)
     }
 
-    pub fn get_logs(&self, params: LogQueryParams) -> Vec<Log> {
+    pub fn get_logs(&self, params: LogQueryParams) -> Result<Vec<Log>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetLogs(params, tx)).expect("Should success send request");
-        let logs = rx.recv().expect("Should success reciev");
-        logs
+        let logs = rx.recv().map_err(|_| DBError::Timeout)?;
+        Ok(logs)
     }
 
     pub fn write_logs(&self, node_name: &NodeName, logs: Vec<StructuredLog>) {
         self.sender.send(Message::WriteLogs(node_name.clone(), logs)).expect("Should success send request");
     }
 
-    pub fn get_log_targets(&self) -> Vec<String> {
+    pub fn get_log_targets(&self) -> Result<Vec<String>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetLogTargets(tx)).expect("Should success");
-        let targets = rx.recv().expect("Should success receiv");
-        targets
+        let targets = rx.recv().map_err(|_| DBError::Timeout)?;
+        Ok(targets)
     }
 }

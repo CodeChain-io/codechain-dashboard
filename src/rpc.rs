@@ -5,6 +5,7 @@ use std::result::Result;
 use jsonrpc_core::types::{Error as JSONRPCError, ErrorCode};
 use serde_json::{Error as SerdeError, Value};
 
+use super::db::Error as DBError;
 use super::jsonrpc;
 
 pub type RPCResponse<T> = Result<Option<T>, RPCError>;
@@ -14,6 +15,7 @@ pub type RPCResult<T> = Result<T, RPCError>;
 pub enum RPCError {
     Internal(String),
     FromAgent(JSONRPCError),
+    FromDB(DBError),
 
     AgentNotFound,
 }
@@ -23,6 +25,7 @@ impl fmt::Display for RPCError {
         match self {
             RPCError::Internal(err) => write!(f, "RPCError {}", err),
             RPCError::FromAgent(err) => write!(f, "JSONRPCError from Agent {:?}", err),
+            RPCError::FromDB(err) => write!(f, "JSONRPCError from DB {:?}", err),
             RPCError::AgentNotFound => write!(f, "Agent not found"),
         }
     }
@@ -57,6 +60,7 @@ impl RPCError {
                 };
                 error
             }
+            RPCError::FromDB(err) => Self::create_internal_rpc_error(&self.to_string()),
             RPCError::AgentNotFound => Self::create_rpc_error(ERR_AGENT_NOT_FOUND, &format!("{}", self)),
         }
     }
@@ -86,5 +90,11 @@ impl From<jsonrpc::CallError> for RPCError {
             jsonrpc::CallError::Response(jsonrpc_error) => RPCError::FromAgent(jsonrpc_error),
             _ => RPCError::Internal(format!("Internal error about jsonrpc call : {:?}", err)),
         }
+    }
+}
+
+impl From<DBError> for RPCError {
+    fn from(err: DBError) -> Self {
+        RPCError::FromDB(err)
     }
 }

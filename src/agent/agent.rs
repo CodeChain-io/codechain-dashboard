@@ -206,16 +206,19 @@ impl Agent {
         };
 
         if let State::Initializing = *state {
-            let success = self.db_service.initialize_agent_query_result(db::AgentQueryResult {
-                name: info.name.clone(),
-                status: info.status,
-                address: info.address,
-                version: Some(NodeVersion {
-                    version: String::new(),
-                    hash: info.codechain_commit_hash,
-                }),
-                ..Default::default()
-            });
+            let success = self
+                .db_service
+                .initialize_agent_query_result(db::AgentQueryResult {
+                    name: info.name.clone(),
+                    status: info.status,
+                    address: info.address,
+                    version: Some(NodeVersion {
+                        version: String::new(),
+                        hash: info.codechain_commit_hash,
+                    }),
+                    ..Default::default()
+                })
+                .map_err(|_| "DB timeout")?;
 
             if !success {
                 *state = State::Stop {

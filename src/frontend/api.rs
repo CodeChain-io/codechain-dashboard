@@ -36,8 +36,8 @@ fn ping(_: Context) -> RPCResponse<String> {
 }
 
 fn dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetworkResponse> {
-    let agents_state = context.db_service.get_agents_state();
-    let connections = context.db_service.get_connections();
+    let agents_state = context.db_service.get_agents_state()?;
+    let connections = context.db_service.get_connections()?;
     let dashboard_nodes = agents_state.iter().map(|agent| DashboardNode::from_db_state(agent)).collect();
     response(DashboardGetNetworkResponse {
         nodes: dashboard_nodes,
@@ -47,8 +47,8 @@ fn dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetworkRes
 
 fn node_get_info(context: Context, args: (String,)) -> RPCResponse<NodeGetInfoResponse> {
     let (name,) = args;
-    let agent_query_result = context.db_service.get_agent_query_result(&name).ok_or(RPCError::AgentNotFound)?;
-    let extra = context.db_service.get_agent_extra(&name);
+    let agent_query_result = context.db_service.get_agent_query_result(&name)?.ok_or(RPCError::AgentNotFound)?;
+    let extra = context.db_service.get_agent_extra(&name)?;
     response(NodeGetInfoResponse::from_db_state(&agent_query_result, &extra))
 }
 
@@ -89,7 +89,7 @@ fn node_update(context: Context, args: (NodeName, CommitHash)) -> RPCResponse<()
     }
     let agent = agent.expect("Already checked");
 
-    let extra = context.db_service.get_agent_extra(&name);
+    let extra = context.db_service.get_agent_extra(&name)?;
     agent.shell_update_codechain(ShellUpdateCodeChainRequest {
         env: extra.as_ref().map(|extra| extra.prev_env.clone()).unwrap_or("".to_string()),
         args: extra.as_ref().map(|extra| extra.prev_args.clone()).unwrap_or("".to_string()),
@@ -113,7 +113,7 @@ fn shell_get_codechain_log(context: Context, args: (String,)) -> RPCResponse<Str
 }
 
 fn log_get_targets(context: Context) -> RPCResponse<LogGetTargetsResponse> {
-    let targets = context.db_service.get_log_targets();
+    let targets = context.db_service.get_log_targets()?;
     response(LogGetTargetsResponse {
         targets,
     })
@@ -121,7 +121,7 @@ fn log_get_targets(context: Context) -> RPCResponse<LogGetTargetsResponse> {
 
 fn log_get(context: Context, args: (LogGetRequest,)) -> RPCResponse<LogGetResponse> {
     let (req,) = args;
-    let logs = context.db_service.get_logs(req);
+    let logs = context.db_service.get_logs(req)?;
     response(LogGetResponse {
         logs,
     })

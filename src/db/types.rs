@@ -177,3 +177,8 @@ pub struct Log {
     pub timestamp: chrono::DateTime<chrono::Local>,
     pub message: String,
 }
+
+#[derive(Debug, Clone)]
+pub enum Error {
+    Timeout,
+}
