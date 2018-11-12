@@ -232,6 +232,6 @@ export const changeFilters = (params: {
       type: "ChangeFilters",
       data: params
     });
-    dispatch(fetchLogsIfNeeded(true));
+    dispatch(fetchLogsIfNeeded());
   };
 };
