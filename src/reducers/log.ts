@@ -3,6 +3,12 @@ import * as moment from "moment";
 import { LogAction } from "../actions/log";
 import Log from "../components/Log/Log";
 import { getObjectFromStorage, saveObjectToStorage } from "../utils/storage";
+const merge = require("deepmerge").default;
+const overwriteMerge = (
+  destinationArray: any,
+  sourceArray: any,
+  options: any
+) => sourceArray;
 
 export interface LogState {
   filter: {
@@ -12,8 +18,8 @@ export interface LogState {
   };
   search: string;
   time: {
-    fromTime: moment.Moment;
-    toTime: moment.Moment;
+    fromTime: number;
+    toTime: number;
   };
   page: number;
   itemPerPage: number;
@@ -29,6 +35,8 @@ export interface LogState {
   };
   noMoreData: boolean;
   setAutoRefresh: boolean;
+  setFromTime: boolean;
+  setToTime: boolean;
 }
 
 const initialState: LogState = {
@@ -38,8 +46,10 @@ const initialState: LogState = {
     targets: []
   },
   time: {
-    fromTime: moment().subtract("days", 7),
-    toTime: moment()
+    fromTime: moment()
+      .subtract("days", 7)
+      .unix(),
+    toTime: moment().unix()
   },
   search: "",
   page: 1,
@@ -53,29 +63,13 @@ const initialState: LogState = {
   orderBy: "DESC",
   nodeColor: getObjectFromStorage("nodeColor") || {},
   noMoreData: false,
-  setAutoRefresh: false
+  setAutoRefresh: false,
+  setFromTime: true,
+  setToTime: true
 };
 
 export const logReducer = (state = initialState, action: LogAction) => {
   switch (action.type) {
-    case "ChangeDate":
-      return { ...state, time: action.data, noMoreData: false, page: 1 };
-    case "ChagneSearchText":
-      return { ...state, search: action.data, noMoreData: false, page: 1 };
-    case "ChangeNodes": {
-      const newFilter = {
-        ...state.filter,
-        nodeNames: action.data
-      };
-      return { ...state, filter: newFilter, noMoreData: false, page: 1 };
-    }
-    case "ChangeDebugLevel": {
-      const newFilter = {
-        ...state.filter,
-        levels: action.data
-      };
-      return { ...state, filter: newFilter, noMoreData: false, page: 1 };
-    }
     case "RequestTargets": {
       return { ...state, isFetchingTarget: true };
     }
@@ -87,16 +81,6 @@ export const logReducer = (state = initialState, action: LogAction) => {
     }
     case "SetLogs": {
       return { ...state, logs: action.data, isFetchingLog: false };
-    }
-    case "ChangeTargets": {
-      const newFilter = {
-        ...state.filter,
-        targets: action.data
-      };
-      return { ...state, filter: newFilter, noMoreData: false, page: 1 };
-    }
-    case "ChangeOrder": {
-      return { ...state, orderBy: action.data };
     }
     case "SetNodeColor": {
       const newNodeColor = {
@@ -127,12 +111,13 @@ export const logReducer = (state = initialState, action: LogAction) => {
         setAutoRefresh: action.data
       };
     }
-    case "ChangeItemPerPage": {
-      saveObjectToStorage("itemPerPage", { itemPerPage: action.data });
-      return {
-        ...state,
-        itemPerPage: action.data
-      };
+    case "ChangeFilters": {
+      if (action.data.itemPerPage) {
+        saveObjectToStorage("itemPerPage", { itemPerPage: action.data });
+      }
+      return merge({ ...state, noMoreData: false, page: 1 }, action.data, {
+        arrayMerge: overwriteMerge
+      });
     }
   }
   return state;

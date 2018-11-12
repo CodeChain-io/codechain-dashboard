@@ -4,9 +4,7 @@ import { connect } from "react-redux";
 import { Label } from "reactstrap";
 import { fetchChainNetworksIfNeeded } from "../../../actions/chainNetworks";
 import {
-  changeDebugLevel,
-  changeNodes,
-  changeTargets,
+  changeFilters,
   fetchTargetsIfNeeded,
   setNodeColor
 } from "../../../actions/log";
@@ -159,9 +157,15 @@ class LeftFilter extends React.Component<Props, any> {
     const target = event.target;
     const name = target.name;
     if (target.checked) {
-      dispatch(changeNodes(_.concat(selectedNodes, name)));
+      dispatch(
+        changeFilters({ filter: { nodeNames: _.concat(selectedNodes, name) } })
+      );
     } else {
-      dispatch(changeNodes(_.filter(selectedNodes, node => node !== name)));
+      dispatch(
+        changeFilters({
+          filter: { nodeNames: _.filter(selectedNodes, node => node !== name) }
+        })
+      );
     }
   };
   private handleLevelCheck = (event: any) => {
@@ -169,10 +173,14 @@ class LeftFilter extends React.Component<Props, any> {
     const target = event.target;
     const name = target.name;
     if (target.checked) {
-      dispatch(changeDebugLevel(_.concat(selectedLevels, name)));
+      dispatch(
+        changeFilters({ filter: { levels: _.concat(selectedLevels, name) } })
+      );
     } else {
       dispatch(
-        changeDebugLevel(_.filter(selectedLevels, level => level !== name))
+        changeFilters({
+          filter: { levels: _.filter(selectedLevels, level => level !== name) }
+        })
       );
     }
   };
@@ -181,9 +189,15 @@ class LeftFilter extends React.Component<Props, any> {
     const target = event.target;
     const name = target.name;
     if (target.checked) {
-      dispatch(changeTargets(_.concat(selectedTargets, name)));
+      dispatch(
+        changeFilters({ filter: { targets: _.concat(selectedTargets, name) } })
+      );
     } else {
-      dispatch(changeTargets(_.filter(selectedTargets, t => t !== name)));
+      dispatch(
+        changeFilters({
+          filter: { targets: _.filter(selectedTargets, t => t !== name) }
+        })
+      );
     }
   };
   private handleColorChange = (nodeName: string, color: string) => {

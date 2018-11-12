@@ -6,12 +6,6 @@ import RequestAgent from "../RequestAgent";
 const uuidv1 = require("uuid/v1");
 
 export type LogAction =
-  | ChangeNodes
-  | ChangeDebugLevel
-  | ChangeDate
-  | ChagneSearchText
-  | ChangeOrder
-  | ChangeTargets
   | SetTargets
   | RequestTargets
   | SetLogs
@@ -20,40 +14,7 @@ export type LogAction =
   | LoadMore
   | SetNoMoreData
   | SetAutoRefresh
-  | ChangeItemPerPage;
-
-export interface ChangeNodes {
-  type: "ChangeNodes";
-  data: string[];
-}
-
-export interface ChangeDebugLevel {
-  type: "ChangeDebugLevel";
-  data: string[];
-}
-
-export interface ChangeDate {
-  type: "ChangeDate";
-  data: {
-    fromTime: moment.Moment;
-    toTime: moment.Moment;
-  };
-}
-
-export interface ChangeTargets {
-  type: "ChangeTargets";
-  data: string[];
-}
-
-export interface ChagneSearchText {
-  type: "ChagneSearchText";
-  data: string;
-}
-
-export interface ChangeOrder {
-  type: "ChangeOrder";
-  data: "DESC" | "ASC";
-}
+  | ChangeFilters;
 
 export interface RequestTargets {
   type: "RequestTargets";
@@ -96,66 +57,25 @@ export interface SetAutoRefresh {
   data: boolean;
 }
 
-export interface ChangeItemPerPage {
-  type: "ChangeItemPerPage";
-  data: number;
+export interface ChangeFilters {
+  type: "ChangeFilters";
+  data: {
+    time?: {
+      fromTime?: number | null;
+      toTime?: number | null;
+    } | null;
+    search?: string | null;
+    filter?: {
+      nodeNames?: string[] | null;
+      levels?: ("error" | "warn" | "info" | "debug" | "trace")[] | null;
+      targets?: string[] | null;
+    } | null;
+    itemPerPage?: number | null;
+    orderBy?: ("ASC" | "DESC") | null;
+    setFromTime?: boolean | null;
+    setToTime?: boolean | null;
+  };
 }
-
-export const changeDate = (
-  startDate: moment.Moment,
-  endDate: moment.Moment
-) => {
-  return async (dispatch: any, getState: () => ReducerConfigure) => {
-    dispatch({
-      type: "ChangeDate",
-      data: {
-        fromTime: startDate,
-        toTime: endDate
-      }
-    });
-    dispatch(fetchLogsIfNeeded());
-  };
-};
-
-export const changeSearchText = (search: string) => {
-  return async (dispatch: any, getState: () => ReducerConfigure) => {
-    dispatch({
-      type: "ChagneSearchText",
-      data: search
-    });
-    dispatch(fetchLogsIfNeeded());
-  };
-};
-
-export const changeNodes = (nodes: string[]) => {
-  return async (dispatch: any, getState: () => ReducerConfigure) => {
-    dispatch({
-      type: "ChangeNodes",
-      data: nodes
-    });
-    dispatch(fetchLogsIfNeeded());
-  };
-};
-
-export const changeDebugLevel = (levels: string[]) => {
-  return async (dispatch: any, getState: () => ReducerConfigure) => {
-    dispatch({
-      type: "ChangeDebugLevel",
-      data: levels
-    });
-    dispatch(fetchLogsIfNeeded());
-  };
-};
-
-export const changeTypes = (types: string[]) => {
-  return async (dispatch: any, getState: () => ReducerConfigure) => {
-    dispatch({
-      type: "ChangeTypes",
-      data: types
-    });
-    dispatch(fetchLogsIfNeeded());
-  };
-};
 
 const requestTargets = () => ({
   type: "RequestTargets"
@@ -183,18 +103,8 @@ export const fetchTargetsIfNeeded = () => {
         targets: string[];
       }>("log_getTargets", []);
       dispatch(setTargets(response.targets));
-      dispatch(changeTargets(response.targets));
+      dispatch(changeFilters({ filter: { targets: response.targets } }));
     }
-  };
-};
-
-export const changeTargets = (targets: string[]) => {
-  return async (dispatch: any, getState: () => ReducerConfigure) => {
-    dispatch({
-      type: "ChangeTargets",
-      data: targets
-    });
-    dispatch(fetchLogsIfNeeded());
   };
 };
 
@@ -219,7 +129,13 @@ export const fetchLogsIfNeeded = (haveToAppend?: boolean) => {
       {
         filter: logReducer.filter,
         search: logReducer.search,
-        time: logReducer.time,
+        time: {
+          fromTime:
+            logReducer.setFromTime &&
+            moment(logReducer.time.fromTime).toISOString(),
+          toTime:
+            logReducer.setToTime && moment(logReducer.time.toTime).toISOString()
+        },
         page: logReducer.page,
         itemPerPage: logReducer.itemPerPage,
         orderBy: logReducer.orderBy
@@ -237,16 +153,6 @@ export const fetchLogsIfNeeded = (haveToAppend?: boolean) => {
         dispatch(setNoMoreData());
       }
     }
-  };
-};
-
-export const changeOrder = (orderBy: "DESC" | "ASC") => {
-  return async (dispatch: any, getState: () => ReducerConfigure) => {
-    dispatch({
-      type: "ChangeOrder",
-      data: orderBy
-    });
-    dispatch(fetchLogsIfNeeded());
   };
 };
 
@@ -276,11 +182,22 @@ export const setNoMoreData = () => ({
 let refresher: any;
 export const setAutoRefresh = (isOn: boolean) => {
   return async (dispatch: any, getState: () => ReducerConfigure) => {
+    const intervalFunc = () => {
+      const logReducer = getState().logReducer;
+      dispatch(
+        changeFilters({
+          time: {
+            fromTime: logReducer.time.fromTime,
+            toTime: moment().unix()
+          },
+          orderBy: "DESC",
+          setToTime: true
+        })
+      );
+    };
     if (isOn) {
-      refresher = setInterval(() => {
-        const logReducer = getState().logReducer;
-        dispatch(changeDate(logReducer.time.fromTime, moment()));
-      }, 3000);
+      intervalFunc();
+      refresher = setInterval(intervalFunc, 3000);
     } else {
       if (refresher) {
         clearInterval(refresher);
@@ -293,12 +210,27 @@ export const setAutoRefresh = (isOn: boolean) => {
   };
 };
 
-export const changeItemPerPage = (itemPerPage: number) => {
+export const changeFilters = (params: {
+  time?: {
+    fromTime?: number | null;
+    toTime?: number | null;
+  } | null;
+  search?: string | null;
+  filter?: {
+    nodeNames?: string[] | null;
+    levels?: ("error" | "warn" | "info" | "debug" | "trace")[] | null;
+    targets?: string[] | null;
+  } | null;
+  itemPerPage?: number | null;
+  orderBy?: ("ASC" | "DESC") | null;
+  setFromTime?: boolean | null;
+  setToTime?: boolean | null;
+}) => {
   return async (dispatch: any, getState: () => ReducerConfigure) => {
     dispatch({
-      type: "ChangeItemPerPage",
-      data: itemPerPage
+      type: "ChangeFilters",
+      data: params
     });
-    dispatch(fetchLogsIfNeeded());
+    dispatch(fetchLogsIfNeeded(true));
   };
 };

@@ -3,7 +3,7 @@ import { ReducerConfigure } from "../reducers";
 import { ChainNetworksState } from "../reducers/chainNetworks";
 import RequestAgent from "../RequestAgent";
 import { ChainNetworks, ChainNetworksUpdate } from "../requests/types";
-import { changeNodes } from "./log";
+import { changeFilters } from "./log";
 export type ChainNetworksAction =
   | SetChainNetworks
   | UpdateChainNetworks
@@ -56,7 +56,11 @@ export const fetchChainNetworksIfNeeded = () => {
         ChainNetworks
       >("dashboard_getNetwork", []);
       dispatch(setChainNetworks(chainNetworks));
-      dispatch(changeNodes(_.map(chainNetworks.nodes, node => node.name)));
+      dispatch(
+        changeFilters({
+          filter: { nodeNames: _.map(chainNetworks.nodes, node => node.name) }
+        })
+      );
     }
   };
 };

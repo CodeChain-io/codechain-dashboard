@@ -2,9 +2,14 @@
   background-color: white;
   padding: 18px;
 
+  .label-time {
+    display: inline-block;
+    width: 70px;
+  }
+
   .date-picker {
     width: 250px;
-    height: 40px;
+    height: 30px;
     text-align: center;
   }
 

@@ -5,8 +5,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import Table from "reactstrap/lib/Table";
 import {
-  changeItemPerPage,
-  changeOrder,
+  changeFilters,
   loadMoreLog,
   setAutoRefresh
 } from "../../../actions/log";
@@ -112,11 +111,13 @@ class LogViewer extends React.Component<Props, any> {
     );
   }
   private handleChangeItemPerpage = (event: any) => {
-    this.props.dispatch(changeItemPerPage(parseInt(event.target.value, 10)));
+    this.props.dispatch(
+      changeFilters({ itemPerPage: parseInt(event.target.value, 10) })
+    );
   };
   private toggleOrder = () => {
     this.props.dispatch(
-      changeOrder(this.props.orderBy === "DESC" ? "ASC" : "DESC")
+      changeFilters({ orderBy: this.props.orderBy === "DESC" ? "ASC" : "DESC" })
     );
   };
   private handleLoadMore = () => {
