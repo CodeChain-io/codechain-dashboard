@@ -115,6 +115,20 @@ impl Parameters {
 pub fn get_targets(conn: &postgres::Connection) -> postgres::Result<Vec<String>> {
     ctrace!("Query targets");
 
-    let rows = conn.query("SELECT DISTINCT target FROM logs", &[])?;
+    //    let rows = conn.query("SELECT DISTINCT target FROM logs", &[])?;
+    // Below query prints the same result with above query.
+    // See https://wiki.postgresql.org/wiki/Loose_indexscan
+    let rows = conn.query(
+        "
+    WITH RECURSIVE t AS (
+       (SELECT target FROM logs ORDER BY target LIMIT 1)  -- parentheses required
+           UNION ALL
+           SELECT (SELECT target FROM logs WHERE target > t.target ORDER BY target LIMIT 1)
+           FROM t
+           WHERE t.target IS NOT NULL
+       )
+    SELECT target FROM t WHERE target IS NOT NULL",
+        &[],
+    )?;
     Ok(rows.iter().map(|row| row.get("target")).collect())
 }
