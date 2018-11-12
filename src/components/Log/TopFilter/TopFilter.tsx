@@ -71,7 +71,7 @@ class TopFilter extends React.Component<Props, any> {
               </div>
               <DatePicker
                 className="date-picker"
-                selected={moment(startDate)}
+                selected={moment.unix(startDate)}
                 onChange={this.handleChangeStartDate}
                 onChangeRaw={this.handleChangeStartRawDate}
                 timeIntervals={10}
@@ -94,7 +94,7 @@ class TopFilter extends React.Component<Props, any> {
               </div>
               <DatePicker
                 className={`date-picker`}
-                selected={moment(endDate)}
+                selected={moment.unix(endDate)}
                 onChange={this.handleChangeEndDate}
                 timeIntervals={10}
                 disabledKeyboardNavigation={false}

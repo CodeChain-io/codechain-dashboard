@@ -132,9 +132,10 @@ export const fetchLogsIfNeeded = (haveToAppend?: boolean) => {
         time: {
           fromTime:
             logReducer.setFromTime &&
-            moment(logReducer.time.fromTime).toISOString(),
+            moment.unix(logReducer.time.fromTime).toISOString(),
           toTime:
-            logReducer.setToTime && moment(logReducer.time.toTime).toISOString()
+            logReducer.setToTime &&
+            moment.unix(logReducer.time.toTime).toISOString()
         },
         page: logReducer.page,
         itemPerPage: logReducer.itemPerPage,
