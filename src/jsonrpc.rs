@@ -121,6 +121,11 @@ impl Context {
         let mut ws_callback = self.ws_callback.lock().expect("Should success get ws_callback");
         ws_callback.insert(id, callback);
     }
+
+    pub fn remove_callback(&self, id: u64) {
+        let mut ws_callback = self.ws_callback.lock().unwrap();
+        ws_callback.remove(&id);
+    }
 }
 
 pub enum CallError {
@@ -198,7 +203,9 @@ where
     context.add_callback(id, tx);
     ctrace!("send JSONRPC {}", serialized_request);
     context.ws_sender.send(Message::Text(serialized_request))?;
-    let received_string = rx.recv_timeout(Duration::new(10, 0))?;
+    let receive_result = rx.recv_timeout(Duration::new(10, 0));
+    context.remove_callback(id);
+    let received_string = receive_result?;
     ctrace!("Receive JSONRPC {}", received_string);
 
     let res = serde_json::from_str(&received_string)?;
@@ -245,12 +252,16 @@ fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
     }
     .map_err(|id| format!("Invalid id {:#?}", id))?;
 
-    let ws_callback = context
+    let mut ws_callback = context
         .ws_callback
         .lock()
         .map_err(|err| format!("Cannot acquire ws_callback lock on handling {}\n{}", text.clone(), err))?;
-    let callback = ws_callback.get(&id).ok_or(format!("Invalid id {}", id))?;
-    callback.send(text.clone()).map_err(|err| format!("Callback call failed, response was {}\n{}", text.clone(), err))
+    let callback = ws_callback.get(&id).ok_or(format!("Invalid id {}", id))?.clone();
+    let result = callback
+        .send(text.clone())
+        .map_err(|err| format!("Callback call failed, response was {}\n{}", text.clone(), err));
+    ws_callback.remove(&id);
+    result
 }
 
 impl fmt::Display for CallError {
