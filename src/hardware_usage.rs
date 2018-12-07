@@ -123,6 +123,7 @@ impl HardwareService {
         }
     }
 
+    #[allow(dead_code)]
     pub fn quit(&self) {
         self.quit.send(());
     }

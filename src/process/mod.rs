@@ -157,6 +157,7 @@ pub enum Message {
     Stop {
         callback: Sender<Result<(), Error>>,
     },
+    #[allow(dead_code)]
     Quit {
         callback: Sender<Result<(), Error>>,
     },
