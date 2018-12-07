@@ -21,7 +21,8 @@ pub struct WebSocketHandler {
 impl Handler for WebSocketHandler {
     fn on_open(&mut self, _: Handshake) -> Result<()> {
         // We have a new connection, so we increment the connection counter
-        Ok(self.count.set(self.count.get() + 1))
+        self.count.set(self.count.get() + 1);
+        Ok(())
     }
 
     fn on_message(&mut self, msg: Message) -> Result<()> {
@@ -54,7 +55,7 @@ impl Handler for WebSocketHandler {
                         ..
                     })) => {
                         let value_params = serde_json::to_value(params).expect("Change to value always success");
-                        match self.router.run(self.context.clone(), &method, value_params) {
+                        match self.router.run(self.context.as_ref(), &method, value_params) {
                             Ok(Some(value)) => Some(
                                 Success {
                                     jsonrpc: Some(Version::V2),

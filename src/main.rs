@@ -48,5 +48,5 @@ fn main() {
         codechain_address,
         name,
     };
-    run(args);
+    run(&args);
 }

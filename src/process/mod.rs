@@ -148,35 +148,37 @@ pub struct Process {
     http_client: reqwest::Client,
 }
 
+type Callback<T> = Sender<Result<T, Error>>;
+
 pub enum Message {
     Run {
         env: String,
         args: String,
-        callback: Sender<Result<(), Error>>,
+        callback: Callback<()>,
     },
     Stop {
-        callback: Sender<Result<(), Error>>,
+        callback: Callback<()>,
     },
     #[allow(dead_code)]
     Quit {
-        callback: Sender<Result<(), Error>>,
+        callback: Callback<()>,
     },
     Update {
         env: String,
         args: String,
         target_version: CommitHash,
-        callback: Sender<Result<(), Error>>,
+        callback: Callback<()>,
     },
     GetStatus {
-        callback: Sender<Result<(NodeStatus, Option<u16>, CommitHash), Error>>,
+        callback: Callback<(NodeStatus, Option<u16>, CommitHash)>,
     },
     GetLog {
-        callback: Sender<Result<String, Error>>,
+        callback: Callback<String>,
     },
     CallRPC {
         method: String,
         arguments: Vec<Value>,
-        callback: Sender<Result<Value, Error>>,
+        callback: Callback<Value>,
     },
 }
 
@@ -218,7 +220,7 @@ impl Process {
                 args,
                 callback,
             } => {
-                let result = self.run(env, args);
+                let result = self.run(&env, &args);
                 callback.send(result);
             }
             Message::Stop {
@@ -251,10 +253,11 @@ impl Process {
                 target_version,
                 callback,
             } => {
-                let mut result = Ok(());
-                if self.is_running() {
-                    result = self.stop();
-                }
+                let result = if self.check_running() {
+                    self.stop()
+                } else {
+                    Ok(())
+                };
                 let result = result.and_then(|_| self.update(&target_version, env, args));
                 callback.send(result);
             }
@@ -264,7 +267,7 @@ impl Process {
                 let codechain_status = &self.codechain_status;
                 let status = codechain_status.to_node_status();
                 let p2p_port = codechain_status.p2p_port();
-                let commit_hash = self.get_commit_hash().unwrap_or("".to_string());
+                let commit_hash = self.get_commit_hash().unwrap_or_default();
                 callback.send(Ok((status, p2p_port, commit_hash)));
             }
             Message::GetLog {
@@ -325,7 +328,7 @@ impl Process {
                         rpc_port,
                     };
                 }
-                if !self.is_running() {
+                if !self.check_running() {
                     self.codechain_status = CodeChainStatus::Error {
                         p2p_port,
                         rpc_port,
@@ -378,7 +381,7 @@ impl Process {
 
         if success {
             self.codechain_status = CodeChainStatus::Stop;
-            if let Err(err) = self.run(env.to_string(), args.to_string()) {
+            if let Err(err) = self.run(&env, &args) {
                 cerror!(PROCESS, "Cannot run codechain after update : {:?}", err);
             }
         } else {
@@ -389,9 +392,9 @@ impl Process {
         }
     }
 
-    pub fn run(&mut self, env: String, args: String) -> Result<(), Error> {
+    pub fn run(&mut self, env: &str, args: &str) -> Result<(), Error> {
         cdebug!(PROCESS, "Run codechain");
-        if self.is_running() {
+        if self.check_running() {
             cdebug!(PROCESS, "Run codechain failed because it is AlreadyRunning");
             return Err(Error::AlreadyRunning)
         }
@@ -405,7 +408,7 @@ impl Process {
 
         let (p2p_port, rpc_port) = parse_ports(&args_vec);
 
-        let envs = Self::parse_env(&env)?;
+        let envs = Self::parse_env(env)?;
 
         let file = File::create(self.option.log_file_path.clone())?;
 
@@ -432,17 +435,8 @@ impl Process {
         Ok(())
     }
 
-    pub fn is_running(&mut self) -> bool {
-        if self.child.is_none() {
-            return false
-        }
-
-        let child = self.child.as_mut().unwrap();
-        if child.poll().is_none() {
-            return true
-        } else {
-            return false
-        }
+    pub fn check_running(&mut self) -> bool {
+        self.child.as_mut().map_or(false, |child| child.poll().is_none())
     }
 
     fn is_updating(&self) -> bool {
@@ -460,18 +454,18 @@ impl Process {
         let env_kvs = env.split_whitespace();
         let mut ret = Vec::new();
         for env_kv in env_kvs {
-            let kv_array: Vec<&str> = env_kv.splitn(2, "=").collect();
+            let kv_array: Vec<&str> = env_kv.splitn(2, '=').collect();
             if kv_array.len() != 2 {
                 return Err(Error::EnvParseError)
             } else {
                 ret.push((kv_array[0], kv_array[1]));
             }
         }
-        return Ok(ret)
+        Ok(ret)
     }
 
     pub fn stop(&mut self) -> Result<(), Error> {
-        if !self.is_running() {
+        if !self.check_running() {
             return Err(Error::NotRunning)
         }
         if self.is_updating() {
@@ -566,14 +560,14 @@ impl Process {
     }
 }
 
-fn parse_ports(args: &Vec<String>) -> (u16, u16) {
+fn parse_ports(args: &[String]) -> (u16, u16) {
     let p2p_port = parse_port(args, "--port");
     let rpc_port = parse_port(args, "--jsonrpc-port");
 
     (p2p_port.unwrap_or(3485), rpc_port.unwrap_or(8080))
 }
 
-fn parse_port(args: &Vec<String>, option_name: &str) -> Option<u16> {
+fn parse_port(args: &[String], option_name: &str) -> Option<u16> {
     let option_position = args.iter().position(|arg| arg == option_name);
     let interface_pos = option_position.map(|pos| pos + 1);
     let interface_string = interface_pos.and_then(|pos| args.get(pos));

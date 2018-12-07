@@ -14,7 +14,7 @@ use super::rpc::api::add_routing;
 use super::rpc::router::Router;
 use super::types::{AgentArgs, HandlerContext};
 
-pub fn run(args: AgentArgs) {
+pub fn run(args: &AgentArgs) {
     logger_init().expect("Logger should be initialized");
 
     let count = Rc::new(Cell::new(0));

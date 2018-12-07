@@ -17,16 +17,16 @@ impl Job {
         thread::Builder::new()
             .name("update job".to_string())
             .spawn(move || {
-                let result = Self::update(codechain_dir, commit_hash);
+                let result = Self::update(codechain_dir, &commit_hash);
                 callback.send(result);
             })
             .expect("Should success running update job thread")
     }
 
-    fn update(codechain_dir: String, commit_hash: CommitHash) -> Result<(), Error> {
+    fn update(codechain_dir: String, commit_hash: &str) -> Result<(), Error> {
         git_util::remote_update(codechain_dir.clone())?;
         git_util::reset_hard(codechain_dir.clone(), commit_hash.to_string())?;
-        let current_hash = git_util::current_hash(codechain_dir.clone())?;
+        let current_hash = git_util::current_hash(codechain_dir)?;
         if commit_hash != current_hash {
             cwarn!(PROCESS, "Updated commit hash not matched expected {} found {}", commit_hash, current_hash);
             Err(Error::Unknown(format!("Cannot update to {}", commit_hash)))

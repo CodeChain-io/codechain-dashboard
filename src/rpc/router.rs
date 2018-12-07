@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use std::option::Option;
-use std::sync::Arc;
 
 use serde::de::Deserialize;
 use serde::Serialize;
@@ -11,19 +9,19 @@ use super::super::types::HandlerContext;
 use super::types::{RPCError, RPCResult};
 
 pub trait Route {
-    fn run(&self, context: Arc<HandlerContext>, value: Value) -> RPCResult<Value>;
+    fn run(&self, context: &HandlerContext, value: Value) -> RPCResult<Value>;
 }
 
 pub struct Router {
     table: HashMap<&'static str, Box<Route>>,
 }
 
-impl<Arg, Res> Route for fn(Arc<HandlerContext>, Arg) -> RPCResult<Res>
+impl<Arg, Res> Route for fn(&HandlerContext, Arg) -> RPCResult<Res>
 where
     Res: Serialize,
     for<'de> Arg: Deserialize<'de>,
 {
-    fn run(&self, context: Arc<HandlerContext>, value: Value) -> RPCResult<Value> {
+    fn run(&self, context: &HandlerContext, value: Value) -> RPCResult<Value> {
         let arg = serde_json::from_value(value)?;
         let result = self(context, arg)?;
         if let Some(result) = result {
@@ -34,11 +32,11 @@ where
     }
 }
 
-impl<Res> Route for fn(Arc<HandlerContext>) -> RPCResult<Res>
+impl<Res> Route for fn(&HandlerContext) -> RPCResult<Res>
 where
     Res: Serialize,
 {
-    fn run(&self, context: Arc<HandlerContext>, _value: Value) -> RPCResult<Value> {
+    fn run(&self, context: &HandlerContext, _value: Value) -> RPCResult<Value> {
         let result = self(context)?;
         if let Some(result) = result {
             let value_result = serde_json::to_value(result)?;
@@ -66,7 +64,7 @@ impl Router {
         self.table.insert(method, route);
     }
 
-    pub fn run(&self, context: Arc<HandlerContext>, method: &str, arg: Value) -> Result<Option<Value>, Error> {
+    pub fn run(&self, context: &HandlerContext, method: &str, arg: Value) -> Result<Option<Value>, Error> {
         let route = self.table.get(method);
         match route {
             None => Err(Error::MethodNotFound),

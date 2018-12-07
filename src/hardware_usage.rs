@@ -32,7 +32,7 @@ pub struct HardwareService {
 type CpuMeasurement = DelayedMeasurement<Vec<CPULoad>>;
 
 impl HardwareService {
-    pub fn new() -> (Self, Receiver<()>) {
+    pub fn create() -> (Self, Receiver<()>) {
         let (tx, rx) = channel::unbounded();
         (
             Self {
@@ -44,7 +44,7 @@ impl HardwareService {
     }
 
     pub fn run_thread() -> HardwareService {
-        let (mut hardware_service, quit_rx) = HardwareService::new();
+        let (mut hardware_service, quit_rx) = HardwareService::create();
         let hardware_service_ret = hardware_service.clone();
 
         thread::Builder::new()
@@ -71,13 +71,9 @@ impl HardwareService {
                         recv(channel::after(timeout)) => {}
                     }
 
-                    match hardware_service.update(measurement, &mut sysinfo_sys) {
-                        Ok(_) => {}
-                        Err(_) => {
-                            // Do not print error.
-                            // There will be too many error if cpu usage is not supported
-                        }
-                    }
+                    let _ = hardware_service.update(measurement, &mut sysinfo_sys);
+                    // Do not print error.
+                    // There will be too many error if cpu usage is not supported
                 }
             })
             .expect("Should success running process thread");
@@ -93,7 +89,7 @@ impl HardwareService {
     fn update(&mut self, cpu_measure: Option<CpuMeasurement>, sysinfo_sys: &mut sysinfo::System) -> Result<(), String> {
         let cpu_usage = if let Some(measure) = cpu_measure {
             let cpu = measure.done().map_err(|err| err.description().to_string())?;
-            cpu.iter().map(|core| (core.user + core.system) as f64).collect()
+            cpu.iter().map(|core| f64::from(core.user + core.system)).collect()
         } else {
             Vec::new()
         };
