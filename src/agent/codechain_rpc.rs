@@ -41,7 +41,8 @@ impl CodeChainRPC {
     }
 
     pub fn get_pending_parcels(&self, status: NodeStatus) -> Result<Vec<PendingParcel>, String> {
-        self.call_rpc(status, "chain_getPendingParcels")
+        //        self.call_rpc(status, "chain_getPendingParcels")
+        Ok(Vec::new())
     }
 
     pub fn get_whitelist(&self, status: NodeStatus) -> Result<Option<WhiteList>, String> {
