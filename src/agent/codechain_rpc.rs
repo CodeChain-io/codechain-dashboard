@@ -75,7 +75,7 @@ impl CodeChainRPC {
             Output::Failure(Failure {
                 error,
                 ..
-            }) => return Err(format!("get_peers error {:#?}", error)),
+            }) => return Err(format!("{} error {:#?}", method, error)),
         };
 
         Ok(response)
