@@ -11,14 +11,41 @@ use super::super::types::{Log, LogQueryParams};
 
 pub fn insert(conn: &postgres::Connection, node_name: &NodeName, logs: Vec<StructuredLog>) -> postgres::Result<()> {
     ctrace!("Add log {} : {:?}", node_name, logs);
-    for log in logs {
+
+    if logs.len() == 0 {
+        return Ok(())
+    }
+
+    let mut query = "";
+    let mut parameters_positions: Vec<String> = Vec::new();
+    let mut parameters: Vec<Box<ToSql>> = Vec::new();
+    for (row_index, log) in logs.into_iter().enumerate() {
+        let base_num = row_index * 5;
+        parameters_positions.push(format!(
+            "(${}, ${}, ${}, ${}, ${})",
+            base_num + 1,
+            base_num + 2,
+            base_num + 3,
+            base_num + 4,
+            base_num + 5
+        ));
         let rfc3339with_nano_second = "%Y-%m-%dT%H:%M:%S.%f%z";
         let datetime = chrono::DateTime::parse_from_str(&log.timestamp, rfc3339with_nano_second).unwrap();
-        conn.execute(
-            "INSERT INTO logs (name, level, target, message, timestamp) VALUES ($1, $2, $3, $4, $5)",
-            &[node_name, &log.level, &log.target, &log.message, &datetime],
-        )?;
+        parameters.push(Box::new(node_name));
+        parameters.push(Box::new(log.level));
+        parameters.push(Box::new(log.target));
+        parameters.push(Box::new(log.message));
+        parameters.push(Box::new(datetime));
     }
+
+    let full_sql = format!(
+        "INSERT INTO logs (name, level, target, message, timestamp) VALUES {}",
+        parameters_positions.join(", ")
+    );
+    let parameters_ref: Vec<&ToSql> = parameters.iter().map(|param| param.as_ref()).collect();
+    ctrace!("Full query is {}", full_sql);
+    conn.execute(&full_sql, &parameters_ref)?;
+
     Ok(())
 }
 
