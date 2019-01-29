@@ -122,7 +122,7 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
             level: row.get("level"),
             target: row.get("target"),
             timestamp: row.get("timestamp"),
-            message: row.get("message"),
+            message: format!("{} {}", row.get::<_, String>("thread_name"), row.get::<_, String>("message")),
         })
         .collect())
 }
