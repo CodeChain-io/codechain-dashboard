@@ -136,6 +136,7 @@ pub struct LogFilter {
     pub node_names: Vec<String>,
     pub levels: Vec<LogLevel>,
     pub targets: Vec<String>,
+    pub thread_name: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

@@ -20,14 +20,15 @@ pub fn insert(conn: &postgres::Connection, node_name: &NodeName, logs: Vec<Struc
     let mut parameters_positions: Vec<String> = Vec::new();
     let mut parameters: Vec<Box<ToSql>> = Vec::new();
     for (row_index, log) in logs.into_iter().enumerate() {
-        let base_num = row_index * 5;
+        let base_num = row_index * 6;
         parameters_positions.push(format!(
-            "(${}, ${}, ${}, ${}, ${})",
+            "(${}, ${}, ${}, ${}, ${}, ${})",
             base_num + 1,
             base_num + 2,
             base_num + 3,
             base_num + 4,
-            base_num + 5
+            base_num + 5,
+            base_num + 6
         ));
         let rfc3339with_nano_second = "%Y-%m-%dT%H:%M:%S.%f%z";
         let datetime = chrono::DateTime::parse_from_str(&log.timestamp, rfc3339with_nano_second).unwrap();
@@ -36,10 +37,11 @@ pub fn insert(conn: &postgres::Connection, node_name: &NodeName, logs: Vec<Struc
         parameters.push(Box::new(log.target));
         parameters.push(Box::new(log.message));
         parameters.push(Box::new(datetime));
+        parameters.push(Box::new(log.thread_name));
     }
 
     let full_sql = format!(
-        "INSERT INTO logs (name, level, target, message, timestamp) VALUES {}",
+        "INSERT INTO logs (name, level, target, message, timestamp, thread_name) VALUES {}",
         parameters_positions.join(", ")
     );
     let parameters_ref: Vec<&ToSql> = parameters.iter().map(|param| param.as_ref()).collect();
@@ -67,6 +69,10 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
         if filter.targets.len() != 0 {
             let targets_index = parameters.add(Rc::new(filter.targets));
             where_conditions.push(format!("target = ANY(${})", targets_index));
+        }
+        if let Some(thread_name) = filter.thread_name {
+            let target_index = parameters.add(Rc::new(thread_name));
+            where_conditions.push(format!("thread_name = ${}", target_index));
         }
     }
     if let Some(search) = params.search {

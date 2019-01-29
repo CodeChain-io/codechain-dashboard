@@ -89,4 +89,5 @@ pub struct StructuredLog {
     pub target: String,
     pub message: String,
     pub timestamp: String,
+    pub thread_name: String,
 }

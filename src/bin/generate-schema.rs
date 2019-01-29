@@ -42,6 +42,7 @@ fn create_logs_schema(conn: &Connection) {
         name VARCHAR NOT NULL,
         level VARCHAR NOT NULL,
         target VARCHAR NOT NULL,
+        thread_name VARCHAR NOT NULL,
         message VARCHAR NOT NULL,
         timestamp TIMESTAMP WITH TIME ZONE NOT NULL
     )",
