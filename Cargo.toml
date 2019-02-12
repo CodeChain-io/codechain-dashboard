@@ -6,7 +6,6 @@ authors = ["CodeChain Team <codechain@kodebox.io>"]
 [dependencies]
 atty = "0.2"
 chrono = { version = "0.4", features = ["serde"] }
-codechain-rpc = { git = "https://github.com/CodeChain-io/codechain.git", rev = "7cd80ce55f25513e1b4b60f2e148eb9641c3ee51" }
 colored = "1.6"
 env_logger = "0.5.7"
 iron = "*"

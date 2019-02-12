@@ -2,7 +2,6 @@
 extern crate log;
 
 extern crate chrono;
-extern crate codechain_rpc as crpc;
 extern crate iron;
 extern crate jsonrpc_core;
 extern crate postgres;
