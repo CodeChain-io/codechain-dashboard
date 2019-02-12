@@ -63,7 +63,7 @@ export const nodeInfoReducer = (
         ...state.nodeInfos,
         [action.name]: {
           ...state.nodeInfos[action.name],
-          info: merge(state.nodeInfos[action.name].info, action.data, {
+          info: merge(state.nodeInfos[action.name].info || {}, action.data, {
             arrayMerge: overwriteMerge
           })
         }
