@@ -28,6 +28,7 @@ pub enum DashboardNode {
         name: NodeName,
     },
     #[serde(rename_all = "camelCase")]
+    #[allow(dead_code)]
     UFO {
         status: NodeStatus,
         name: NodeName,

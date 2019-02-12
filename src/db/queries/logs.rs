@@ -17,7 +17,6 @@ pub fn insert(conn: &postgres::Connection, node_name: &NodeName, logs: Vec<Struc
     }
 
     for log_chunk in logs.chunks(1000) {
-        let mut query = "";
         let mut parameters_positions: Vec<String> = Vec::new();
         let mut parameters: Vec<Box<ToSql>> = Vec::new();
 

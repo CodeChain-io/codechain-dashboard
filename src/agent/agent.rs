@@ -116,6 +116,7 @@ pub struct Agent {
 
 pub enum AgentCleanupReason {
     Error(String),
+    #[allow(dead_code)]
     Success,
     AlreadyConnected,
     Unexpected,
