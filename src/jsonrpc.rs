@@ -255,11 +255,13 @@ fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
     let mut ws_callback = context
         .ws_callback
         .lock()
-        .map_err(|err| format!("Cannot acquire ws_callback lock on handling {}\n{}", text.clone(), err))?;
-    let callback = ws_callback.get(&id).ok_or(format!("Invalid id {}", id))?.clone();
-    let result = callback
-        .send(text.clone())
-        .map_err(|err| format!("Callback call failed, response was {}\n{}", text.clone(), err));
+        .map_err(|err| format!("Cannot acquire ws_callback lock on handling {}\n{}", text, err))?;
+    let result = {
+        let callback = ws_callback.get_mut(&id).ok_or_else(|| format!("Invalid id {}", id))?;
+        callback
+            .send(text.clone())
+            .map_err(|err| format!("Callback call failed, response was {}\n{}", text.clone(), err))
+    };
     ws_callback.remove(&id);
     result
 }

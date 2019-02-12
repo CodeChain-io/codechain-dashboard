@@ -48,7 +48,7 @@ fn dashboard_get_network(context: Context) -> RPCResponse<DashboardGetNetworkRes
 fn node_get_info(context: Context, args: (String,)) -> RPCResponse<NodeGetInfoResponse> {
     let (name,) = args;
     let agent_query_result = context.db_service.get_agent_query_result(&name)?.ok_or(RPCError::AgentNotFound)?;
-    let extra = context.db_service.get_agent_extra(&name)?;
+    let extra = context.db_service.get_agent_extra(name)?;
     response(NodeGetInfoResponse::from_db_state(&agent_query_result, &extra))
 }
 
@@ -62,7 +62,7 @@ fn node_start(context: Context, args: (NodeName, ShellStartCodeChainRequest)) ->
     let agent = agent.expect("Already checked");
     agent.shell_start_codechain(req.clone())?;
 
-    context.db_service.save_start_option(&name, &req.env, &req.args);
+    context.db_service.save_start_option(name, &req.env, &req.args);
 
     response(())
 }
@@ -89,10 +89,10 @@ fn node_update(context: Context, args: (NodeName, CommitHash)) -> RPCResponse<()
     }
     let agent = agent.expect("Already checked");
 
-    let extra = context.db_service.get_agent_extra(&name)?;
+    let extra = context.db_service.get_agent_extra(name)?;
     agent.shell_update_codechain(ShellUpdateCodeChainRequest {
-        env: extra.as_ref().map(|extra| extra.prev_env.clone()).unwrap_or("".to_string()),
-        args: extra.as_ref().map(|extra| extra.prev_args.clone()).unwrap_or("".to_string()),
+        env: extra.as_ref().map(|extra| extra.prev_env.clone()).unwrap_or_default(),
+        args: extra.as_ref().map(|extra| extra.prev_args.clone()).unwrap_or_default(),
         commit_hash,
     })?;
 

@@ -64,7 +64,7 @@ impl Connections {
         let mut ret_removed = Vec::new();
 
         for added_element in added {
-            if self.data.insert(added_element.clone()) {
+            if self.data.insert(added_element) {
                 ret_added.push(added_element);
             }
         }
@@ -115,7 +115,7 @@ impl Connections {
     }
 
     pub fn get_all(&self) -> Vec<Connection> {
-        self.data.iter().map(|connection| *connection).collect()
+        self.data.iter().cloned().collect()
     }
 }
 

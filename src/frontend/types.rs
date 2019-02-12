@@ -43,7 +43,7 @@ impl DashboardNode {
             name: state.name.clone(),
             address: state.address,
             version: state.version.clone(),
-            best_block_id: state.best_block_id.clone(),
+            best_block_id: state.best_block_id,
         }
     }
 }
@@ -144,7 +144,7 @@ impl NodeGetInfoResponse {
         dummy.status = state.status;
         dummy.name = state.name.clone();
         dummy.peers = state.peers.clone();
-        dummy.best_block_id = state.best_block_id.clone();
+        dummy.best_block_id = state.best_block_id;
         dummy.version = state.version.clone();
         dummy.pending_parcels = state.pending_parcels.clone();
         dummy.whitelist = state.whitelist.clone();

@@ -245,10 +245,13 @@ impl Agent {
                 hash,
             })
         });
-        let version = version.or(Some(NodeVersion {
-            version: String::new(),
-            hash: info.codechain_commit_hash,
-        }));
+        let hash = info.codechain_commit_hash;
+        let version = version.or_else(|| {
+            Some(NodeVersion {
+                version: String::new(),
+                hash,
+            })
+        });
         let pending_parcels = self.codechain_rpc.get_pending_parcels(info.status)?;
         let whitelist = self.codechain_rpc.get_whitelist(info.status)?;
         let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
@@ -271,7 +274,7 @@ impl Agent {
 
         let logs = self.codechain_rpc.get_logs(info.status)?;
         if let Some(logs) = logs {
-            self.db_service.write_logs(&info.name, logs);
+            self.db_service.write_logs(info.name, logs);
         }
 
         Ok(())

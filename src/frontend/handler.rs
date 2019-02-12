@@ -23,7 +23,8 @@ impl Handler for WebSocketHandler {
             .send(super::Message::AddWS(self.out.clone()))
             .expect("Should success adding ws to frontend_service");
         // We have a new connection, so we increment the connection counter
-        Ok(self.count.set(self.count.get() + 1))
+        self.count.set(self.count.get() + 1);
+        Ok(())
     }
 
     fn on_message(&mut self, msg: ws::Message) -> Result<()> {

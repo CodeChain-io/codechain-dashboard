@@ -3,8 +3,8 @@ use super::types::{AgentExtra, AgentQueryResult};
 
 pub enum Event {
     AgentUpdated {
-        before: Option<AgentQueryResult>,
-        after: AgentQueryResult,
+        before: Box<Option<AgentQueryResult>>,
+        after: Box<AgentQueryResult>,
     },
     ConnectionChanged {
         added: Vec<(NodeName, NodeName)>,

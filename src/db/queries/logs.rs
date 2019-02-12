@@ -5,14 +5,14 @@ use chrono;
 use postgres;
 use postgres::types::ToSql;
 
-use super::super::super::common_rpc_types::{NodeName, StructuredLog};
+use super::super::super::common_rpc_types::StructuredLog;
 use super::super::types::OrderBy;
 use super::super::types::{Log, LogQueryParams};
 
-pub fn insert(conn: &postgres::Connection, node_name: &NodeName, logs: Vec<StructuredLog>) -> postgres::Result<()> {
+pub fn insert(conn: &postgres::Connection, node_name: &str, logs: Vec<StructuredLog>) -> postgres::Result<()> {
     ctrace!("Add log {} : {:?}", node_name, logs);
 
-    if logs.len() == 0 {
+    if logs.is_empty() {
         return Ok(())
     }
 
@@ -20,7 +20,7 @@ pub fn insert(conn: &postgres::Connection, node_name: &NodeName, logs: Vec<Struc
         let mut parameters_positions: Vec<String> = Vec::new();
         let mut parameters: Vec<Box<ToSql>> = Vec::new();
 
-        for (row_index, log) in log_chunk.into_iter().enumerate() {
+        for (row_index, log) in log_chunk.iter().enumerate() {
             let base_num = row_index * 6;
             parameters_positions.push(format!(
                 "(${}, ${}, ${}, ${}, ${}, ${})",
@@ -58,17 +58,17 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
     let mut parameters = Parameters::new();
     let mut where_conditions = Vec::new();
     if let Some(filter) = params.filter {
-        if filter.node_names.len() != 0 {
+        if !filter.node_names.is_empty() {
             let node_names_index = parameters.add(Rc::new(filter.node_names));
             where_conditions.push(format!("name = ANY(${})", node_names_index));
         }
-        if filter.levels.len() != 0 {
+        if !filter.levels.is_empty() {
             let uppercase_levels: Vec<String> =
                 filter.levels.iter().map(|level| level.to_string().to_uppercase()).collect();
             let filters_index = parameters.add(Rc::new(uppercase_levels));
             where_conditions.push(format!("level = ANY(${})", filters_index));
         }
-        if filter.targets.len() != 0 {
+        if !filter.targets.is_empty() {
             let targets_index = parameters.add(Rc::new(filter.targets));
             where_conditions.push(format!("target = ANY(${})", targets_index));
         }
@@ -94,7 +94,7 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
         }
     }
 
-    let where_clause = if where_conditions.len() > 0 {
+    let where_clause = if !where_conditions.is_empty() {
         "WHERE ".to_string() + &where_conditions.join(" AND ")
     } else {
         "".to_string()

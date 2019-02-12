@@ -1,3 +1,4 @@
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::error;
 use std::net::SocketAddr;
@@ -16,8 +17,8 @@ use util;
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    InitializeAgent(AgentQueryResult, Sender<bool>),
-    UpdateAgent(AgentQueryResult),
+    InitializeAgent(Box<AgentQueryResult>, Sender<bool>),
+    UpdateAgent(Box<AgentQueryResult>),
     GetAgent(NodeName, Sender<Option<AgentQueryResult>>),
     GetAgents(Sender<Vec<AgentQueryResult>>),
     GetConnections(Sender<Vec<rpc_type::Connection>>),
@@ -91,25 +92,25 @@ impl Service {
                 for message in rx {
                     match message {
                         Message::InitializeAgent(agent_query_result, callback) => {
-                            service.initialize_agent(&agent_query_result, callback.clone());
+                            service.initialize_agent(&agent_query_result, callback);
                         }
                         Message::UpdateAgent(agent_query_result) => {
-                            service.update_agent(agent_query_result.clone());
+                            service.update_agent(*agent_query_result);
                         }
                         Message::GetAgent(node_name, callback) => {
-                            service.get_agent(&node_name, callback.clone());
+                            service.get_agent(&node_name, callback);
                         }
                         Message::GetAgents(callback) => {
-                            service.get_agents(callback.clone());
+                            service.get_agents(callback);
                         }
                         Message::GetConnections(callback) => {
-                            service.get_connections(callback.clone());
+                            service.get_connections(callback);
                         }
                         Message::SaveStartOption(node_name, env, args) => {
-                            util::log_error(&node_name, service.save_start_option(&node_name, &env, &args));
+                            util::log_error(&node_name, service.save_start_option(node_name.clone(), &env, &args));
                         }
                         Message::GetAgentExtra(node_name, callback) => {
-                            util::log_error(&node_name, service.get_agent_extra(&node_name, callback.clone()));
+                            util::log_error(&node_name, service.get_agent_extra(&node_name, callback));
                         }
                         Message::GetLogs(params, callback) => {
                             let result = service.get_logs(params, callback);
@@ -139,21 +140,27 @@ impl Service {
 
     fn initialize_agent(&mut self, state: &AgentQueryResult, callback: Sender<bool>) {
         let name = state.name.clone();
-        if !self.state.agent_query_result.contains_key(&name) {
-            self.event_subscriber.on_event(Event::AgentUpdated {
-                before: None,
-                after: state.clone(),
-            });
-            self.state.agent_query_result.insert(name, state.clone());
-            if let Err(err) = callback.send(true) {
-                cerror!("Cannot send callback : {}", err);
+        let before = match self.state.agent_query_result.entry(name) {
+            Entry::Occupied(mut before) => before.into_mut(),
+            Entry::Vacant(e) => {
+                self.event_subscriber.on_event(Event::AgentUpdated {
+                    before: None.into(),
+                    after: state.clone().into(),
+                });
+                e.insert(state.clone());
+                if let Err(err) = callback.send(true) {
+                    cerror!("Cannot send callback : {}", err);
+                }
+                return
             }
-            return
-        }
+        };
 
-        let before = self.state.agent_query_result.get_mut(&name).unwrap();
         if before.status != NodeStatus::Error {
-            cinfo!("Node {}({:?}) try to connect but a node with the same name already connected", name, before.status);
+            cinfo!(
+                "Node {}({:?}) try to connect but a node with the same name already connected",
+                state.name,
+                before.status
+            );
             if let Err(err) = callback.send(false) {
                 cerror!("Cannot send callback : {}", err);
             }
@@ -161,8 +168,8 @@ impl Service {
         }
 
         self.event_subscriber.on_event(Event::AgentUpdated {
-            before: None,
-            after: state.clone(),
+            before: None.into(),
+            after: state.clone().into(),
         });
         *before = state.clone();
         if let Err(err) = callback.send(true) {
@@ -186,8 +193,8 @@ impl Service {
             }
 
             self.event_subscriber.on_event(Event::AgentUpdated {
-                before: Some(before.clone()),
-                after: after.clone(),
+                before: Some(before.clone()).into(),
+                after: after.clone().into(),
             });
         }
 
@@ -212,16 +219,15 @@ impl Service {
         find.map(|agent| agent.name.clone())
     }
 
-    fn get_agent(&self, name: &NodeName, callback: Sender<Option<AgentQueryResult>>) {
+    fn get_agent(&self, name: &str, callback: Sender<Option<AgentQueryResult>>) {
         let agent_query_result = self.state.agent_query_result.get(name);
-        if let Err(err) = callback.send(agent_query_result.map(|state| state.clone())) {
+        if let Err(err) = callback.send(agent_query_result.cloned()) {
             cerror!("Cannot call calback get_agent, name: {}\nerr: {}", name, err);
         }
     }
 
     fn get_agents(&self, callback: Sender<Vec<AgentQueryResult>>) {
-        let states: Vec<AgentQueryResult> =
-            self.state.agent_query_result.values().into_iter().map(|state| state.clone()).collect();
+        let states = self.state.agent_query_result.values().cloned().collect();
         if let Err(err) = callback.send(states) {
             cerror!("Callback error {}", err);
         }
@@ -236,35 +242,25 @@ impl Service {
         }
     }
 
-    fn save_start_option(
-        &mut self,
-        node_name: &NodeName,
-        env: &String,
-        args: &String,
-    ) -> Result<(), Box<error::Error>> {
-        let before_extra = queries::agent_extra::get(&self.db_conn, node_name)?;
-        let mut extra = before_extra.clone().unwrap_or(Default::default());
+    fn save_start_option(&mut self, node_name: NodeName, env: &str, args: &str) -> Result<(), Box<error::Error>> {
+        let before_extra = queries::agent_extra::get(&self.db_conn, &node_name)?;
+        let mut extra = before_extra.clone().unwrap_or_default();
 
         extra.prev_env = env.to_string();
         extra.prev_args = args.to_string();
 
-        let after_extra = extra.clone();
-        queries::agent_extra::upsert(&self.db_conn, node_name, &extra)?;
+        queries::agent_extra::upsert(&self.db_conn, &node_name, &extra)?;
 
         self.event_subscriber.on_event(Event::AgentExtraUpdated {
-            name: node_name.clone(),
+            name: node_name,
             before: before_extra,
-            after: after_extra,
+            after: extra,
         });
 
         Ok(())
     }
 
-    fn get_agent_extra(
-        &self,
-        node_name: &NodeName,
-        callback: Sender<Option<AgentExtra>>,
-    ) -> Result<(), Box<error::Error>> {
+    fn get_agent_extra(&self, node_name: &str, callback: Sender<Option<AgentExtra>>) -> Result<(), Box<error::Error>> {
         let extra = queries::agent_extra::get(&self.db_conn, node_name)?;
         if let Err(err) = callback.send(extra) {
             cerror!("Callback error {}", err);
@@ -278,7 +274,7 @@ impl Service {
         Ok(())
     }
 
-    fn write_logs(&self, node_name: &NodeName, logs: Vec<StructuredLog>) -> Result<(), Box<error::Error>> {
+    fn write_logs(&self, node_name: &str, logs: Vec<StructuredLog>) -> Result<(), Box<error::Error>> {
         queries::logs::insert(&self.db_conn, node_name, logs)?;
         Ok(())
     }
@@ -299,13 +295,13 @@ impl ServiceSender {
 
     pub fn initialize_agent_query_result(&self, agent_query_result: AgentQueryResult) -> Result<bool, DBError> {
         let (tx, rx) = channel();
-        self.sender.send(Message::InitializeAgent(agent_query_result, tx)).expect("Should success update agent");
+        self.sender.send(Message::InitializeAgent(agent_query_result.into(), tx)).expect("Should success update agent");
         let result = rx.recv().map_err(|_| DBError::Timeout)?;
         Ok(result)
     }
 
     pub fn update_agent_query_result(&self, agent_query_result: AgentQueryResult) {
-        self.sender.send(Message::UpdateAgent(agent_query_result)).expect("Should success update agent");
+        self.sender.send(Message::UpdateAgent(agent_query_result.into())).expect("Should success update agent");
     }
 
     pub fn get_agent_query_result(&self, name: &str) -> Result<Option<AgentQueryResult>, DBError> {
@@ -329,15 +325,15 @@ impl ServiceSender {
         Ok(connections)
     }
 
-    pub fn save_start_option(&self, node_name: &NodeName, env: &str, args: &str) {
+    pub fn save_start_option(&self, node_name: NodeName, env: &str, args: &str) {
         self.sender
-            .send(Message::SaveStartOption(node_name.clone(), env.to_string(), args.to_string()))
+            .send(Message::SaveStartOption(node_name, env.to_string(), args.to_string()))
             .expect("Should success send request");
     }
 
-    pub fn get_agent_extra(&self, node_name: &NodeName) -> Result<Option<AgentExtra>, DBError> {
+    pub fn get_agent_extra(&self, node_name: NodeName) -> Result<Option<AgentExtra>, DBError> {
         let (tx, rx) = channel();
-        self.sender.send(Message::GetAgentExtra(node_name.clone(), tx)).expect("Should success send request");
+        self.sender.send(Message::GetAgentExtra(node_name, tx)).expect("Should success send request");
         let agent_extra = rx.recv().map_err(|_| DBError::Timeout)?;
         Ok(agent_extra)
     }
@@ -349,8 +345,8 @@ impl ServiceSender {
         Ok(logs)
     }
 
-    pub fn write_logs(&self, node_name: &NodeName, logs: Vec<StructuredLog>) {
-        self.sender.send(Message::WriteLogs(node_name.clone(), logs)).expect("Should success send request");
+    pub fn write_logs(&self, node_name: NodeName, logs: Vec<StructuredLog>) {
+        self.sender.send(Message::WriteLogs(node_name, logs)).expect("Should success send request");
     }
 
     pub fn get_log_targets(&self) -> Result<Vec<String>, DBError> {

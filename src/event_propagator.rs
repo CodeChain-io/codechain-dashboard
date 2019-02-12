@@ -28,6 +28,7 @@ impl db::EventSubscriber for EventPropagator {
                     "name": after.name,
                 });
 
+                let after = *after;
                 if before.is_none() {
                     diff["address"] = serde_json::to_value(after.address).unwrap();
                     diff["status"] = serde_json::to_value(after.status).unwrap();
