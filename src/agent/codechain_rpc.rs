@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use jsonrpc_core::types::{Failure, Output, Success};
 use serde::de::DeserializeOwned;
 use serde_json;
+use serde_json::Value;
 
 use super::super::common_rpc_types::{BlackList, BlockId, NodeStatus, PendingParcel, StructuredLog, WhiteList};
 use super::agent::{AgentSender, SendAgentRPC};
@@ -20,11 +21,12 @@ impl CodeChainRPC {
     }
 
     pub fn get_peers(&self, status: NodeStatus) -> Result<Vec<SocketAddr>, String> {
-        self.call_rpc(status, "net_getEstablishedPeers")
+        self.call_rpc(status, "net_getEstablishedPeers", Vec::new())
     }
 
     pub fn get_best_block_id(&self, status: NodeStatus) -> Result<Option<BlockId>, String> {
-        let response: Option<ChainGetBestBlockIdResponse> = self.call_rpc(status, "chain_getBestBlockId")?;
+        let response: Option<ChainGetBestBlockIdResponse> =
+            self.call_rpc(status, "chain_getBestBlockId", Vec::new())?;
 
         Ok(response.map(|response| BlockId {
             block_number: response.number,
@@ -33,11 +35,11 @@ impl CodeChainRPC {
     }
 
     pub fn version(&self, status: NodeStatus) -> Result<Option<String>, String> {
-        self.call_rpc(status, "version")
+        self.call_rpc(status, "version", Vec::new())
     }
 
     pub fn commit_hash(&self, status: NodeStatus) -> Result<Option<String>, String> {
-        self.call_rpc(status, "commitHash")
+        self.call_rpc(status, "commitHash", Vec::new())
     }
 
     pub fn get_pending_parcels(&self, _status: NodeStatus) -> Result<Vec<PendingParcel>, String> {
@@ -46,18 +48,18 @@ impl CodeChainRPC {
     }
 
     pub fn get_whitelist(&self, status: NodeStatus) -> Result<Option<WhiteList>, String> {
-        self.call_rpc(status, "net_getWhitelist")
+        self.call_rpc(status, "net_getWhitelist", Vec::new())
     }
 
     pub fn get_blacklist(&self, status: NodeStatus) -> Result<Option<BlackList>, String> {
-        self.call_rpc(status, "net_getBlacklist")
+        self.call_rpc(status, "net_getBlacklist", Vec::new())
     }
 
     pub fn get_logs(&self, status: NodeStatus) -> Result<Option<Vec<StructuredLog>>, String> {
-        self.call_rpc(status, "slog")
+        self.call_rpc(status, "slog", Vec::new())
     }
 
-    fn call_rpc<T>(&self, status: NodeStatus, method: &str) -> Result<T, String>
+    fn call_rpc<T>(&self, status: NodeStatus, method: &str, params: Vec<Value>) -> Result<T, String>
     where
         T: Default + DeserializeOwned, {
         if status != NodeStatus::Run {
@@ -65,7 +67,7 @@ impl CodeChainRPC {
         }
 
         let response =
-            self.sender.codechain_call_rpc((method.to_string(), Vec::new())).map_err(|err| format!("{}", err))?;
+            self.sender.codechain_call_rpc((method.to_string(), params)).map_err(|err| format!("{}", err))?;
 
         let response: T = match response {
             Output::Success(Success {
