@@ -4,7 +4,6 @@ mod git_util;
 use std::cell::Cell;
 use std::fs::File;
 use std::io::Error as IOError;
-use std::io::Read;
 use std::option::Option;
 use std::result::Result;
 use std::thread;
@@ -173,7 +172,8 @@ pub enum Message {
         callback: Callback<(NodeStatus, Option<u16>, CommitHash)>,
     },
     GetLog {
-        callback: Callback<String>,
+        levels: Vec<String>,
+        callback: Callback<Vec<Value>>,
     },
     CallRPC {
         method: String,
@@ -271,9 +271,10 @@ impl Process {
                 callback.send(Ok((status, p2p_port, commit_hash)));
             }
             Message::GetLog {
+                levels,
                 callback,
             } => {
-                let result = self.get_log();
+                let result = self.get_log(levels);
                 callback.send(result);
             }
             Message::CallRPC {
@@ -511,12 +512,25 @@ impl Process {
         Ok(())
     }
 
-    fn get_log(&mut self) -> Result<String, Error> {
-        let file_name = self.option.log_file_path.clone();
-        let mut file = File::open(file_name)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-        Ok(contents)
+    fn get_log(&mut self, levels: Vec<String>) -> Result<Vec<Value>, Error> {
+        let mut response = self.call_rpc("slog".to_string(), Vec::new())?;
+        let result = response
+            .get_mut("result")
+            .ok_or_else(|| Error::CodeChainRPC("JSON parse failed: cannot find the result field".to_string()))?;
+        let logs = result
+            .as_array_mut()
+            .ok_or_else(|| Error::CodeChainRPC("JSON parse failed: slog's result is not array".to_string()))?;
+
+        let empty_string = Value::String("".to_string());
+        let filtered_logs = logs
+            .iter_mut()
+            .filter(|log| {
+                let target = log.pointer("/level").unwrap_or(&empty_string).as_str().unwrap_or("");
+                levels.iter().any(|t| target.to_lowercase() == t.to_lowercase())
+            })
+            .map(|value| value.take());
+
+        Ok(filtered_logs.collect())
     }
 
     fn call_rpc(&self, method: String, arguments: Vec<Value>) -> Result<Value, Error> {

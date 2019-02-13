@@ -19,6 +19,12 @@ pub struct ShellUpdateCodeChainRequest {
     pub commit_hash: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShellGetCodeChainLogRequest {
+    pub levels: Vec<String>,
+}
+
 pub type RPCResult<T> = Result<Option<T>, RPCError>;
 
 pub enum RPCError {

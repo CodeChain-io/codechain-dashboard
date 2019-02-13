@@ -8,8 +8,8 @@ use super::super::process::{Error as ProcessError, Message as ProcessMessage};
 use super::super::types::HandlerContext;
 use super::router::Router;
 use super::types::{
-    response, AgentGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellStartCodeChainRequest,
-    ShellUpdateCodeChainRequest,
+    response, AgentGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellGetCodeChainLogRequest,
+    ShellStartCodeChainRequest, ShellUpdateCodeChainRequest,
 };
 use rpc::types::RPCError;
 use rpc::types::ERR_NETWORK_ERROR;
@@ -27,7 +27,9 @@ pub fn add_routing(router: &mut Router) {
     );
     router.add_route(
         "shell_getCodeChainLog",
-        Box::new(shell_get_codechain_log as fn(&HandlerContext) -> RPCResult<String>),
+        Box::new(
+            shell_get_codechain_log as fn(&HandlerContext, (ShellGetCodeChainLogRequest,)) -> RPCResult<Vec<Value>>,
+        ),
     );
     router
         .add_route("agent_getInfo", Box::new(agent_get_info as fn(&HandlerContext) -> RPCResult<AgentGetInfoResponse>));
@@ -83,9 +85,10 @@ fn shell_update_codechain(context: &HandlerContext, req: (ShellUpdateCodeChainRe
     response(())
 }
 
-fn shell_get_codechain_log(context: &HandlerContext) -> RPCResult<String> {
+fn shell_get_codechain_log(context: &HandlerContext, req: (ShellGetCodeChainLogRequest,)) -> RPCResult<Vec<Value>> {
     let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::GetLog {
+        levels: req.0.levels,
         callback: tx,
     });
     let process_result = rx.recv();
