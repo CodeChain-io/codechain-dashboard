@@ -23,10 +23,6 @@ pub fn add_routing(router: &mut Router<Context>) {
     );
     router.add_route("node_stop", Box::new(node_stop as fn(Context, (String,)) -> RPCResponse<()>));
     router.add_route("node_update", Box::new(node_update as fn(Context, (NodeName, CommitHash)) -> RPCResponse<()>));
-    router.add_route(
-        "shell_getCodeChainLog",
-        Box::new(shell_get_codechain_log as fn(Context, (String,)) -> RPCResponse<String>),
-    );
     router.add_route("log_getTargets", Box::new(log_get_targets as fn(Context) -> RPCResponse<LogGetTargetsResponse>));
     router.add_route("log_get", Box::new(log_get as fn(Context, (LogGetRequest,)) -> RPCResponse<LogGetResponse>));
 }
@@ -97,19 +93,6 @@ fn node_update(context: Context, args: (NodeName, CommitHash)) -> RPCResponse<()
     })?;
 
     response(())
-}
-
-fn shell_get_codechain_log(context: Context, args: (String,)) -> RPCResponse<String> {
-    let (name,) = args;
-
-    let agent = context.agent_service.get_agent(name);
-    if agent.is_none() {
-        return Err(RPCError::AgentNotFound)
-    }
-    let agent = agent.expect("Already checked");
-    let result = agent.shell_get_codechain_log()?;
-
-    response(result)
 }
 
 fn log_get_targets(context: Context) -> RPCResponse<LogGetTargetsResponse> {

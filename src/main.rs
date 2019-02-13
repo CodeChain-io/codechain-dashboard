@@ -37,7 +37,6 @@ use iron::prelude::*;
 use iron::status;
 use ws::listen;
 
-use self::agent::SendAgentRPC;
 use self::event_propagator::EventPropagator;
 use self::logger::init as logger_init;
 use self::router::Router;
@@ -106,6 +105,7 @@ fn main() {
 }
 
 struct WebHandler {
+    #[allow(dead_code)]
     agent_service_sender: Mutex<agent::ServiceSender>,
 }
 
@@ -133,28 +133,20 @@ impl iron::Handler for WebHandler {
         let node_name = *paths.get(1).expect("Already checked");
         ctrace!("Get log for agent-{}", node_name);
 
-        let agent = self
-            .agent_service_sender
-            .lock()
-            .expect("Should success get lock")
-            .get_agent(node_name.to_string())
-            .ok_or_else(|| iron::IronError::new(WebError::new("Not Found"), status::NotFound))?;
-
-        let log =
-            agent.shell_get_codechain_log().map_err(|err| iron::IronError::new(err, status::InternalServerError))?;
-
         use iron::mime;
         let content_type = "text/plain".parse::<mime::Mime>().unwrap();
-        Ok(Response::with((content_type, status::Ok, log)))
+        Ok(Response::with((content_type, status::Ok, "")))
     }
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct WebError {
     value: String,
 }
 
 impl WebError {
+    #[allow(dead_code)]
     fn new(s: &str) -> Self {
         WebError {
             value: s.to_string(),

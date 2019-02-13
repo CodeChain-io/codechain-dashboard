@@ -55,8 +55,13 @@ impl CodeChainRPC {
         self.call_rpc(status, "net_getBlacklist", Vec::new())
     }
 
-    pub fn get_logs(&self, status: NodeStatus) -> Result<Option<Vec<StructuredLog>>, String> {
-        self.call_rpc(status, "slog", Vec::new())
+    pub fn get_logs(&self, status: NodeStatus) -> Result<Vec<StructuredLog>, String> {
+        if status != NodeStatus::Run {
+            return Ok(Default::default())
+        }
+        let response = self.sender.shell_get_codechain_log().map_err(|err| format!("{}", err))?;
+
+        Ok(response)
     }
 
     fn call_rpc<T>(&self, status: NodeStatus, method: &str, params: Vec<Value>) -> Result<T, String>

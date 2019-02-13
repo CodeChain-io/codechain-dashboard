@@ -12,6 +12,7 @@ use ws::CloseCode as WSCloseCode;
 
 use super::super::common_rpc_types::{
     BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest, ShellUpdateCodeChainRequest,
+    StructuredLog,
 };
 use super::super::db;
 use super::super::jsonrpc;
@@ -273,9 +274,7 @@ impl Agent {
         *state = new_state;
 
         let logs = self.codechain_rpc.get_logs(info.status)?;
-        if let Some(logs) = logs {
-            self.db_service.write_logs(info.name, logs);
-        }
+        self.db_service.write_logs(info.name, logs);
 
         Ok(())
     }
@@ -347,7 +346,7 @@ pub trait SendAgentRPC {
     fn shell_start_codechain(&self, _req: ShellStartCodeChainRequest) -> RPCResult<()>;
     fn shell_stop_codechain(&self) -> RPCResult<()>;
     fn shell_update_codechain(&self, _req: ShellUpdateCodeChainRequest) -> RPCResult<()>;
-    fn shell_get_codechain_log(&self) -> RPCResult<String>;
+    fn shell_get_codechain_log(&self) -> RPCResult<Vec<StructuredLog>>;
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse>;
     fn codechain_call_rpc_raw(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>;
     fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<Output>;
@@ -370,9 +369,15 @@ impl SendAgentRPC for AgentSender {
         Ok(())
     }
 
-    fn shell_get_codechain_log(&self) -> RPCResult<String> {
-        let message = jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "shell_getCodeChainLog")?;
-        Ok(message)
+    fn shell_get_codechain_log(&self) -> RPCResult<Vec<StructuredLog>> {
+        let logs = jsonrpc::call_one_arg(
+            self.jsonrpc_context.clone(),
+            "shell_getCodeChainLog",
+            json!({
+              "levels": ["info", "warn", "error"]
+            }),
+        )?;
+        Ok(logs)
     }
 
     fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse> {
