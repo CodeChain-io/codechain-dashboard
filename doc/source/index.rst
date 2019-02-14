@@ -470,12 +470,21 @@ shell_updateCodeChain ➡️ ⬅️
 
 Update CodeChain source code to the given commit hash.
 
+.. _type-UpdateCodeChainRequest:
+
 Request
 """""""""
 
 Commit hash of the CodeChain repository
 
-``string``
+::
+
+  interface UpdateCodeChainRequest {
+    type: "git" | "binary"
+    commitHash?: string;
+    binaryURL?: string;
+    binaryChecksum?: string;
+  }
 
 Response
 """""""""
@@ -807,9 +816,14 @@ Request
 
 First argument is the name of the node.
 
-Second argument is commit hash of the CodeChain repository.
+::
 
-``[string, string]``
+  type NodeUpdateRequest = [
+    string, // The name of the node
+    UpdateCodeChainRequest
+  ]
+
+links: type-UpdateCodeChainRequest_
 
 Response
 """""""""
