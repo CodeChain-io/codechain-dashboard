@@ -441,6 +441,29 @@ Response
 
 links: type-ISO8601Duration_
 
+shell_getCodeChainLog ➡️ ⬅️
+----------------------------
+
+Get CodeChain's logs.
+
+Request
+"""""""""
+
+::
+  type ShellGetCodeChainRequest = [
+    {
+      levels: string[]; // ex) ["info", "warn", "error]
+    }
+  ]
+
+Response
+"""""""""
+
+::
+
+  type ShellGetCodeChainResponse = LogGetResponse
+
+links: type-LogGetResponse_
 
 shell_updateCodeChain ➡️ ⬅️ 
 ---------------------------
@@ -935,6 +958,7 @@ Response
     }[]
   }
 
+.. _type-LogGetResponse:
 links: type-ISO8601_
 
 ..
