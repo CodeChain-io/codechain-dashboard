@@ -1,5 +1,6 @@
 mod git_update;
 mod git_util;
+mod rpc;
 
 use std::cell::Cell;
 use std::fs::File;
@@ -11,9 +12,6 @@ use std::time::Duration;
 
 use crossbeam::channel;
 use crossbeam::channel::{Receiver, Sender};
-use jsonrpc_core;
-use reqwest;
-use serde_json;
 use serde_json::Value;
 use subprocess::{Exec, ExitStatus, Popen, PopenError, Redirection};
 
@@ -59,11 +57,11 @@ pub struct ProcessOption {
 enum CodeChainStatus {
     Starting {
         p2p_port: u16,
-        rpc_port: u16,
+        rpc_client: rpc::RPCClient,
     },
     Run {
         p2p_port: u16,
-        rpc_port: u16,
+        rpc_client: rpc::RPCClient,
     },
     Updating {
         env: String,
@@ -74,8 +72,9 @@ enum CodeChainStatus {
     Stop,
     Error {
         p2p_port: u16,
-        rpc_port: u16,
+        rpc_client: Option<rpc::RPCClient>,
     },
+    Temp,
 }
 
 impl CodeChainStatus {
@@ -94,6 +93,7 @@ impl CodeChainStatus {
             CodeChainStatus::Error {
                 ..
             } => NodeStatus::Error,
+            CodeChainStatus::Temp => unreachable!(),
         }
     }
 
@@ -115,27 +115,29 @@ impl CodeChainStatus {
                 p2p_port,
                 ..
             } => Some(*p2p_port),
+            CodeChainStatus::Temp => unreachable!(),
         }
     }
 
-    fn rpc_port(&self) -> u16 {
+    fn rpc_client(&self) -> Option<&rpc::RPCClient> {
         match self {
             CodeChainStatus::Starting {
-                rpc_port,
+                rpc_client,
                 ..
-            } => *rpc_port,
+            } => Some(rpc_client),
             CodeChainStatus::Run {
-                rpc_port,
+                rpc_client,
                 ..
-            } => *rpc_port,
-            CodeChainStatus::Stop => 0,
+            } => Some(rpc_client),
+            CodeChainStatus::Stop => None,
             CodeChainStatus::Updating {
                 ..
-            } => 0,
+            } => None,
             CodeChainStatus::Error {
-                rpc_port,
+                rpc_client,
                 ..
-            } => *rpc_port,
+            } => rpc_client.as_ref(),
+            CodeChainStatus::Temp => unreachable!(),
         }
     }
 }
@@ -144,7 +146,6 @@ pub struct Process {
     option: ProcessOption,
     child: Option<Popen>,
     codechain_status: CodeChainStatus,
-    http_client: reqwest::Client,
 }
 
 type Callback<T> = Sender<Result<T, Error>>;
@@ -188,7 +189,6 @@ impl Process {
             option,
             child: None,
             codechain_status: CodeChainStatus::Stop,
-            http_client: reqwest::Client::new(),
         };
         let (tx, rx) = channel::unbounded();
         thread::Builder::new()
@@ -281,10 +281,14 @@ impl Process {
                 method,
                 arguments,
                 callback,
-            } => {
-                let result = self.call_rpc(method, arguments);
-                callback.send(result);
-            }
+            } => match self.codechain_status.rpc_client() {
+                Some(rpc_client) => {
+                    let result =
+                        rpc_client.call_rpc(method, arguments).map_err(|err| Error::CodeChainRPC(err.to_string()));
+                    callback.send(result)
+                }
+                None => callback.send(Err(Error::NotRunning)),
+            },
         }
     }
 
@@ -302,59 +306,78 @@ impl Process {
 
         ctrace!(PROCESS, "Ping to CodeChain");
 
-        let result = self.call_rpc("ping".to_string(), Vec::new());
+        let result = match self.codechain_status.rpc_client() {
+            Some(rpc_client) => Some(rpc_client.call_rpc("ping".to_string(), Vec::new())),
+            None => None,
+        };
         ctrace!(PROCESS, "{:?}", result);
 
-        match self.codechain_status {
+        let original: CodeChainStatus = ::std::mem::replace(&mut self.codechain_status, CodeChainStatus::Temp);
+        let next_status: CodeChainStatus = match original {
             CodeChainStatus::Run {
                 p2p_port,
-                rpc_port,
+                rpc_client,
             } => {
-                if let Err(err) = result {
+                if let Err(err) = result.unwrap() {
                     cinfo!(PROCESS, "Codechain ping error {:#?}", err);
-                    self.codechain_status = CodeChainStatus::Error {
+                    CodeChainStatus::Error {
                         p2p_port,
-                        rpc_port,
-                    };
+                        rpc_client: Some(rpc_client),
+                    }
+                } else {
+                    CodeChainStatus::Run {
+                        p2p_port,
+                        rpc_client,
+                    }
                 }
             }
             CodeChainStatus::Starting {
                 p2p_port,
-                rpc_port,
+                rpc_client,
             } => {
-                if result.is_ok() {
+                if result.unwrap().is_ok() {
                     cinfo!(PROCESS, "CodeChain is running now");
-                    self.codechain_status = CodeChainStatus::Run {
+                    CodeChainStatus::Run {
                         p2p_port,
-                        rpc_port,
-                    };
-                }
-                if !self.check_running() {
-                    self.codechain_status = CodeChainStatus::Error {
+                        rpc_client,
+                    }
+                } else if !self.check_running() {
+                    CodeChainStatus::Error {
                         p2p_port,
-                        rpc_port,
-                    };
+                        rpc_client: Some(rpc_client),
+                    }
+                } else {
+                    CodeChainStatus::Starting {
+                        p2p_port,
+                        rpc_client,
+                    }
                 }
             }
-            CodeChainStatus::Stop => {
-                cerror!(PROCESS, "Should not reach here");
-            }
+            CodeChainStatus::Stop => unreachable!(),
             CodeChainStatus::Error {
                 p2p_port,
-                rpc_port,
+                rpc_client,
             } => {
-                if result.is_ok() {
-                    cinfo!(PROCESS, "CodeChain comback to normal");
-                    self.codechain_status = CodeChainStatus::Run {
+                if let Some(Ok(_)) = result {
+                    cinfo!(PROCESS, "CodeChain returned to normal");
+                    CodeChainStatus::Run {
                         p2p_port,
-                        rpc_port,
-                    };
+                        rpc_client: rpc_client.unwrap(),
+                    }
+                } else {
+                    CodeChainStatus::Error {
+                        p2p_port,
+                        rpc_client,
+                    }
                 }
             }
             CodeChainStatus::Updating {
                 ..
             } => unreachable!(),
-        }
+            CodeChainStatus::Temp => unreachable!(),
+        };
+
+        self.codechain_status = next_status;
     }
 
     fn handle_git_update(&mut self) {
@@ -388,7 +411,7 @@ impl Process {
         } else {
             self.codechain_status = CodeChainStatus::Error {
                 p2p_port: 0,
-                rpc_port: 0,
+                rpc_client: None,
             };
         }
     }
@@ -430,7 +453,7 @@ impl Process {
 
         self.codechain_status = CodeChainStatus::Starting {
             p2p_port,
-            rpc_port,
+            rpc_client: rpc::RPCClient::new(rpc_port),
         };
 
         Ok(())
@@ -513,7 +536,12 @@ impl Process {
     }
 
     fn get_log(&mut self, levels: Vec<String>) -> Result<Vec<Value>, Error> {
-        let mut response = self.call_rpc("slog".to_string(), Vec::new())?;
+        let rpc_client = match self.codechain_status.rpc_client() {
+            Some(rpc_client) => rpc_client,
+            None => return Err(Error::NotRunning),
+        };
+        let mut response =
+            rpc_client.call_rpc("slog".to_string(), Vec::new()).map_err(|err| Error::CodeChainRPC(err.to_string()))?;
         let result = response
             .get_mut("result")
             .ok_or_else(|| Error::CodeChainRPC("JSON parse failed: cannot find the result field".to_string()))?;
@@ -533,40 +561,15 @@ impl Process {
         Ok(filtered_logs.collect())
     }
 
-    fn call_rpc(&self, method: String, arguments: Vec<Value>) -> Result<Value, Error> {
-        let params = jsonrpc_core::Params::Array(arguments);
-
-        let jsonrpc_request = jsonrpc_core::MethodCall {
-            jsonrpc: None,
-            method,
-            params: Some(params),
-            id: jsonrpc_core::Id::Num(1),
-        };
-
-        ctrace!(PROCESS, "Send JSONRPC to CodeChain {:#?}", jsonrpc_request);
-
-        let url = format!("http://127.0.0.1:{}/", self.codechain_status.rpc_port());
-        let mut response = self
-            .http_client
-            .post(&url)
-            .json(&jsonrpc_request)
-            .send()
-            .map_err(|err| Error::CodeChainRPC(format!("{}", err)))?;
-
-        let response: jsonrpc_core::Response =
-            response.json().map_err(|err| Error::CodeChainRPC(format!("JSON parse failed {}", err)))?;
-        ctrace!(PROCESS, "Recieve JSONRPC response from CodeChain {:#?}", response);
-        let value = serde_json::to_value(response).expect("Should success jsonrpc type to Value");
-
-        Ok(value)
-    }
-
     fn get_commit_hash(&self) -> Result<String, Error> {
         if let CodeChainStatus::Run {
+            rpc_client,
             ..
-        } = self.codechain_status
+        } = &self.codechain_status
         {
-            let response = self.call_rpc("commitHash".to_string(), Vec::new())?;
+            let response = rpc_client
+                .call_rpc("commitHash".to_string(), Vec::new())
+                .map_err(|err| Error::CodeChainRPC(err.to_string()))?;
             Ok(response["result"].as_str().unwrap_or("").to_string())
         } else {
             Ok(git_util::current_hash(self.option.codechain_dir.clone())?)
