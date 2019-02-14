@@ -20,7 +20,10 @@ const stopNode = async (nodeName: string) => {
 const updateNode = async (nodeName: string, commitHash: string) => {
   return await RequestAgent.getInstance().call<void>("node_update", [
     nodeName,
-    commitHash
+    {
+      type: "git",
+      commitHash
+    }
   ]);
 };
 
