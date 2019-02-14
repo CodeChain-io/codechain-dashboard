@@ -38,7 +38,7 @@ fn create_logs_schema(conn: &Connection) {
     cinfo!("Create logs table");
     conn.execute(
         "CREATE TABLE IF NOT EXISTS logs (
-        id SERIAL PRIMARY KEY,
+        id BIGSERIAL PRIMARY KEY,
         name VARCHAR NOT NULL,
         level VARCHAR NOT NULL,
         target VARCHAR NOT NULL,
