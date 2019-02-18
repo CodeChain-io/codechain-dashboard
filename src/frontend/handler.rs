@@ -33,11 +33,13 @@ impl Handler for WebSocketHandler {
 
         let response: Option<String> = match msg {
             ws::Message::Text(text) => {
+                cinfo!("Receive {}", text);
                 jsonrpc::handle(|method, arg| self.router.run(self.context.clone(), &method, arg), text)
             }
             _ => Some(jsonrpc::invalid_format()),
         };
 
+        cinfo!("Response {:?}", response);
         if let Some(response) = response {
             self.out.send(ws::Message::Text(response))
         } else {
