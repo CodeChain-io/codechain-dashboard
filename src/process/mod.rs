@@ -162,6 +162,7 @@ pub struct ProcessGetStatusResult {
     pub status: NodeStatus,
     pub port: Option<u16>,
     pub commit_hash: CommitHash,
+    pub binary_checksum: String,
 }
 
 pub enum Message {
@@ -282,10 +283,13 @@ impl Process {
                 let status = codechain_status.to_node_status();
                 let p2p_port = codechain_status.p2p_port();
                 let commit_hash = self.get_commit_hash().unwrap_or_default();
+                let binary_checksum =
+                    fs_util::get_checksum_or_default(&self.option.codechain_dir, "codechain").unwrap_or_default();
                 callback.send(Ok(ProcessGetStatusResult {
                     status,
                     port: p2p_port,
                     commit_hash,
+                    binary_checksum,
                 }));
             }
             Message::GetLog {

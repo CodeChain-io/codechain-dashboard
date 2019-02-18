@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use subprocess::Exec;
 
 use super::Error;
@@ -66,4 +68,24 @@ pub fn check_checksum(codechain_dir: &str, binary_checksum: &str) -> Result<(), 
     }
 
     Ok(())
+}
+
+pub fn get_checksum_or_default(dir: &str, file: &str) -> Result<String, Error> {
+    let path = Path::new(dir).join(file);
+    if !path.exists() {
+        return Ok("".to_string())
+    }
+
+    cdebug!(PROCESS, "Run shasum {:?}", path);
+    let exec = Exec::cmd("shasum").arg(file).cwd(dir).capture()?;
+
+    if exec.exit_status.success() {
+        Ok(exec.stdout_str().trim().to_string())
+    } else {
+        Err(Error::ShellError {
+            exit_code: exec.exit_status,
+            stdout: exec.stdout_str(),
+            stderr: exec.stderr_str(),
+        })
+    }
 }

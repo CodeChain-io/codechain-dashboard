@@ -112,12 +112,14 @@ fn agent_get_info(context: &HandlerContext) -> RPCResult<AgentGetInfoResponse> {
         status,
         port,
         commit_hash,
+        binary_checksum,
     } = process_result?;
     response(AgentGetInfoResponse {
         name: context.name.clone(),
         status,
         address: port.map(|port| SocketAddr::new(context.codechain_address, port)),
         codechain_commit_hash: commit_hash,
+        codechain_binary_checksum: binary_checksum,
     })
 }
 
