@@ -157,6 +157,12 @@ pub struct Process {
 
 type Callback<T> = Sender<Result<T, Error>>;
 
+pub struct ProcessGetStatusResult {
+    pub status: NodeStatus,
+    pub port: Option<u16>,
+    pub commit_hash: CommitHash,
+}
+
 pub enum Message {
     Run {
         env: String,
@@ -177,7 +183,7 @@ pub enum Message {
         callback: Callback<()>,
     },
     GetStatus {
-        callback: Callback<(NodeStatus, Option<u16>, CommitHash)>,
+        callback: Callback<ProcessGetStatusResult>,
     },
     GetLog {
         levels: Vec<String>,
@@ -275,7 +281,11 @@ impl Process {
                 let status = codechain_status.to_node_status();
                 let p2p_port = codechain_status.p2p_port();
                 let commit_hash = self.get_commit_hash().unwrap_or_default();
-                callback.send(Ok((status, p2p_port, commit_hash)));
+                callback.send(Ok(ProcessGetStatusResult {
+                    status,
+                    port: p2p_port,
+                    commit_hash,
+                }));
             }
             Message::GetLog {
                 levels,

@@ -4,7 +4,7 @@ use crossbeam::channel;
 use serde_json::Value;
 
 use super::super::hardware_usage::HardwareInfo;
-use super::super::process::{Error as ProcessError, Message as ProcessMessage};
+use super::super::process::{Error as ProcessError, Message as ProcessMessage, ProcessGetStatusResult};
 use super::super::types::HandlerContext;
 use super::router::Router;
 use super::types::{
@@ -108,10 +108,14 @@ fn agent_get_info(context: &HandlerContext) -> RPCResult<AgentGetInfoResponse> {
         callback: tx,
     });
     let process_result = rx.recv().ok_or_else(|| RPCError::Internal("Cannot get process result".to_string()))?;
-    let (node_status, port, commit_hash) = process_result?;
+    let ProcessGetStatusResult {
+        status,
+        port,
+        commit_hash,
+    } = process_result?;
     response(AgentGetInfoResponse {
         name: context.name.clone(),
-        status: node_status,
+        status,
         address: port.map(|port| SocketAddr::new(context.codechain_address, port)),
         codechain_commit_hash: commit_hash,
     })
