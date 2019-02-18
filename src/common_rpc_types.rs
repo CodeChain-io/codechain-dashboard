@@ -29,13 +29,7 @@ pub struct ShellStartCodeChainRequest {
     pub args: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct ShellUpdateCodeChainRequest {
-    pub env: String,
-    pub args: String,
-    pub commit_hash: String,
-}
+pub type ShellUpdateCodeChainRequest = (ShellStartCodeChainRequest, UpdateCodeChainRequest);
 
 pub type Connection = (NodeName, NodeName);
 
@@ -90,4 +84,20 @@ pub struct StructuredLog {
     pub message: String,
     pub timestamp: String,
     pub thread_name: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(tag = "type")]
+pub enum UpdateCodeChainRequest {
+    #[serde(rename_all = "camelCase")]
+    Git {
+        commit_hash: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    Binary {
+        #[serde(rename = "binaryURL")]
+        binary_url: String,
+        binary_checksum: String,
+    },
 }

@@ -6,6 +6,7 @@ use super::types::{
     Context, DashboardGetNetworkResponse, DashboardNode, LogGetRequest, LogGetResponse, LogGetTargetsResponse,
     NodeConnection, NodeGetInfoResponse,
 };
+use common_rpc_types::UpdateCodeChainRequest;
 
 pub fn add_routing(router: &mut Router<Context>) {
     router.add_route("ping", Box::new(ping as fn(Context) -> RPCResponse<String>));
@@ -22,7 +23,10 @@ pub fn add_routing(router: &mut Router<Context>) {
         Box::new(node_start as fn(Context, (String, ShellStartCodeChainRequest)) -> RPCResponse<()>),
     );
     router.add_route("node_stop", Box::new(node_stop as fn(Context, (String,)) -> RPCResponse<()>));
-    router.add_route("node_update", Box::new(node_update as fn(Context, (NodeName, CommitHash)) -> RPCResponse<()>));
+    router.add_route(
+        "node_update",
+        Box::new(node_update as fn(Context, (NodeName, UpdateCodeChainRequest)) -> RPCResponse<()>),
+    );
     router.add_route("log_getTargets", Box::new(log_get_targets as fn(Context) -> RPCResponse<LogGetTargetsResponse>));
     router.add_route("log_get", Box::new(log_get as fn(Context, (LogGetRequest,)) -> RPCResponse<LogGetResponse>));
 }
@@ -76,8 +80,8 @@ fn node_stop(context: Context, args: (String,)) -> RPCResponse<()> {
     response(())
 }
 
-fn node_update(context: Context, args: (NodeName, CommitHash)) -> RPCResponse<()> {
-    let (name, commit_hash) = args;
+fn node_update(context: Context, args: (NodeName, UpdateCodeChainRequest)) -> RPCResponse<()> {
+    let (name, req) = args;
 
     let agent = context.agent_service.get_agent(name.clone());
     if agent.is_none() {
@@ -86,11 +90,13 @@ fn node_update(context: Context, args: (NodeName, CommitHash)) -> RPCResponse<()
     let agent = agent.expect("Already checked");
 
     let extra = context.db_service.get_agent_extra(name)?;
-    agent.shell_update_codechain(ShellUpdateCodeChainRequest {
-        env: extra.as_ref().map(|extra| extra.prev_env.clone()).unwrap_or_default(),
-        args: extra.as_ref().map(|extra| extra.prev_args.clone()).unwrap_or_default(),
-        commit_hash,
-    })?;
+    agent.shell_update_codechain((
+        ShellStartCodeChainRequest {
+            env: extra.as_ref().map(|extra| extra.prev_env.clone()).unwrap_or_default(),
+            args: extra.as_ref().map(|extra| extra.prev_args.clone()).unwrap_or_default(),
+        },
+        req,
+    ));
 
     response(())
 }

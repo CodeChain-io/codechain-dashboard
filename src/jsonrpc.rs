@@ -49,8 +49,8 @@ where
             params,
             ..
         })) => {
-            let value_params = serde_json::to_value(params).expect("Change to value always success");
-            match router(method, value_params) {
+            let value_params = serde_json::to_value(params.clone()).expect("Change to value always success");
+            match router(method.clone(), value_params) {
                 Ok(Some(value)) => Some(
                     Success {
                         jsonrpc: None,
@@ -79,14 +79,17 @@ where
                     }
                     .into(),
                 ),
-                Err(RouterError::RPC(err)) => Some(
-                    Failure {
-                        jsonrpc: None,
-                        id,
-                        error: err.to_jsonrpc_error(),
-                    }
-                    .into(),
-                ),
+                Err(RouterError::RPC(err)) => {
+                    cwarn!("Error while handlinig {}({:#?}) : {}", method, params, err);
+                    Some(
+                        Failure {
+                            jsonrpc: None,
+                            id,
+                            error: err.to_jsonrpc_error(),
+                        }
+                        .into(),
+                    )
+                }
             }
         }
         Ok(Call::Notification(_)) => None,

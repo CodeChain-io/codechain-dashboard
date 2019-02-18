@@ -365,7 +365,7 @@ impl SendAgentRPC for AgentSender {
     }
 
     fn shell_update_codechain(&self, args: ShellUpdateCodeChainRequest) -> RPCResult<()> {
-        jsonrpc::call_one_arg(self.jsonrpc_context.clone(), "shell_updateCodeChain", args)?;
+        jsonrpc::call_many_args(self.jsonrpc_context.clone(), "shell_updateCodeChain", args)?;
         Ok(())
     }
 
