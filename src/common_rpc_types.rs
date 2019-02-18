@@ -4,7 +4,6 @@ use cprimitives::H256;
 use serde_json;
 
 pub type NodeName = String;
-pub type CommitHash = String;
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
 pub enum NodeStatus {
@@ -45,6 +44,7 @@ pub struct BlockId {
 pub struct NodeVersion {
     pub version: String,
     pub hash: String,
+    pub binary_checksum: String,
 }
 
 pub type PendingParcel = serde_json::Value;

@@ -217,6 +217,7 @@ impl Agent {
                     version: Some(NodeVersion {
                         version: String::new(),
                         hash: info.codechain_commit_hash,
+                        binary_checksum: info.codechain_binary_checksum,
                     }),
                     ..Default::default()
                 })
@@ -244,13 +245,15 @@ impl Agent {
             codechain_version_hash.map(|hash| NodeVersion {
                 version,
                 hash,
+                binary_checksum: info.codechain_binary_checksum.clone(),
             })
         });
-        let hash = info.codechain_commit_hash;
+        let hash = info.codechain_commit_hash.clone();
         let version = version.or_else(|| {
             Some(NodeVersion {
                 version: String::new(),
                 hash,
+                binary_checksum: info.codechain_binary_checksum.clone(),
             })
         });
         let pending_parcels = self.codechain_rpc.get_pending_parcels(info.status)?;

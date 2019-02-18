@@ -1,5 +1,5 @@
 use super::super::agent::SendAgentRPC;
-use super::super::common_rpc_types::{CommitHash, NodeName, ShellStartCodeChainRequest, ShellUpdateCodeChainRequest};
+use super::super::common_rpc_types::{NodeName, ShellStartCodeChainRequest};
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
@@ -96,7 +96,7 @@ fn node_update(context: Context, args: (NodeName, UpdateCodeChainRequest)) -> RP
             args: extra.as_ref().map(|extra| extra.prev_args.clone()).unwrap_or_default(),
         },
         req,
-    ));
+    ))?;
 
     response(())
 }
