@@ -1,21 +1,18 @@
 use std::thread;
-use std::thread::JoinHandle;
 
 use crossbeam;
 
 use super::super::types::CommitHash;
 use super::git_util;
+use super::update::{CallbackResult, Sender};
 use super::Error;
 
 pub struct Job {}
 
-pub type Sender = JoinHandle<()>;
-pub type CallbackResult = Result<(), Error>;
-
 impl Job {
     pub fn run(codechain_dir: String, commit_hash: CommitHash, callback: crossbeam::Sender<CallbackResult>) -> Sender {
         thread::Builder::new()
-            .name("update job".to_string())
+            .name("git update job".to_string())
             .spawn(move || {
                 let result = Self::update(codechain_dir, &commit_hash);
                 callback.send(result);

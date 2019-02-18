@@ -11,12 +11,20 @@ pub struct ShellStartCodeChainRequest {
     pub args: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ShellUpdateCodeChainRequest {
-    pub env: String,
-    pub args: String,
-    pub commit_hash: String,
+#[serde(tag = "type")]
+pub enum UpdateCodeChainRequest {
+    #[serde(rename_all = "camelCase")]
+    Git {
+        commit_hash: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    Binary {
+        #[serde(rename = "binaryURL")]
+        binary_url: String,
+        binary_checksum: String,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -69,6 +77,13 @@ impl RPCError {
             RPCError::Process(ProcessError::IO(err)) => {
                 Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("IO error occured {:?}", err))
             }
+            RPCError::Process(ProcessError::BinaryChecksumMismatch {
+                expected,
+                actual,
+            }) => Self::create_rpc_error(
+                ERR_PROCESS_INTERNAL,
+                &format!("Downloaded binary file's sha1sum is {} but it should be {}", actual, expected),
+            ),
             RPCError::Process(ProcessError::CodeChainRPC(err)) => {
                 Self::create_rpc_error(ERR_PROCESS_INTERNAL, &format!("Sending RPC to ChdeChain failed {}", err))
             }

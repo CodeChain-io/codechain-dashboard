@@ -4,8 +4,14 @@ use super::Exec;
 
 pub fn current_hash(codechain_dir: String) -> Result<CommitHash, Error> {
     cdebug!(PROCESS, "Run git rev-parse HEAD at {}", codechain_dir);
-    let exec = Exec::cmd("git").arg("rev-parse").arg("HEAD").cwd(codechain_dir).capture()?;
-    Ok(exec.stdout_str().trim().to_string())
+    let result = match Exec::cmd("git").arg("rev-parse").arg("HEAD").cwd(codechain_dir).capture() {
+        Ok(exec) => exec.stdout_str().trim().to_string(),
+        Err(err) => {
+            cwarn!(PROCESS, "Cannot get git hash {}", err);
+            "NONE".to_string()
+        }
+    };
+    Ok(result)
 }
 
 pub fn remote_update(codechain_dir: String) -> Result<(), Error> {

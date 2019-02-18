@@ -479,12 +479,15 @@ Commit hash of the CodeChain repository
 
 ::
 
-  interface UpdateCodeChainRequest {
+  type UpdateCodeChainRequest = [{
+    env: string;
+    args: string;
+  }, {
     type: "git" | "binary"
     commitHash?: string;
     binaryURL?: string;
     binaryChecksum?: string;
-  }
+  }]
 
 Response
 """""""""
@@ -820,7 +823,7 @@ First argument is the name of the node.
 
   type NodeUpdateRequest = [
     string, // The name of the node
-    UpdateCodeChainRequest
+    UpdateCodeChainRequest[1]
   ]
 
 links: type-UpdateCodeChainRequest_

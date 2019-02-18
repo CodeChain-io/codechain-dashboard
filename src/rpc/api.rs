@@ -9,7 +9,7 @@ use super::super::types::HandlerContext;
 use super::router::Router;
 use super::types::{
     response, AgentGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellGetCodeChainLogRequest,
-    ShellStartCodeChainRequest, ShellUpdateCodeChainRequest,
+    ShellStartCodeChainRequest, UpdateCodeChainRequest,
 };
 use rpc::types::RPCError;
 use rpc::types::ERR_NETWORK_ERROR;
@@ -23,7 +23,10 @@ pub fn add_routing(router: &mut Router) {
     router.add_route("shell_stopCodeChain", Box::new(shell_stop_codechain as fn(&HandlerContext) -> RPCResult<()>));
     router.add_route(
         "shell_updateCodeChain",
-        Box::new(shell_update_codechain as fn(&HandlerContext, (ShellUpdateCodeChainRequest,)) -> RPCResult<()>),
+        Box::new(
+            shell_update_codechain
+                as fn(&HandlerContext, (ShellStartCodeChainRequest, UpdateCodeChainRequest)) -> RPCResult<()>,
+        ),
     );
     router.add_route(
         "shell_getCodeChainLog",
@@ -70,14 +73,17 @@ fn shell_stop_codechain(context: &HandlerContext) -> RPCResult<()> {
     response(())
 }
 
-fn shell_update_codechain(context: &HandlerContext, req: (ShellUpdateCodeChainRequest,)) -> RPCResult<()> {
-    let (req,) = req;
+fn shell_update_codechain(
+    context: &HandlerContext,
+    req: (ShellStartCodeChainRequest, UpdateCodeChainRequest),
+) -> RPCResult<()> {
+    let (start_req, update_req) = req;
 
     let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::Update {
-        env: req.env,
-        args: req.args,
-        target_version: req.commit_hash,
+        env: start_req.env,
+        args: start_req.args,
+        target: update_req,
         callback: tx,
     });
     let process_result = rx.recv();

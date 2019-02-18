@@ -1,11 +1,14 @@
+mod binary_update;
 mod git_update;
 mod git_util;
 mod rpc;
+mod update;
 
 use std::cell::Cell;
 use std::fs::File;
 use std::io::Error as IOError;
 use std::option::Option;
+use std::path::Path;
 use std::result::Result;
 use std::thread;
 use std::time::Duration;
@@ -15,7 +18,7 @@ use crossbeam::channel::{Receiver, Sender};
 use serde_json::Value;
 use subprocess::{Exec, ExitStatus, Popen, PopenError, Redirection};
 
-use super::rpc::types::NodeStatus;
+use super::rpc::types::{NodeStatus, UpdateCodeChainRequest};
 use super::types::CommitHash;
 
 #[derive(Debug)]
@@ -31,6 +34,10 @@ pub enum Error {
         exit_code: ExitStatus,
         stdout: String,
         stderr: String,
+    },
+    BinaryChecksumMismatch {
+        expected: String,
+        actual: String,
     },
     // This error caused when sending HTTP request to the codechain
     CodeChainRPC(String),
@@ -66,8 +73,8 @@ enum CodeChainStatus {
     Updating {
         env: String,
         args: String,
-        sender: Cell<Option<git_update::Sender>>,
-        rx_callback: Receiver<git_update::CallbackResult>,
+        sender: Cell<Option<update::Sender>>,
+        rx_callback: Receiver<update::CallbackResult>,
     },
     Stop,
     Error {
@@ -166,7 +173,7 @@ pub enum Message {
     Update {
         env: String,
         args: String,
-        target_version: CommitHash,
+        target: UpdateCodeChainRequest,
         callback: Callback<()>,
     },
     GetStatus {
@@ -207,7 +214,7 @@ impl Process {
                     process.handle_message(m);
                 }
                 process.ping_to_codechain();
-                process.handle_git_update();
+                process.handle_update();
             })
             .expect("Should success running process thread");
         tx
@@ -250,7 +257,7 @@ impl Process {
             Message::Update {
                 env,
                 args,
-                target_version,
+                target,
                 callback,
             } => {
                 let result = if self.check_running() {
@@ -258,7 +265,7 @@ impl Process {
                 } else {
                     Ok(())
                 };
-                let result = result.and_then(|_| self.update(&target_version, env, args));
+                let result = result.and_then(|_| self.update(&target, env, args));
                 callback.send(result);
             }
             Message::GetStatus {
@@ -380,7 +387,7 @@ impl Process {
         self.codechain_status = next_status;
     }
 
-    fn handle_git_update(&mut self) {
+    fn handle_update(&mut self) {
         let (success, env, args) = if let CodeChainStatus::Updating {
             rx_callback,
             env,
@@ -391,11 +398,11 @@ impl Process {
             match rx_callback.try_recv() {
                 None => return,
                 Some(Err(err)) => {
-                    cinfo!(PROCESS, "Git update update failed : {:?}", err);
+                    cinfo!(PROCESS, "Update failed : {:?}", err);
                     (false, env.to_string(), args.to_string())
                 }
                 Some(Ok(_)) => {
-                    cinfo!(PROCESS, "Git update success");
+                    cinfo!(PROCESS, "Update success");
                     (true, env.to_string(), args.to_string())
                 }
             }
@@ -436,13 +443,22 @@ impl Process {
 
         let file = File::create(self.option.log_file_path.clone())?;
 
-        let mut exec = Exec::cmd("cargo")
-            .arg("run")
-            .arg("--")
-            .cwd(self.option.codechain_dir.clone())
-            .stdout(Redirection::File(file))
-            .stderr(Redirection::Merge)
-            .args(&args_vec);
+
+        let mut exec = if Path::new(&self.option.codechain_dir).join("codechain").exists() {
+            Exec::cmd("./codechain")
+                .cwd(self.option.codechain_dir.clone())
+                .stdout(Redirection::File(file))
+                .stderr(Redirection::Merge)
+                .args(&args_vec)
+        } else {
+            Exec::cmd("cargo")
+                .arg("run")
+                .arg("--")
+                .cwd(self.option.codechain_dir.clone())
+                .stdout(Redirection::File(file))
+                .stderr(Redirection::Merge)
+                .args(&args_vec)
+        };
 
         for (k, v) in envs {
             exec = exec.env(k, v);
@@ -517,13 +533,26 @@ impl Process {
         Ok(())
     }
 
-    fn update(&mut self, commit_hash: &str, env: String, args: String) -> Result<(), Error> {
+    fn update(&mut self, target: &UpdateCodeChainRequest, env: String, args: String) -> Result<(), Error> {
         if self.is_updating() {
             return Err(Error::Updating)
         }
 
         let (tx, rx) = channel::unbounded();
-        let job_sender = git_update::Job::run(self.option.codechain_dir.to_string(), commit_hash.to_string(), tx);
+        let job_sender = match target {
+            UpdateCodeChainRequest::Git {
+                commit_hash,
+            } => git_update::Job::run(self.option.codechain_dir.to_string(), commit_hash.to_string(), tx),
+            UpdateCodeChainRequest::Binary {
+                binary_url,
+                binary_checksum,
+            } => binary_update::Job::run(
+                self.option.codechain_dir.to_string(),
+                binary_url.to_string(),
+                binary_checksum.to_string(),
+                tx,
+            ),
+        };
 
         self.codechain_status = CodeChainStatus::Updating {
             env,
