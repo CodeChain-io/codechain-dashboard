@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import * as React from "react";
 import * as Modal from "react-modal";
 import { Label } from "reactstrap";
+import { UpdateCodeChainRequest } from "../../../../../requests/types";
 import "./UpgradeNodeModal.css";
 
 const customStyles = {
@@ -20,7 +21,7 @@ interface Props {
   onClose: () => void;
   currentCommitHash: string;
   isOpen: boolean;
-  onUpdateNode: (hash: string) => void;
+  onUpdateNode: (req: UpdateCodeChainRequest) => void;
 }
 
 interface State {
@@ -43,6 +44,8 @@ interface State {
   inputCommit: string;
   selectedBranchName?: string;
   selectedTagName?: string;
+  binaryURL: string;
+  binaryChecksum: string;
 }
 
 export default class UpgradeNodeModal extends React.Component<Props, State> {
@@ -55,7 +58,9 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
       isTagEmpty: false,
       inputCommit: "",
       selectedBranchName: undefined,
-      selectedTagName: undefined
+      selectedTagName: undefined,
+      binaryURL: "",
+      binaryChecksum: ""
     };
   }
   public componentDidMount() {
@@ -100,7 +105,9 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
       isTagEmpty,
       inputCommit,
       selectedBranchName,
-      selectedTagName
+      selectedTagName,
+      binaryURL,
+      binaryChecksum
     } = this.state;
     return (
       <div>
@@ -225,6 +232,43 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
                   />
                 </div>
               )}
+              <div>
+                <div className="form-check">
+                  <input
+                    type="radio"
+                    className="form-check-input"
+                    id="upgrade-by-binary"
+                    name="upgrade-type"
+                    value="upgrade-by-binary"
+                    checked={selectedType === "upgrade-by-binary"}
+                    // tslint:disable-next-line:jsx-no-lambda
+                    onChange={e =>
+                      this.setState({ selectedType: e.target.value })
+                    }
+                  />
+                  <Label className="form-check-label" for="upgrade-by-binary">
+                    Upgrade by binary file
+                  </Label>
+                </div>
+              </div>
+              {selectedType === "upgrade-by-binary" && (
+                <div className="form-group mt-3 mb-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="CodeChain Download URL"
+                    value={binaryURL}
+                    onChange={this.handleBinaryURLInput}
+                  />
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="CodeChain Checksum"
+                    value={binaryChecksum}
+                    onChange={this.handleBinaryChecksumInput}
+                  />
+                </div>
+              )}
             </div>
             <div className="d-flex justify-content-end">
               <button
@@ -238,7 +282,7 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
                 type="submit"
                 onClick={this.onUpgradeClick}
                 className="btn btn-primary mt-3"
-                disabled={this.getSelectedCommitHash() === ""}
+                disabled={this.getSelectedCommitHash() === null}
               >
                 Upgrade
               </button>
@@ -251,42 +295,58 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
 
   private onUpgradeClick = (e: any) => {
     e.preventDefault();
-    this.props.onUpdateNode(this.getSelectedCommitHash());
+    this.props.onUpdateNode(this.getSelectedCommitHash()!);
   };
 
-  private getSelectedCommitHash = () => {
+  private getSelectedCommitHash = (): UpdateCodeChainRequest | null => {
     const selectedType = this.state.selectedType;
     let commitHash = "";
     switch (selectedType) {
       case "upgrade-by-commit":
         commitHash = this.state.inputCommit;
-        break;
-      case "upgrade-by-branch":
-        {
-          const selectedBranchName = this.state.selectedBranchName;
-          const selectedBranch = _.find(
-            this.state.branchList,
-            branch => branch.name === selectedBranchName
-          );
-          if (selectedBranch) {
-            commitHash = selectedBranch.commit.sha;
-          }
+        return {
+          type: "git",
+          commitHash
+        };
+      case "upgrade-by-branch": {
+        const selectedBranchName = this.state.selectedBranchName;
+        const selectedBranch = _.find(
+          this.state.branchList,
+          branch => branch.name === selectedBranchName
+        );
+        if (selectedBranch) {
+          return {
+            type: "git",
+            commitHash: selectedBranch.commit.sha
+          };
         }
-        break;
-      case "upgrade-by-tag":
-        {
-          const selectedTagName = this.state.selectedTagName;
-          const selectedTag = _.find(
-            this.state.tagList,
-            tag => tag.name === selectedTagName
-          );
-          if (selectedTag) {
-            commitHash = selectedTag.commit.sha;
-          }
+      }
+      case "upgrade-by-tag": {
+        const selectedTagName = this.state.selectedTagName;
+        const selectedTag = _.find(
+          this.state.tagList,
+          tag => tag.name === selectedTagName
+        );
+        if (selectedTag) {
+          commitHash = selectedTag.commit.sha;
+          return {
+            type: "git",
+            commitHash
+          };
         }
-        break;
+      }
+      case "upgrade-by-binary": {
+        const { binaryURL, binaryChecksum } = this.state;
+        if (binaryURL && binaryChecksum) {
+          return {
+            type: "binary",
+            binaryURL: this.state.binaryURL,
+            binaryChecksum: this.state.binaryChecksum
+          };
+        }
+      }
     }
-    return commitHash;
+    return null;
   };
   private handleCommitInput = (e: any) => {
     this.setState({ inputCommit: e.target.value });
@@ -296,6 +356,12 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
   };
   private handleSelectingTag = (e: any) => {
     this.setState({ selectedTagName: e.target.value });
+  };
+  private handleBinaryURLInput = (e: any) => {
+    this.setState({ binaryURL: e.target.value });
+  };
+  private handleBinaryChecksumInput = (e: any) => {
+    this.setState({ binaryChecksum: e.target.value });
   };
   private onCloseClick = (e: any) => {
     e.preventDefault();

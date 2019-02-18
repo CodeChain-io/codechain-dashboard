@@ -1,5 +1,5 @@
 import RequestAgent from "../RequestAgent";
-import { NodeInfo } from "./types";
+import { NodeInfo, UpdateCodeChainRequest } from "./types";
 
 const startNode = async (nodeName: string, env: string, args: string) => {
   return await RequestAgent.getInstance().call<NodeInfo>("node_start", [
@@ -17,13 +17,10 @@ const stopNode = async (nodeName: string) => {
   ]);
 };
 
-const updateNode = async (nodeName: string, commitHash: string) => {
+const updateNode = async (nodeName: string, req: UpdateCodeChainRequest) => {
   return await RequestAgent.getInstance().call<void>("node_update", [
     nodeName,
-    {
-      type: "git",
-      commitHash
-    }
+    req
   ]);
 };
 

@@ -87,3 +87,14 @@ export interface Log {
   timestamp: string;
   message: string;
 }
+
+export type UpdateCodeChainRequest =
+  | {
+      type: "git";
+      commitHash: string;
+    }
+  | {
+      type: "binary";
+      binaryURL: string;
+      binaryChecksum: string;
+    };

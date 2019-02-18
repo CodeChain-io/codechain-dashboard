@@ -3,7 +3,11 @@ import * as React from "react";
 import { Doughnut, HorizontalBar } from "react-chartjs-2";
 import { JsonRPCError } from "../../../../RequestAgent";
 import { Apis } from "../../../../requests";
-import { NodeInfo, NodeStatus } from "../../../../requests/types";
+import {
+  NodeInfo,
+  NodeStatus,
+  UpdateCodeChainRequest
+} from "../../../../requests/types";
 import "./NodeDetail.css";
 import StartNodeModal from "./StartNodeModal/StartNodeModal";
 const { confirmAlert } = require("react-confirm-alert");
@@ -464,9 +468,9 @@ export default class NodeDetail extends React.Component<Props, State> {
   private openUpgradeNodeModal = () => {
     this.setState({ isUpgradeNodeModalOpen: true });
   };
-  private handleOnUpdateNode = async (hash: string) => {
+  private handleOnUpdateNode = async (req: UpdateCodeChainRequest) => {
     const name = this.props.nodeInfo.name;
-    await Apis.updateNode(name, hash);
+    await Apis.updateNode(name, req);
     this.setState({ isUpgradeNodeModalOpen: false });
   };
   private getButtonByStatus = (status: NodeStatus) => {

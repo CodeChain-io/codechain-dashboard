@@ -113,7 +113,9 @@ export const logReducer = (state = initialState, action: LogAction) => {
     }
     case "ChangeFilters": {
       if (action.data.itemPerPage) {
-        saveObjectToStorage("itemPerPage", { itemPerPage: action.data.itemPerPage });
+        saveObjectToStorage("itemPerPage", {
+          itemPerPage: action.data.itemPerPage
+        });
       }
       return merge({ ...state, noMoreData: false, page: 1 }, action.data, {
         arrayMerge: overwriteMerge
