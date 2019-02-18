@@ -282,7 +282,7 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
                 type="submit"
                 onClick={this.onUpgradeClick}
                 className="btn btn-primary mt-3"
-                disabled={this.getSelectedCommitHash() === null}
+                disabled={this.getSelectedInformation() === null}
               >
                 Upgrade
               </button>
@@ -295,10 +295,10 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
 
   private onUpgradeClick = (e: any) => {
     e.preventDefault();
-    this.props.onUpdateNode(this.getSelectedCommitHash()!);
+    this.props.onUpdateNode(this.getSelectedInformation()!);
   };
 
-  private getSelectedCommitHash = (): UpdateCodeChainRequest | null => {
+  private getSelectedInformation = (): UpdateCodeChainRequest | null => {
     const selectedType = this.state.selectedType;
     let commitHash = "";
     switch (selectedType) {
