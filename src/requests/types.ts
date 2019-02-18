@@ -46,7 +46,7 @@ export interface NodeInfo {
   address?: SocketAddr;
   agentVersion?: string;
   status: NodeStatus;
-  version?: { version: string; hash: string };
+  version?: { version: string; hash: string; binaryChecksum: string };
   bestBlockId?: { blockNumber: number; hash: string };
   pendingParcels?: object[];
   peers?: SocketAddr[];

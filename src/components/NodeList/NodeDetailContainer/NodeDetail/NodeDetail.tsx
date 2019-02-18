@@ -187,12 +187,24 @@ export default class NodeDetail extends React.Component<Props, State> {
             <div>Version</div>
             <div>{nodeInfo.version ? nodeInfo.version.version : "Unknown"}</div>
           </div>
-          <div className="data-row mb-3">
+          <div className="data-row">
             <div>Hash</div>
             <div>
               {nodeInfo.version ? (
                 <span className="link-text" onClick={this.openUpgradeNodeModal}>
                   {nodeInfo.version.hash.slice(0, 6)}
+                </span>
+              ) : (
+                "Unknown"
+              )}
+            </div>
+          </div>
+          <div className="data-row mb-3">
+            <div>Binary Checksum</div>
+            <div>
+              {nodeInfo.version ? (
+                <span className="link-text" onClick={this.openUpgradeNodeModal}>
+                  {nodeInfo.version.binaryChecksum.slice(0, 6)}
                 </span>
               ) : (
                 "Unknown"
