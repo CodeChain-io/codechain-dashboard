@@ -1,4 +1,5 @@
 mod binary_update;
+mod fs_util;
 mod git_update;
 mod git_util;
 mod rpc;
