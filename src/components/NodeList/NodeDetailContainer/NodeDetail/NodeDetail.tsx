@@ -16,7 +16,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Parcel } from "codechain-sdk/lib/core/classes";
 import { toast } from "react-toastify";
 import { getStatusClass } from "../../../../utils/getStatusClass";
-import UpgradeNodeModal from "./UpgradeNodeModal/UpgradeNodeModal";
+import UpgradeNodeModal from "../../UpgradeNodeModal/UpgradeNodeModal";
 
 interface Props {
   nodeInfo: NodeInfo;

@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import * as React from "react";
 import * as Modal from "react-modal";
 import { Label } from "reactstrap";
-import { UpdateCodeChainRequest } from "../../../../../requests/types";
+import { UpdateCodeChainRequest } from "../../../requests/types";
 import "./UpgradeNodeModal.css";
 
 const customStyles = {
