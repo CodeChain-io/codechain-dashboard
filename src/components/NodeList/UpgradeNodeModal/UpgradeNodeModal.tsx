@@ -19,7 +19,6 @@ const customStyles = {
 
 interface Props {
   onClose: () => void;
-  currentCommitHash: string;
   isOpen: boolean;
   onUpdateNode: (req: UpdateCodeChainRequest) => void;
 }

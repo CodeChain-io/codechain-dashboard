@@ -133,7 +133,6 @@ export default class NodeDetail extends React.Component<Props, State> {
         {nodeInfo.version && (
           <UpgradeNodeModal
             isOpen={isUpgradeNodeModalOpen}
-            currentCommitHash={nodeInfo.version.hash}
             onClose={this.handleOnCloseUpgradeModal}
             onUpdateNode={this.handleOnUpdateNode}
           />
