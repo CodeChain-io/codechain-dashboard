@@ -183,6 +183,19 @@ impl Agent {
             .send(ServiceMessage::AddAgent(self.id, self.sender.clone()))
             .map_err(|err| format!("AddAgent failed {}", err))?;
 
+        // get prev data from db
+        // if exist, run it.
+        let name = self.state.read().expect("Should success getting agent state").name().expect("Updated");
+
+        if let Ok(Some(extra)) = self.db_service.get_agent_extra(name) {
+            if let Err(err) = self.sender.shell_start_codechain(ShellStartCodeChainRequest {
+                env: extra.prev_env,
+                args: extra.prev_args,
+            }) {
+                cerror!("Cannot start CodeChain {}", err);
+            }
+        }
+
         loop {
             ctrace!("Agent-{} update", self.id);
             self.update()?;
