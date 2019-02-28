@@ -6,7 +6,7 @@ mod rpc;
 mod update;
 
 use std::cell::Cell;
-use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::Error as IOError;
 use std::option::Option;
 use std::path::Path;
@@ -456,8 +456,7 @@ impl Process {
 
         let envs = Self::parse_env(env)?;
 
-        let file = File::create(self.option.log_file_path.clone())?;
-
+        let file = OpenOptions::new().append(true).create(true).open(self.option.log_file_path.clone())?;
 
         let mut exec = if Path::new(&self.option.codechain_dir).join("codechain").exists() {
             Exec::cmd("./codechain")
