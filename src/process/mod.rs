@@ -439,13 +439,13 @@ impl Process {
     }
 
     pub fn run(&mut self, env: &str, args: &str) -> Result<(), Error> {
-        cdebug!(PROCESS, "Run codechain");
+        cinfo!(PROCESS, "Run codechain");
         if self.check_running() {
-            cdebug!(PROCESS, "Run codechain failed because it is AlreadyRunning");
+            cinfo!(PROCESS, "Run codechain failed because it is AlreadyRunning");
             return Err(Error::AlreadyRunning)
         }
         if self.is_updating() {
-            cdebug!(PROCESS, "Run codechain failed because it is Updating");
+            cinfo!(PROCESS, "Run codechain failed because it is Updating");
             return Err(Error::Updating)
         }
 
@@ -526,6 +526,8 @@ impl Process {
             return Err(Error::Updating)
         }
 
+        cinfo!(PROCESS, "Stop CodeChain");
+
         let codechain = &mut self.child.as_mut().expect("Already checked");
         ctrace!(PROCESS, "Send SIGTERM to CodeChain");
         codechain.terminate()?;
@@ -551,6 +553,8 @@ impl Process {
         if self.is_updating() {
             return Err(Error::Updating)
         }
+
+        cinfo!(PROCESS, "Update CodeChain");
 
         let (tx, rx) = channel::unbounded();
         let job_sender = match target {
