@@ -390,7 +390,7 @@ impl SendAgentRPC for AgentSender {
             self.jsonrpc_context.clone(),
             "shell_getCodeChainLog",
             json!({
-              "levels": ["info", "warn", "error"]
+              "levels": ["warn", "error"]
             }),
         )?;
         Ok(logs)
