@@ -188,11 +188,18 @@ impl Agent {
         let name = self.state.read().expect("Should success getting agent state").name().expect("Updated");
 
         if let Ok(Some(extra)) = self.db_service.get_agent_extra(name) {
-            if let Err(err) = self.sender.shell_start_codechain(ShellStartCodeChainRequest {
-                env: extra.prev_env,
-                args: extra.prev_args,
-            }) {
-                cerror!("Cannot start CodeChain {}", err);
+            match ::std::env::var("START_AT_CONNECT") {
+                Ok(_) => {
+                    if let Err(err) = self.sender.shell_start_codechain(ShellStartCodeChainRequest {
+                        env: extra.prev_env,
+                        args: extra.prev_args,
+                    }) {
+                        cerror!("Cannot start CodeChain {}", err);
+                    }
+                }
+                Err(_) => {
+                    cinfo!("Do not start CodeChain at connected");
+                }
             }
         }
 
