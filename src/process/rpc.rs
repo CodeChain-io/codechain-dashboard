@@ -1,4 +1,5 @@
 use jsonrpc_core;
+use jsonrpc_core::types::Version;
 use reqwest;
 use serde_json::Value;
 
@@ -39,7 +40,7 @@ impl RPCClient {
         let params = jsonrpc_core::Params::Array(arguments);
 
         let jsonrpc_request = jsonrpc_core::MethodCall {
-            jsonrpc: None,
+            jsonrpc: Some(Version::V2),
             method,
             params: Some(params),
             id: jsonrpc_core::Id::Num(1),
