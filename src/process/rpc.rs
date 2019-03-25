@@ -2,6 +2,7 @@ use jsonrpc_core;
 use jsonrpc_core::types::Version;
 use reqwest;
 use serde_json::Value;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub enum CallRPCError {
@@ -27,7 +28,7 @@ pub struct RPCClient {
 
 impl RPCClient {
     pub fn new(rpc_port: u16) -> Self {
-        let http_client = reqwest::Client::new();
+        let http_client = reqwest::Client::builder().gzip(true).timeout(Duration::from_secs(1)).build().unwrap();
         Self {
             rpc_port,
             http_client,
