@@ -1,11 +1,11 @@
 use std::net::SocketAddr;
 use std::ops::Drop;
 use std::sync::Arc;
-use std::sync::{RwLock, RwLockReadGuard};
 use std::thread;
 use std::time::Duration;
 
 use jsonrpc_core::Output;
+use parking_lot::{RwLock, RwLockReadGuard};
 use serde_json;
 use serde_json::Value;
 use ws::CloseCode as WSCloseCode;
@@ -101,7 +101,7 @@ impl AgentSender {
     }
 
     pub fn read_state(&self) -> RwLockReadGuard<State> {
-        self.state.read().expect("Should success reading state")
+        self.state.read()
     }
 }
 
@@ -175,7 +175,7 @@ impl Agent {
         if let State::Stop {
             cause,
             ..
-        } = *self.state.read().unwrap()
+        } = *self.state.read()
         {
             return Ok(cause)
         }
@@ -185,7 +185,7 @@ impl Agent {
 
         // get prev data from db
         // if exist, run it.
-        let name = self.state.read().expect("Should success getting agent state").name().expect("Updated");
+        let name = self.state.read().name().expect("Updated");
 
         if let Ok(Some(extra)) = self.db_service.get_agent_extra(name) {
             match ::std::env::var("START_AT_CONNECT") {
@@ -209,7 +209,7 @@ impl Agent {
             if let State::Stop {
                 cause,
                 ..
-            } = *self.state.read().unwrap()
+            } = *self.state.read()
             {
                 return Ok(cause)
             }
@@ -220,7 +220,7 @@ impl Agent {
     fn update(&mut self) -> Result<(), String> {
         let info = self.sender.agent_get_info().map_err(|err| format!("{}", err))?;
 
-        let mut state = self.state.write().expect("Should success getting agent state");
+        let mut state = self.state.write();
         let new_state = State::Normal {
             name: info.name.clone(),
             address: info.address,
@@ -281,7 +281,7 @@ impl Agent {
         let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
         let hardware = self.sender.hardware_get().map_err(|err| format!("Agent Update {}", err))?;
 
-        ctrace!("Update state from {:?} to {:?}", state, new_state);
+        ctrace!("Update state from {:?} to {:?}", *state, new_state);
         self.db_service.update_agent_query_result(db::AgentQueryResult {
             name: info.name.clone(),
             status: info.status,
@@ -329,17 +329,17 @@ impl Agent {
             cerror!("Agent cleanup error {}", error);
         }
 
-        let state = self.state.read().expect("Should success read");
+        let state = self.state.read();
         if let State::Normal {
             name,
             address,
             ..
-        } = state.clone()
+        } = &*state
         {
             self.db_service.update_agent_query_result(db::AgentQueryResult {
-                name,
+                name: name.clone(),
                 status: NodeStatus::Error,
-                address,
+                address: *address,
                 ..Default::default()
             });
         }

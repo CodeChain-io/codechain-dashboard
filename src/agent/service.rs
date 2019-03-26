@@ -1,7 +1,9 @@
 use std::sync::mpsc::{channel, SendError, Sender};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::thread;
 use std::vec::Vec;
+
+use parking_lot::RwLock;
 
 use super::super::common_rpc_types::NodeName;
 use super::super::db;
@@ -32,7 +34,7 @@ impl ServiceSender {
     }
 
     pub fn get_agent(&self, name: NodeName) -> Option<AgentSender> {
-        let state = self.state.read().expect("Should access read service state");
+        let state = self.state.read();
         let find_result = state.agents.iter().find(|(_, agent)| {
             let agent_state = agent.read_state();
             match agent_state.name() {
@@ -108,13 +110,13 @@ impl Service {
     }
 
     fn add_agent(&mut self, id: i32, agent_sender: AgentSender) {
-        let mut state = self.state.write().expect("Should get state");
+        let mut state = self.state.write();
         state.agents.push((id, agent_sender));
         cdebug!("Agent {} is added to AgentService", id);
     }
 
     fn remove_agent(&mut self, id: i32) {
-        let mut state = self.state.write().expect("Should get state");
+        let mut state = self.state.write();
 
         let agent_index = state.agents.iter().position(|(iter_id, _)| *iter_id == id);
         if agent_index.is_none() {

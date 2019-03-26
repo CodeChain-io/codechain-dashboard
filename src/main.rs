@@ -4,6 +4,7 @@ extern crate log;
 extern crate chrono;
 extern crate iron;
 extern crate jsonrpc_core;
+extern crate parking_lot;
 extern crate postgres;
 extern crate primitives as cprimitives;
 extern crate rand;
@@ -30,11 +31,11 @@ use std::cell::Cell;
 use std::fmt;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::sync::Mutex;
 use std::thread;
 
 use iron::prelude::*;
 use iron::status;
+use parking_lot::Mutex;
 use ws::listen;
 
 use self::event_propagator::EventPropagator;

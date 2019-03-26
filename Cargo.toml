@@ -11,6 +11,7 @@ env_logger = "0.5.7"
 iron = "*"
 jsonrpc-core = { git = "https://github.com/paritytech/jsonrpc.git", branch = "parity-1.11" }
 log = "0.4.1"
+parking_lot = "0.7.1"
 postgres = { version = "0.15", features = ["with-chrono"] }
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4.0" }
 rand = "0.5.5"

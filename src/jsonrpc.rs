@@ -5,7 +5,6 @@ use std::option::Option;
 use std::result::Result::{Err, Ok};
 use std::sync::mpsc::{channel, RecvError, RecvTimeoutError, Sender};
 use std::sync::Arc;
-use std::sync::Mutex;
 use std::sync::PoisonError;
 use std::time::Duration;
 
@@ -13,6 +12,7 @@ use jsonrpc_core::types::{
     Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Notification, Output, Params, Response, Success,
     Version,
 };
+use parking_lot::Mutex;
 use rand;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -121,12 +121,12 @@ impl Context {
     }
 
     pub fn add_callback(&self, id: u64, callback: Sender<String>) {
-        let mut ws_callback = self.ws_callback.lock().expect("Should success get ws_callback");
+        let mut ws_callback = self.ws_callback.lock();
         ws_callback.insert(id, callback);
     }
 
     pub fn remove_callback(&self, id: u64) {
-        let mut ws_callback = self.ws_callback.lock().unwrap();
+        let mut ws_callback = self.ws_callback.lock();
         ws_callback.remove(&id);
     }
 }
@@ -255,10 +255,7 @@ fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
     }
     .map_err(|id| format!("Invalid id {:#?}", id))?;
 
-    let mut ws_callback = context
-        .ws_callback
-        .lock()
-        .map_err(|err| format!("Cannot acquire ws_callback lock on handling {}\n{}", text, err))?;
+    let mut ws_callback = context.ws_callback.lock();
     let result = {
         let callback = ws_callback.get_mut(&id).ok_or_else(|| format!("Invalid id {}", id))?;
         callback
