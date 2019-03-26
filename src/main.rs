@@ -2,6 +2,7 @@
 extern crate clap;
 #[macro_use]
 extern crate log;
+extern crate parking_lot;
 #[macro_use]
 extern crate serde_derive;
 

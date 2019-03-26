@@ -4,10 +4,11 @@ extern crate reopen;
 use std::fs::OpenOptions;
 use std::io::{self, Read, Write};
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
+use parking_lot::Mutex;
 use subprocess::{Exec, ExitStatus, Popen, PopenError, Redirection};
 
 use super::ProcessOption;
@@ -80,27 +81,27 @@ impl CodeChainProcess {
     }
 
     pub fn read(&self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
-        let mut process = self.process.lock().unwrap();
+        let mut process = self.process.lock();
         process.stdout.as_mut().expect("Process opened with pipe").read(buf)
     }
 
     pub fn is_running(&self) -> bool {
-        let mut process = self.process.lock().unwrap();
+        let mut process = self.process.lock();
         process.poll().is_none()
     }
 
     pub fn terminate(&self) -> Result<(), io::Error> {
-        let mut process = self.process.lock().unwrap();
+        let mut process = self.process.lock();
         process.terminate()
     }
 
     pub fn wait_timeout(&self, duration: Duration) -> Result<Option<ExitStatus>, PopenError> {
-        let mut process = self.process.lock().unwrap();
+        let mut process = self.process.lock();
         process.wait_timeout(duration)
     }
 
     pub fn kill(&self) -> Result<(), io::Error> {
-        let mut process = self.process.lock().unwrap();
+        let mut process = self.process.lock();
         process.kill()
     }
 }

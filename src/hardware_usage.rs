@@ -1,11 +1,11 @@
 use std::error::Error;
 use std::sync::Arc;
-use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
 use crossbeam::channel;
 use crossbeam::channel::{Receiver, Sender};
+use parking_lot::Mutex;
 use sysinfo;
 use sysinfo::{DiskExt, SystemExt};
 use systemstat;
@@ -98,21 +98,20 @@ impl HardwareService {
         let mut systemstat_sys = systemstat::System::new();
         let memory_usage = get_memory_usage(&mut systemstat_sys);
 
-        match self.hardware_info.try_lock() {
-            Ok(mut hardware_info) => {
-                *hardware_info = HardwareInfo {
-                    cpu_usage,
-                    disk_usage,
-                    memory_usage,
-                };
-            }
-            Err(err) => cdebug!(HARDWARE, "Cannot acquire hardware_info lock : {}", err),
+        if let Some(mut hardware_info) = self.hardware_info.try_lock() {
+            *hardware_info = HardwareInfo {
+                cpu_usage,
+                disk_usage,
+                memory_usage,
+            };
+        } else {
+            cdebug!(HARDWARE, "Cannot acquire hardware_info lock");
         }
         Ok(())
     }
 
     pub fn get(&self) -> HardwareInfo {
-        if let Ok(hardware_info) = self.hardware_info.try_lock() {
+        if let Some(hardware_info) = self.hardware_info.try_lock() {
             hardware_info.clone()
         } else {
             Default::default()
