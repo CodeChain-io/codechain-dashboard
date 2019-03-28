@@ -13,7 +13,7 @@ import StartNodeModal from "./StartNodeModal/StartNodeModal";
 const { confirmAlert } = require("react-confirm-alert");
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Parcel } from "codechain-sdk/lib/core/classes";
+// import { Parcel } from "codechain-sdk/lib/core/classes";
 import { toast } from "react-toastify";
 import { getStatusClass } from "../../../../utils/getStatusClass";
 import UpgradeNodeModal from "../../UpgradeNodeModal/UpgradeNodeModal";
@@ -237,7 +237,8 @@ export default class NodeDetail extends React.Component<Props, State> {
             {nodeInfo.pendingParcels
               ? _.map(
                   nodeInfo.pendingParcels,
-                  pendingParcel => Parcel.fromJSON(pendingParcel).hash().value
+                  // pendingParcel => Parcel.fromJSON(pendingParcel).hash().value
+                  pendingParcel => "deprecated"
                 ).join(" ")
               : ""}
           </div>
