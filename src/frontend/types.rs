@@ -11,6 +11,7 @@ use super::super::db;
 pub struct Context {
     pub agent_service: agent::ServiceSender,
     pub db_service: db::ServiceSender,
+    pub passphrase: String
 }
 
 pub type Event = String;

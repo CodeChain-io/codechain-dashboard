@@ -69,6 +69,7 @@ fn main() {
             let frontend_context = frontend::Context {
                 agent_service: agent_service_for_frontend,
                 db_service: db_service_sender.clone(),
+                passphrase: std::env::var("PASSPHRASE").unwrap_or("passphrase".to_string()),
             };
             listen("0.0.0.0:3012", move |out| frontend::WebSocketHandler {
                 out,
