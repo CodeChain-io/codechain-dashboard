@@ -9,7 +9,7 @@ use ws::connect;
 use super::handler::WebSocketHandler;
 use super::hardware_usage::HardwareService;
 use super::logger::init as logger_init;
-use super::process::{Process, ProcessOption};
+use super::process::{self, ProcessOption};
 use super::rpc::api::add_routing;
 use super::rpc::router::Router;
 use super::types::{AgentArgs, HandlerContext};
@@ -22,7 +22,7 @@ pub fn run(args: &AgentArgs) {
     let mut router = Arc::new(Router::new());
     add_routing(Arc::get_mut(&mut router).unwrap());
 
-    let process = Process::run_thread(ProcessOption {
+    let process = process::spawn(ProcessOption {
         codechain_dir: args.codechain_dir.to_string(),
         log_file_path: args.log_file_path.to_string(),
     });

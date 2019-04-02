@@ -150,11 +150,17 @@ impl CodeChainStatus {
             CodeChainStatus::Temp => unreachable!(),
         }
     }
-}
 
-pub struct Process {
-    option: ProcessOption,
-    child: Option<CodeChainProcess>,
+    fn is_updating(&self) -> bool {
+        if let CodeChainStatus::Updating {
+            ..
+        } = self
+        {
+            true
+        } else {
+            false
+        }
+    }
 }
 
 type Callback<T> = Sender<Result<T, Error>>;
@@ -199,413 +205,415 @@ pub enum Message {
     },
 }
 
-impl Process {
-    pub fn run_thread(option: ProcessOption) -> Sender<Message> {
-        let codechain_status: Arc<Mutex<CodeChainStatus>> = Arc::new(Mutex::new(CodeChainStatus::Stop));
-        let mut process = Self {
-            option,
-            child: None,
-        };
-        let (tx, rx) = channel::unbounded();
-        thread::Builder::new()
-            .name("process".to_string())
-            .spawn(move || loop {
-                let timeout = Duration::new(1, 0);
-                let message = select! {
-                    recv(rx, message) => {
-                        message
-                    },
-                    recv(channel::after(timeout)) => {
-                        None
-                    }
-                };
-                if let Some(m) = message {
-                    process.handle_message(m, codechain_status.as_ref());
+pub fn spawn(option: ProcessOption) -> Sender<Message> {
+    let codechain_status: Arc<Mutex<CodeChainStatus>> = Arc::new(Mutex::new(CodeChainStatus::Stop));
+    let child: Arc<Mutex<Option<CodeChainProcess>>> = Default::default();
+
+    let (tx, rx) = channel::unbounded();
+    let cloned_tx = tx.clone();
+    thread::Builder::new()
+        .name("process".to_string())
+        .spawn(move || loop {
+            let timeout = Duration::new(1, 0);
+            let message = select! {
+                recv(rx, message) => {
+                    message
+                },
+                recv(channel::after(timeout)) => {
+                    None
                 }
-                process.ping_to_codechain(codechain_status.as_ref());
-                process.handle_update(codechain_status.as_ref());
-            })
-            .expect("Should success running process thread");
-        tx
-    }
-
-    fn handle_message(&mut self, message: Message, codechain_status: &Mutex<CodeChainStatus>) {
-        match message {
-            Message::Run {
-                env,
-                args,
-                callback,
-            } => {
-                let result = self.run(&env, &args, &mut codechain_status.lock());
-                callback.send(result);
-            }
-            Message::Stop {
-                callback,
-            } => {
-                let result = self.stop(&mut *codechain_status.lock());
-                callback.send(result);
-            }
-            Message::Quit {
-                callback,
-            } => {
-                let result = self.stop(&mut *codechain_status.lock());
-                if let CodeChainStatus::Updating {
-                    sender,
-                    ..
-                } = &*codechain_status.lock()
-                {
-                    cinfo!(PROCESS, "Wait until codechain update finish");
-                    let moved_sender = sender.replace(None).expect("Sender should be exist");
-                    if let Err(err) = moved_sender.join() {
-                        cerror!(PROCESS, "Cannot wait for git update closing: {:?}", err);
-                    }
-                }
-                callback.send(result);
-                return
-            }
-            Message::Update {
-                env,
-                args,
-                target,
-                callback,
-            } => {
-                let result = if self.check_running() {
-                    self.stop(&mut *codechain_status.lock())
-                } else {
-                    Ok(())
-                };
-                let result = result.and_then(|_| self.update(&target, env, args, &mut *codechain_status.lock()));
-                callback.send(result);
-            }
-            Message::GetStatus {
-                callback,
-            } => {
-                let codechain_status = codechain_status.lock();
-                let status = codechain_status.to_node_status();
-                let p2p_port = codechain_status.p2p_port();
-                let commit_hash = self.get_commit_hash(&*codechain_status).unwrap_or_default();
-                let binary_checksum =
-                    fs_util::get_checksum_or_default(&self.option.codechain_dir, "codechain").unwrap_or_default();
-                callback.send(Ok(ProcessGetStatusResult {
-                    status,
-                    port: p2p_port,
-                    commit_hash,
-                    binary_checksum,
-                }));
-            }
-            Message::GetLog {
-                levels,
-                callback,
-            } => {
-                let result = self.get_log(levels, &*codechain_status.lock());
-                callback.send(result);
-            }
-            Message::CallRPC {
-                method,
-                arguments,
-                callback,
-            } => match codechain_status.lock().rpc_client() {
-                Some(rpc_client) => {
-                    let result =
-                        rpc_client.call_rpc(method, arguments).map_err(|err| Error::CodeChainRPC(err.to_string()));
-                    callback.send(result)
-                }
-                None => callback.send(Err(Error::NotRunning)),
-            },
-        }
-    }
-
-    fn ping_to_codechain(&mut self, codechain_status: &Mutex<CodeChainStatus>) {
-        let mut codechain_status = codechain_status.lock();
-        if let CodeChainStatus::Stop = *codechain_status {
-            return
-        }
-
-        if let CodeChainStatus::Updating {
-            ..
-        } = *codechain_status
-        {
-            return
-        }
-
-        ctrace!(PROCESS, "Ping to CodeChain");
-
-        let result = match codechain_status.rpc_client() {
-            Some(rpc_client) => Some(rpc_client.call_rpc("ping".to_string(), Vec::new())),
-            None => None,
-        };
-        ctrace!(PROCESS, "{:?}", result);
-
-        let original: CodeChainStatus = ::std::mem::replace(&mut *codechain_status, CodeChainStatus::Temp);
-        let next_status: CodeChainStatus = match original {
-            CodeChainStatus::Run {
-                p2p_port,
-                rpc_client,
-            } => {
-                if let Err(err) = result.unwrap() {
-                    cinfo!(PROCESS, "Codechain ping error {:#?}", err);
-                    CodeChainStatus::Error {
-                        p2p_port,
-                        rpc_client: Some(rpc_client),
-                    }
-                } else {
-                    CodeChainStatus::Run {
-                        p2p_port,
-                        rpc_client,
-                    }
-                }
-            }
-            CodeChainStatus::Starting {
-                p2p_port,
-                rpc_client,
-            } => {
-                if result.unwrap().is_ok() {
-                    cinfo!(PROCESS, "CodeChain is running now");
-                    CodeChainStatus::Run {
-                        p2p_port,
-                        rpc_client,
-                    }
-                } else if !self.check_running() {
-                    CodeChainStatus::Error {
-                        p2p_port,
-                        rpc_client: Some(rpc_client),
-                    }
-                } else {
-                    CodeChainStatus::Starting {
-                        p2p_port,
-                        rpc_client,
-                    }
-                }
-            }
-            CodeChainStatus::Stop => unreachable!(),
-            CodeChainStatus::Error {
-                p2p_port,
-                rpc_client,
-            } => {
-                if let Some(Ok(_)) = result {
-                    cinfo!(PROCESS, "CodeChain returned to normal");
-                    CodeChainStatus::Run {
-                        p2p_port,
-                        rpc_client: rpc_client.unwrap(),
-                    }
-                } else {
-                    CodeChainStatus::Error {
-                        p2p_port,
-                        rpc_client,
-                    }
-                }
-            }
-            CodeChainStatus::Updating {
-                ..
-            } => unreachable!(),
-            CodeChainStatus::Temp => unreachable!(),
-        };
-
-        *codechain_status = next_status;
-    }
-
-    fn handle_update(&mut self, codechain_status: &Mutex<CodeChainStatus>) {
-        let mut codechain_status = codechain_status.lock();
-        let (success, env, args) = if let CodeChainStatus::Updating {
-            rx_callback,
-            env,
-            args,
-            ..
-        } = &*codechain_status
-        {
-            match rx_callback.try_recv() {
-                None => return,
-                Some(Err(err)) => {
-                    cinfo!(PROCESS, "Update failed : {:?}", err);
-                    (false, env.to_string(), args.to_string())
-                }
-                Some(Ok(_)) => {
-                    cinfo!(PROCESS, "Update success");
-                    (true, env.to_string(), args.to_string())
-                }
-            }
-        } else {
-            return
-        };
-
-        if success {
-            *codechain_status = CodeChainStatus::Stop;
-            if let Err(err) = self.run(&env, &args, &mut codechain_status) {
-                cerror!(PROCESS, "Cannot run codechain after update : {:?}", err);
-            }
-        } else {
-            *codechain_status = CodeChainStatus::Error {
-                p2p_port: 0,
-                rpc_client: None,
             };
-        }
-    }
-
-    fn run(&mut self, env: &str, args: &str, codechain_status: &mut CodeChainStatus) -> Result<(), Error> {
-        cinfo!(PROCESS, "Run codechain");
-        if self.check_running() {
-            cinfo!(PROCESS, "Run codechain failed because it is AlreadyRunning");
-            return Err(Error::AlreadyRunning)
-        }
-        if self.is_updating(codechain_status) {
-            cinfo!(PROCESS, "Run codechain failed because it is Updating");
-            return Err(Error::Updating)
-        }
-
-        let args_iter = args.split_whitespace();
-        let args_vec: Vec<String> = args_iter.map(|str| str.to_string()).collect();
-        let (p2p_port, rpc_port) = parse_ports(&args_vec);
-        let envs = Self::parse_env(env)?;
-
-        let child = CodeChainProcess::new(envs, args_vec, &self.option).map_err(Error::Unknown)?;
-        self.child = Some(child);
-
-        *codechain_status = CodeChainStatus::Starting {
-            p2p_port,
-            rpc_client: rpc::RPCClient::new(rpc_port),
-        };
-
-        Ok(())
-    }
-
-    pub fn check_running(&mut self) -> bool {
-        self.child.as_ref().map_or(false, |child| child.is_running())
-    }
-
-    fn is_updating(&self, codechain_status: &CodeChainStatus) -> bool {
-        if let CodeChainStatus::Updating {
-            ..
-        } = codechain_status
-        {
-            true
-        } else {
-            false
-        }
-    }
-
-    fn parse_env(env: &str) -> Result<Vec<(&str, &str)>, Error> {
-        let env_kvs = env.split_whitespace();
-        let mut ret = Vec::new();
-        for env_kv in env_kvs {
-            let kv_array: Vec<&str> = env_kv.splitn(2, '=').collect();
-            if kv_array.len() != 2 {
-                return Err(Error::EnvParseError)
-            } else {
-                ret.push((kv_array[0], kv_array[1]));
+            if let Some(m) = message {
+                handle_message(m, &option, child.as_ref(), codechain_status.as_ref());
             }
-        }
-        Ok(ret)
-    }
+            ping_to_codechain(child.as_ref(), codechain_status.as_ref());
+            handle_update(&cloned_tx, codechain_status.as_ref());
+        })
+        .expect("Should success running process thread");
+    tx
+}
 
-    fn stop(&mut self, codechain_status: &mut CodeChainStatus) -> Result<(), Error> {
-        if !self.check_running() {
-            return Err(Error::NotRunning)
-        }
-        if self.is_updating(codechain_status) {
-            return Err(Error::Updating)
-        }
-
-        cinfo!(PROCESS, "Stop CodeChain");
-
-        let codechain = self.child.as_ref().expect("Already checked");
-        ctrace!(PROCESS, "Send SIGTERM to CodeChain");
-        codechain.terminate()?;
-
-        let wait_result = codechain.wait_timeout(Duration::new(10, 0))?;
-
-        if let Some(exit_code) = wait_result {
-            ctrace!(PROCESS, "CodeChain closed with {:?}", exit_code);
-            *codechain_status = CodeChainStatus::Stop;
-            return Ok(())
-        }
-
-        cinfo!(PROCESS, "CodeChain does not exit after 10 seconds");
-
-        codechain.kill()?;
-
-        *codechain_status = CodeChainStatus::Stop;
-
-        Ok(())
-    }
-
-    fn update(
-        &mut self,
-        target: &UpdateCodeChainRequest,
-        env: String,
-        args: String,
-        codechain_status: &mut CodeChainStatus,
-    ) -> Result<(), Error> {
-        if self.is_updating(codechain_status) {
-            return Err(Error::Updating)
-        }
-
-        cinfo!(PROCESS, "Update CodeChain");
-
-        let (tx, rx) = channel::unbounded();
-        let job_sender = match target {
-            UpdateCodeChainRequest::Git {
-                commit_hash,
-            } => git_update::Job::run(self.option.codechain_dir.to_string(), commit_hash.to_string(), tx),
-            UpdateCodeChainRequest::Binary {
-                binary_url,
-                binary_checksum,
-            } => binary_update::Job::run(
-                self.option.codechain_dir.to_string(),
-                binary_url.to_string(),
-                binary_checksum.to_string(),
-                tx,
-            ),
-        };
-
-        *codechain_status = CodeChainStatus::Updating {
+fn handle_message(
+    message: Message,
+    option: &ProcessOption,
+    child: &Mutex<Option<CodeChainProcess>>,
+    codechain_status: &Mutex<CodeChainStatus>,
+) {
+    match message {
+        Message::Run {
             env,
             args,
-            sender: Cell::new(Some(job_sender)),
-            rx_callback: rx,
-        };
-
-        Ok(())
-    }
-
-    fn get_log(&mut self, levels: Vec<String>, codechain_status: &CodeChainStatus) -> Result<Vec<Value>, Error> {
-        let rpc_client = match codechain_status.rpc_client() {
-            Some(rpc_client) => rpc_client,
-            None => return Err(Error::NotRunning),
-        };
-        let mut response =
-            rpc_client.call_rpc("slog".to_string(), Vec::new()).map_err(|err| Error::CodeChainRPC(err.to_string()))?;
-        let result = response
-            .get_mut("result")
-            .ok_or_else(|| Error::CodeChainRPC("JSON parse failed: cannot find the result field".to_string()))?;
-        let logs = result
-            .as_array_mut()
-            .ok_or_else(|| Error::CodeChainRPC("JSON parse failed: slog's result is not array".to_string()))?;
-
-        let empty_string = Value::String("".to_string());
-        let filtered_logs = logs
-            .iter_mut()
-            .filter(|log| {
-                let target = log.pointer("/level").unwrap_or(&empty_string).as_str().unwrap_or("");
-                levels.iter().any(|t| target.to_lowercase() == t.to_lowercase())
-            })
-            .map(|value| value.take());
-
-        Ok(filtered_logs.collect())
-    }
-
-    fn get_commit_hash(&self, codechain_status: &CodeChainStatus) -> Result<String, Error> {
-        if let CodeChainStatus::Run {
-            rpc_client,
-            ..
-        } = &codechain_status
-        {
-            let response = rpc_client
-                .call_rpc("commitHash".to_string(), Vec::new())
-                .map_err(|err| Error::CodeChainRPC(err.to_string()))?;
-            Ok(response["result"].as_str().unwrap_or("").to_string())
-        } else {
-            Ok(git_util::current_hash(self.option.codechain_dir.clone())?)
+            callback,
+        } => {
+            let result = run(&env, &args, option, child, &mut codechain_status.lock());
+            callback.send(result);
         }
+        Message::Stop {
+            callback,
+        } => {
+            let result = stop(child, &mut *codechain_status.lock());
+            callback.send(result);
+        }
+        Message::Quit {
+            callback,
+        } => {
+            let result = stop(child, &mut *codechain_status.lock());
+            if let CodeChainStatus::Updating {
+                sender,
+                ..
+            } = &*codechain_status.lock()
+            {
+                cinfo!(PROCESS, "Wait until codechain update finish");
+                let moved_sender = sender.replace(None).expect("Sender should be exist");
+                if let Err(err) = moved_sender.join() {
+                    cerror!(PROCESS, "Cannot wait for git update closing: {:?}", err);
+                }
+            }
+            callback.send(result);
+            return
+        }
+        Message::Update {
+            env,
+            args,
+            target,
+            callback,
+        } => {
+            let result = if check_running(&*child.lock()) {
+                stop(child, &mut *codechain_status.lock())
+            } else {
+                Ok(())
+            };
+            let result = result.and_then(|_| update(option, &target, env, args, &mut *codechain_status.lock()));
+            callback.send(result);
+        }
+        Message::GetStatus {
+            callback,
+        } => {
+            let codechain_status = codechain_status.lock();
+            let status = codechain_status.to_node_status();
+            let p2p_port = codechain_status.p2p_port();
+            let commit_hash = get_commit_hash(option, &*codechain_status).unwrap_or_default();
+            let binary_checksum =
+                fs_util::get_checksum_or_default(&option.codechain_dir, "codechain").unwrap_or_default();
+            callback.send(Ok(ProcessGetStatusResult {
+                status,
+                port: p2p_port,
+                commit_hash,
+                binary_checksum,
+            }));
+        }
+        Message::GetLog {
+            levels,
+            callback,
+        } => {
+            let result = get_log(levels, &*codechain_status.lock());
+            callback.send(result);
+        }
+        Message::CallRPC {
+            method,
+            arguments,
+            callback,
+        } => match codechain_status.lock().rpc_client() {
+            Some(rpc_client) => {
+                let result = rpc_client.call_rpc(method, arguments).map_err(|err| Error::CodeChainRPC(err.to_string()));
+                callback.send(result)
+            }
+            None => callback.send(Err(Error::NotRunning)),
+        },
+    }
+}
+
+fn ping_to_codechain(child: &Mutex<Option<CodeChainProcess>>, codechain_status: &Mutex<CodeChainStatus>) {
+    let mut codechain_status = codechain_status.lock();
+    if let CodeChainStatus::Stop = *codechain_status {
+        return
+    }
+
+    if let CodeChainStatus::Updating {
+        ..
+    } = *codechain_status
+    {
+        return
+    }
+
+    ctrace!(PROCESS, "Ping to CodeChain");
+
+    let result = match codechain_status.rpc_client() {
+        Some(rpc_client) => Some(rpc_client.call_rpc("ping".to_string(), Vec::new())),
+        None => None,
+    };
+    ctrace!(PROCESS, "{:?}", result);
+
+    let original: CodeChainStatus = ::std::mem::replace(&mut *codechain_status, CodeChainStatus::Temp);
+    let next_status: CodeChainStatus = match original {
+        CodeChainStatus::Run {
+            p2p_port,
+            rpc_client,
+        } => {
+            if let Err(err) = result.unwrap() {
+                cinfo!(PROCESS, "Codechain ping error {:#?}", err);
+                CodeChainStatus::Error {
+                    p2p_port,
+                    rpc_client: Some(rpc_client),
+                }
+            } else {
+                CodeChainStatus::Run {
+                    p2p_port,
+                    rpc_client,
+                }
+            }
+        }
+        CodeChainStatus::Starting {
+            p2p_port,
+            rpc_client,
+        } => {
+            if result.unwrap().is_ok() {
+                cinfo!(PROCESS, "CodeChain is running now");
+                CodeChainStatus::Run {
+                    p2p_port,
+                    rpc_client,
+                }
+            } else if !check_running(&*child.lock()) {
+                CodeChainStatus::Error {
+                    p2p_port,
+                    rpc_client: Some(rpc_client),
+                }
+            } else {
+                CodeChainStatus::Starting {
+                    p2p_port,
+                    rpc_client,
+                }
+            }
+        }
+        CodeChainStatus::Stop => unreachable!(),
+        CodeChainStatus::Error {
+            p2p_port,
+            rpc_client,
+        } => {
+            if let Some(Ok(_)) = result {
+                cinfo!(PROCESS, "CodeChain returned to normal");
+                CodeChainStatus::Run {
+                    p2p_port,
+                    rpc_client: rpc_client.unwrap(),
+                }
+            } else {
+                CodeChainStatus::Error {
+                    p2p_port,
+                    rpc_client,
+                }
+            }
+        }
+        CodeChainStatus::Updating {
+            ..
+        } => unreachable!(),
+        CodeChainStatus::Temp => unreachable!(),
+    };
+
+    *codechain_status = next_status;
+}
+
+fn handle_update(tx: &Sender<Message>, codechain_status: &Mutex<CodeChainStatus>) {
+    let mut codechain_status = codechain_status.lock();
+    let (success, env, args) = if let CodeChainStatus::Updating {
+        rx_callback,
+        env,
+        args,
+        ..
+    } = &*codechain_status
+    {
+        match rx_callback.try_recv() {
+            None => return,
+            Some(Err(err)) => {
+                cinfo!(PROCESS, "Update failed : {:?}", err);
+                (false, env.to_string(), args.to_string())
+            }
+            Some(Ok(_)) => {
+                cinfo!(PROCESS, "Update success");
+                (true, env.to_string(), args.to_string())
+            }
+        }
+    } else {
+        return
+    };
+
+    if success {
+        *codechain_status = CodeChainStatus::Stop;
+        let (callback, recv) = channel::bounded(1);
+        tx.send(Message::Run {
+            env,
+            args,
+            callback,
+        });
+        if let Err(err) = recv.recv().unwrap() {
+            cerror!(PROCESS, "Cannot run codechain after update : {:?}", err);
+        }
+    } else {
+        *codechain_status = CodeChainStatus::Error {
+            p2p_port: 0,
+            rpc_client: None,
+        };
+    }
+}
+
+fn run(
+    env: &str,
+    args: &str,
+    option: &ProcessOption,
+    child: &Mutex<Option<CodeChainProcess>>,
+    codechain_status: &mut CodeChainStatus,
+) -> Result<(), Error> {
+    cinfo!(PROCESS, "Run codechain");
+    if check_running(&*child.lock()) {
+        cinfo!(PROCESS, "Run codechain failed because it is AlreadyRunning");
+        return Err(Error::AlreadyRunning)
+    }
+    if codechain_status.is_updating() {
+        cinfo!(PROCESS, "Run codechain failed because it is Updating");
+        return Err(Error::Updating)
+    }
+
+    let args_iter = args.split_whitespace();
+    let args_vec: Vec<String> = args_iter.map(|str| str.to_string()).collect();
+    let (p2p_port, rpc_port) = parse_ports(&args_vec);
+    let envs = parse_env(env)?;
+
+    *child.lock() = Some(CodeChainProcess::new(envs, args_vec, option).map_err(Error::Unknown)?);
+
+    *codechain_status = CodeChainStatus::Starting {
+        p2p_port,
+        rpc_client: rpc::RPCClient::new(rpc_port),
+    };
+
+    Ok(())
+}
+
+fn check_running(child: &Option<CodeChainProcess>) -> bool {
+    child.as_ref().map_or(false, |child| child.is_running())
+}
+
+fn parse_env(env: &str) -> Result<Vec<(&str, &str)>, Error> {
+    let env_kvs = env.split_whitespace();
+    let mut ret = Vec::new();
+    for env_kv in env_kvs {
+        let kv_array: Vec<&str> = env_kv.splitn(2, '=').collect();
+        if kv_array.len() != 2 {
+            return Err(Error::EnvParseError)
+        } else {
+            ret.push((kv_array[0], kv_array[1]));
+        }
+    }
+    Ok(ret)
+}
+
+fn stop(child: &Mutex<Option<CodeChainProcess>>, codechain_status: &mut CodeChainStatus) -> Result<(), Error> {
+    let child = child.lock();
+    if !check_running(&*child) {
+        return Err(Error::NotRunning)
+    }
+    if codechain_status.is_updating() {
+        return Err(Error::Updating)
+    }
+
+    cinfo!(PROCESS, "Stop CodeChain");
+
+    let codechain = child.as_ref().expect("Already checked");
+    ctrace!(PROCESS, "Send SIGTERM to CodeChain");
+    codechain.terminate()?;
+
+    let wait_result = codechain.wait_timeout(Duration::new(10, 0))?;
+
+    if let Some(exit_code) = wait_result {
+        ctrace!(PROCESS, "CodeChain closed with {:?}", exit_code);
+        *codechain_status = CodeChainStatus::Stop;
+        return Ok(())
+    }
+
+    cinfo!(PROCESS, "CodeChain does not exit after 10 seconds");
+
+    codechain.kill()?;
+
+    *codechain_status = CodeChainStatus::Stop;
+
+    Ok(())
+}
+
+fn update(
+    option: &ProcessOption,
+    target: &UpdateCodeChainRequest,
+    env: String,
+    args: String,
+    codechain_status: &mut CodeChainStatus,
+) -> Result<(), Error> {
+    if codechain_status.is_updating() {
+        return Err(Error::Updating)
+    }
+
+    cinfo!(PROCESS, "Update CodeChain");
+
+    let (tx, rx) = channel::unbounded();
+    let job_sender = match target {
+        UpdateCodeChainRequest::Git {
+            commit_hash,
+        } => git_update::Job::run(option.codechain_dir.to_string(), commit_hash.to_string(), tx),
+        UpdateCodeChainRequest::Binary {
+            binary_url,
+            binary_checksum,
+        } => binary_update::Job::run(
+            option.codechain_dir.to_string(),
+            binary_url.to_string(),
+            binary_checksum.to_string(),
+            tx,
+        ),
+    };
+
+    *codechain_status = CodeChainStatus::Updating {
+        env,
+        args,
+        sender: Cell::new(Some(job_sender)),
+        rx_callback: rx,
+    };
+
+    Ok(())
+}
+
+fn get_log(levels: Vec<String>, codechain_status: &CodeChainStatus) -> Result<Vec<Value>, Error> {
+    let rpc_client = match codechain_status.rpc_client() {
+        Some(rpc_client) => rpc_client,
+        None => return Err(Error::NotRunning),
+    };
+    let mut response =
+        rpc_client.call_rpc("slog".to_string(), Vec::new()).map_err(|err| Error::CodeChainRPC(err.to_string()))?;
+    let result = response
+        .get_mut("result")
+        .ok_or_else(|| Error::CodeChainRPC("JSON parse failed: cannot find the result field".to_string()))?;
+    let logs = result
+        .as_array_mut()
+        .ok_or_else(|| Error::CodeChainRPC("JSON parse failed: slog's result is not array".to_string()))?;
+
+    let empty_string = Value::String("".to_string());
+    let filtered_logs = logs
+        .iter_mut()
+        .filter(|log| {
+            let target = log.pointer("/level").unwrap_or(&empty_string).as_str().unwrap_or("");
+            levels.iter().any(|t| target.to_lowercase() == t.to_lowercase())
+        })
+        .map(|value| value.take());
+
+    Ok(filtered_logs.collect())
+}
+
+fn get_commit_hash(option: &ProcessOption, codechain_status: &CodeChainStatus) -> Result<String, Error> {
+    if let CodeChainStatus::Run {
+        rpc_client,
+        ..
+    } = &codechain_status
+    {
+        let response = rpc_client
+            .call_rpc("commitHash".to_string(), Vec::new())
+            .map_err(|err| Error::CodeChainRPC(err.to_string()))?;
+        Ok(response["result"].as_str().unwrap_or("").to_string())
+    } else {
+        Ok(git_util::current_hash(option.codechain_dir.clone())?)
     }
 }
 
