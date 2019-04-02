@@ -77,7 +77,7 @@ pub fn get_checksum_or_default(dir: &str, file: &str) -> Result<String, Error> {
     }
 
     cdebug!(PROCESS, "Run shasum {:?}", path);
-    let exec = Exec::cmd("shasum").arg(file).cwd(dir).capture()?;
+    let exec = Exec::cmd("shasum").arg("-a").arg("256").arg(file).cwd(dir).capture()?;
 
     if exec.exit_status.success() {
         Ok(exec.stdout_str().trim().to_string())
