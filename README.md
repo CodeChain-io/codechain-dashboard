@@ -5,7 +5,7 @@
 The following are the software dependencies required to install and run CodeChain-agent:
 
 - [CodeChain](https://github.com/CodeChain-io/codechain)
-- [CodeChain-agent-hub](https://github.com/CodeChain-io/codechain-agent-hub)
+- [CodeChain-agent-server](https://github.com/CodeChain-io/codechain-agent-server)
 
 ### Install dependencies (Ubuntu)
 
