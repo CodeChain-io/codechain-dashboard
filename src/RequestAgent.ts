@@ -23,9 +23,13 @@ export default class RequestAgent {
   private agentHubHost = process.env.REACT_APP_AGENT_HUB_HOST
     ? process.env.REACT_APP_AGENT_HUB_HOST
     : "ws://localhost:3012";
+  private passphrase = process.env.AGENT_HUB_PASSPHRASE
+    ? process.env.AGENT_HUB_PASSPHRASE
+    : "passphrase";
   private isConnected: boolean = false;
   constructor() {
-    this.ws = new WebSocket(this.agentHubHost);
+    console.log("Create websocket");
+    this.ws = new WebSocket(this.agentHubHost + `/${this.passphrase}`);
     this.ws.on("open", () => {
       console.log("connected");
       this.isConnected = true;
