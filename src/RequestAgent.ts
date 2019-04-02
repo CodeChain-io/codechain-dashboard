@@ -23,8 +23,8 @@ export default class RequestAgent {
   private agentHubHost = process.env.REACT_APP_AGENT_HUB_HOST
     ? process.env.REACT_APP_AGENT_HUB_HOST
     : "ws://localhost:3012";
-  private passphrase = process.env.AGENT_HUB_PASSPHRASE
-    ? process.env.AGENT_HUB_PASSPHRASE
+  private passphrase = process.env.REACT_APP_AGENT_HUB_PASSPHRASE
+    ? process.env.REACT_APP_AGENT_HUB_PASSPHRASE
     : "passphrase";
   private isConnected: boolean = false;
   constructor() {
