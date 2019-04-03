@@ -131,6 +131,9 @@ impl Handler for WebSocketHandler {
     }
 
     fn on_error(&mut self, err: WSError) {
+        if let Err(error) = self.out.close_with_reason(CloseCode::Error, "Error") {
+            cerror!(WEB, "Fail to close connection {}", error);
+        }
         cerror!(WEB, "The server encountered an error: {:?}", err);
     }
 }
