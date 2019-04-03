@@ -33,7 +33,10 @@ generate-schema
 Run
 ----
 
-Just run `codechain-agent-hub` in your shell.
+Just run `codechain-agent-hub` in your shell. 
+To safely communicate with the Dashboard, please set the `PASSPHRASE` environment variable. The Dashboard program should use the same passphrase.
+
+When you are using the `PASSPHRASE` you should use SSL over the connection. If you don't use the SSL, the `PASSPHRASE` is open to the internet. 
 
 CodeChain Agent Hub will listen 3012 port to communicate with the Dashboard using JSON-RPC.
 
