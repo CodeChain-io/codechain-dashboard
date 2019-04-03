@@ -24,8 +24,9 @@ yarn run build
 
 ## Configuration
 
-|                           | Default               |
-| ------------------------- | --------------------- |
-| REACT_APP_AGENT_HUB_HOST  | ws://localhost:3012   |
-| REACT_APP_LOG_SERVER_HOST | http://localhost:5012 |
-| REACT_APP_TITLE           |                       |
+|                                | Default               |
+| ------------------------------ | --------------------- |
+| REACT_APP_AGENT_HUB_HOST       | ws://localhost:3012   |
+| REACT_APP_LOG_SERVER_HOST      | http://localhost:5012 |
+| REACT_APP_TITLE                |                       |
+| REACT_APP_AGENT_HUB_PASSPHRASE | passphrase            |
