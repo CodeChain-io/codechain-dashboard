@@ -210,34 +210,44 @@ pub fn spawn(option: ProcessOption) -> Sender<Message> {
     let child: Arc<Mutex<Option<CodeChainProcess>>> = Default::default();
 
     let (tx, rx) = channel::unbounded();
-    let cloned_tx = tx.clone();
+    let cloned_child = Arc::clone(&child);
+    let cloned_codechain_status = Arc::clone(&codechain_status);
     thread::Builder::new()
         .name("process".to_string())
         .spawn(move || loop {
-            let timeout = Duration::new(1, 0);
-            let message = select! {
-                recv(rx, message) => {
-                    message
-                },
-                recv(channel::after(timeout)) => {
-                    None
-                }
-            };
-            if let Some(m) = message {
-                handle_message(m, &option, child.as_ref(), codechain_status.as_ref());
-            }
-            ping_to_codechain(child.as_ref(), codechain_status.as_ref());
-            handle_update(&cloned_tx, codechain_status.as_ref());
+            let message = rx.recv().unwrap();
+            handle_message(message, &option, cloned_codechain_status.as_ref(), cloned_child.as_ref());
         })
         .expect("Should success running process thread");
+
+    let cloned_tx = tx.clone();
+    thread::Builder::new()
+        .name("heartbeat".to_string())
+        .spawn(move || loop {
+            let one_second = Duration::from_secs(1);
+            channel::after(one_second).recv().unwrap();
+            ping_to_codechain(codechain_status.as_ref(), child.as_ref());
+            if let Some((env, args)) = handle_update(codechain_status.as_ref()) {
+                let (callback, recv) = channel::bounded(1);
+                cloned_tx.send(Message::Run {
+                    env,
+                    args,
+                    callback,
+                });
+                if let Err(err) = recv.recv().unwrap() {
+                    cerror!(PROCESS, "Cannot run codechain after update : {:?}", err);
+                }
+            }
+        })
+        .expect("Should success running heartbeat thread");
     tx
 }
 
 fn handle_message(
     message: Message,
     option: &ProcessOption,
-    child: &Mutex<Option<CodeChainProcess>>,
     codechain_status: &Mutex<CodeChainStatus>,
+    child: &Mutex<Option<CodeChainProcess>>,
 ) {
     match message {
         Message::Run {
@@ -245,19 +255,19 @@ fn handle_message(
             args,
             callback,
         } => {
-            let result = run(&env, &args, option, child, &mut codechain_status.lock());
+            let result = run(&env, &args, option, &mut codechain_status.lock(), child);
             callback.send(result);
         }
         Message::Stop {
             callback,
         } => {
-            let result = stop(child, &mut *codechain_status.lock());
+            let result = stop(&mut *codechain_status.lock(), child);
             callback.send(result);
         }
         Message::Quit {
             callback,
         } => {
-            let result = stop(child, &mut *codechain_status.lock());
+            let result = stop(&mut *codechain_status.lock(), child);
             if let CodeChainStatus::Updating {
                 sender,
                 ..
@@ -278,12 +288,13 @@ fn handle_message(
             target,
             callback,
         } => {
+            let mut codechain_status = codechain_status.lock();
             let result = if check_running(&*child.lock()) {
-                stop(child, &mut *codechain_status.lock())
+                stop(&mut *codechain_status, child)
             } else {
                 Ok(())
             };
-            let result = result.and_then(|_| update(option, &target, env, args, &mut *codechain_status.lock()));
+            let result = result.and_then(|_| update(option, &target, env, args, &mut *codechain_status));
             callback.send(result);
         }
         Message::GetStatus {
@@ -323,7 +334,7 @@ fn handle_message(
     }
 }
 
-fn ping_to_codechain(child: &Mutex<Option<CodeChainProcess>>, codechain_status: &Mutex<CodeChainStatus>) {
+fn ping_to_codechain(codechain_status: &Mutex<CodeChainStatus>, child: &Mutex<Option<CodeChainProcess>>) {
     let mut codechain_status = codechain_status.lock();
     if let CodeChainStatus::Stop = *codechain_status {
         return
@@ -412,46 +423,37 @@ fn ping_to_codechain(child: &Mutex<Option<CodeChainProcess>>, codechain_status: 
     *codechain_status = next_status;
 }
 
-fn handle_update(tx: &Sender<Message>, codechain_status: &Mutex<CodeChainStatus>) {
+fn handle_update(codechain_status: &Mutex<CodeChainStatus>) -> Option<(String, String)> {
     let mut codechain_status = codechain_status.lock();
-    let (success, env, args) = if let CodeChainStatus::Updating {
+    let result = if let CodeChainStatus::Updating {
         rx_callback,
         env,
         args,
         ..
     } = &*codechain_status
     {
-        match rx_callback.try_recv() {
-            None => return,
-            Some(Err(err)) => {
+        match rx_callback.try_recv()? {
+            Err(err) => {
                 cinfo!(PROCESS, "Update failed : {:?}", err);
-                (false, env.to_string(), args.to_string())
+                None
             }
-            Some(Ok(_)) => {
+            Ok(_) => {
                 cinfo!(PROCESS, "Update success");
-                (true, env.to_string(), args.to_string())
+                Some((env.clone(), args.clone()))
             }
         }
     } else {
-        return
+        return None
     };
-
-    if success {
+    if let Some((env, args)) = result {
         *codechain_status = CodeChainStatus::Stop;
-        let (callback, recv) = channel::bounded(1);
-        tx.send(Message::Run {
-            env,
-            args,
-            callback,
-        });
-        if let Err(err) = recv.recv().unwrap() {
-            cerror!(PROCESS, "Cannot run codechain after update : {:?}", err);
-        }
+        Some((env, args))
     } else {
         *codechain_status = CodeChainStatus::Error {
             p2p_port: 0,
             rpc_client: None,
         };
+        None
     }
 }
 
@@ -459,8 +461,8 @@ fn run(
     env: &str,
     args: &str,
     option: &ProcessOption,
-    child: &Mutex<Option<CodeChainProcess>>,
     codechain_status: &mut CodeChainStatus,
+    child: &Mutex<Option<CodeChainProcess>>,
 ) -> Result<(), Error> {
     cinfo!(PROCESS, "Run codechain");
     if check_running(&*child.lock()) {
@@ -505,7 +507,7 @@ fn parse_env(env: &str) -> Result<Vec<(&str, &str)>, Error> {
     Ok(ret)
 }
 
-fn stop(child: &Mutex<Option<CodeChainProcess>>, codechain_status: &mut CodeChainStatus) -> Result<(), Error> {
+fn stop(codechain_status: &mut CodeChainStatus, child: &Mutex<Option<CodeChainProcess>>) -> Result<(), Error> {
     let child = child.lock();
     if !check_running(&*child) {
         return Err(Error::NotRunning)
