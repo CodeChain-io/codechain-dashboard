@@ -1,11 +1,11 @@
-use std::error::Error;
 use std::cell::Cell;
+use std::error::Error;
+use std::fmt;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::fmt;
 
 use ws;
-use ws::{CloseCode, Error as WSError, Handler, Handshake, Result, Sender, ErrorKind};
+use ws::{CloseCode, Error as WSError, ErrorKind, Handler, Handshake, Result, Sender};
 
 use super::super::jsonrpc;
 use super::super::router::Router;
@@ -14,9 +14,7 @@ use super::types::Context;
 #[derive(Debug)]
 struct CustomError {}
 
-impl Error for CustomError {
-
-}
+impl Error for CustomError {}
 
 impl fmt::Display for CustomError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -35,8 +33,7 @@ pub struct WebSocketHandler {
 impl Handler for WebSocketHandler {
     fn on_open(&mut self, handshake: Handshake) -> Result<()> {
         if format!("/{}", self.context.passphrase) != handshake.request.resource() {
-            return Err(WSError::new(ErrorKind::Custom(Box::new(CustomError {})),
-                                    "Authorization Error"));
+            return Err(WSError::new(ErrorKind::Custom(Box::new(CustomError {})), "Authorization Error"))
         }
 
         self.frontend_service
