@@ -1,0 +1,33 @@
+name: cagent
+version: "0.1.0"
+version_short: "v"
+author: CodeChain Team <codechain@kodebox.io>
+about: CodeChain Agent
+args:
+    - codechain-dir:
+        long: codechain-dir
+        help: CodeChain's repository
+        required: true
+        takes_value: true
+    - log-file:
+        long: log-file
+        help: log file will be saved to the path
+        required: false
+        takes_value: true
+    - agent-hub-url:
+        long: agent-hub-url
+        help: URL of Agent Hub. ex) "ws://127.0.0.1:4012"
+        required: true
+        takes_value: true
+    - codechain-p2p-address:
+        long: codechain-p2p-address
+        short: a
+        help: Codechain node's p2p address. ex) "127.0.0.1"
+        required: true
+        takes_value: true
+    - name:
+        long: name
+        short: n
+        help: Agent's name. This will be present in the Dashboard.
+        required: true
+        takes_value: true
