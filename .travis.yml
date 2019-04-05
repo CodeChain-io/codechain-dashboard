@@ -29,6 +29,17 @@ jobs:
             - cargo +nightly-2018-12-06 fmt -- --check
               && RUST_BACKTRACE=1 cargo test --verbose --all
               && cargo +nightly-2018-12-06 clippy --all --all-targets -- -D warnings
+        - name: ui
+          before_install:
+            - cd $TRAVIS_JOB_NAME
+            - nvm install 10
+            - nvm use 10
+            - npm install -g yarn
+          install:
+            - yarn install
+          script:
+            - yarn lint
+            - yarn build
 cache:
     cargo: true
     directories:
