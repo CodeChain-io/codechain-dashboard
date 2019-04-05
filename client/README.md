@@ -1,11 +1,11 @@
-# CodeChain Agent [![Build Status](https://travis-ci.org/CodeChain-io/codechain-agent.svg?branch=master)](https://travis-ci.org/CodeChain-io/codechain-agent)
+# CodeChain Agent
 
 ## Requirements
 
 The following are the software dependencies required to install and run CodeChain-agent:
 
 - [CodeChain](https://github.com/CodeChain-io/codechain)
-- [CodeChain-agent-server](https://github.com/CodeChain-io/codechain-agent-server)
+- [CodeChain-agent-server](../server)
 
 ### Install dependencies (Ubuntu)
 
