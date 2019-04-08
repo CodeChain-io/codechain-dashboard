@@ -54,7 +54,7 @@ impl RPCClient {
 
         let response: jsonrpc_core::Response = response.json().map_err(|err| CallRPCError::Format(err.to_string()))?;
 
-        ctrace!(PROCESS, "Recieve JSONRPC response from CodeChain {:#?}", response);
+        ctrace!(PROCESS, "Receive JSONRPC response from CodeChain {:#?}", response);
         let value = serde_json::to_value(response).expect("Should success jsonrpc type to Value");
 
         Ok(value)
