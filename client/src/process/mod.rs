@@ -476,14 +476,14 @@ fn run(
 
     let args_iter = args.split_whitespace();
     let args_vec: Vec<String> = args_iter.map(|str| str.to_string()).collect();
-    let (p2p_port, rpc_port) = parse_ports(&args_vec);
+    let (p2p_port, ipc_path) = parse_flags(&args_vec);
     let envs = parse_env(env)?;
 
     *child.lock() = Some(CodeChainProcess::new(envs, args_vec, option).map_err(Error::Unknown)?);
 
     *codechain_status = CodeChainStatus::Starting {
         p2p_port,
-        rpc_client: rpc::RPCClient::new(rpc_port),
+        rpc_client: rpc::RPCClient::new(ipc_path),
     };
 
     Ok(())
@@ -619,11 +619,11 @@ fn get_commit_hash(option: &ProcessOption, codechain_status: &CodeChainStatus) -
     }
 }
 
-fn parse_ports(args: &[String]) -> (u16, u16) {
+fn parse_flags(args: &[String]) -> (u16, String) {
     let p2p_port = parse_port(args, "--port");
-    let rpc_port = parse_port(args, "--jsonrpc-port");
+    let ipc_path = parse_path(args, "--ipc-path");
 
-    (p2p_port.unwrap_or(3485), rpc_port.unwrap_or(8080))
+    (p2p_port.unwrap_or(3485), ipc_path.unwrap_or_else(|| "/tmp/jsonrpc.ipc".to_string()))
 }
 
 fn parse_port(args: &[String], option_name: &str) -> Option<u16> {
@@ -631,4 +631,11 @@ fn parse_port(args: &[String], option_name: &str) -> Option<u16> {
     let interface_pos = option_position.map(|pos| pos + 1);
     let interface_string = interface_pos.and_then(|pos| args.get(pos));
     interface_string.and_then(|port| port.parse().ok())
+}
+
+fn parse_path(args: &[String], option_name: &str) -> Option<String> {
+    let option_position = args.iter().position(|arg| arg == option_name);
+    let interface_pos = option_position.map(|pos| pos + 1);
+    let interface_string = interface_pos.and_then(|pos| args.get(pos));
+    interface_string.cloned()
 }
