@@ -1,62 +1,112 @@
+use std::io::Error as IoError;
+use std::sync::Arc;
+
 use jsonrpc_core;
 use jsonrpc_core::types::Version;
-use reqwest;
-use serde_json::Value;
-use std::time::Duration;
+use parking_lot::Mutex;
+use serde_json::{Error as SerdeError, Value};
+use tokio::io::{write_all, AsyncRead};
+use tokio::prelude::future::Future;
+use tokio::prelude::stream::Stream;
+use tokio::runtime::Runtime;
+use tokio_codec::{FramedRead, LinesCodec};
+use tokio_uds::UnixStream;
 
 #[derive(Debug)]
 pub enum CallRPCError {
-    Web(reqwest::Error),
-    Format(String),
+    Serde(SerdeError),
+    Io(IoError),
+    NoResponse,
 }
-
-impl ::std::error::Error for CallRPCError {}
 
 impl ::std::fmt::Display for CallRPCError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
         match self {
-            CallRPCError::Web(err) => write!(f, "Web request error while sending RPC to CodeChain: {}", err),
-            CallRPCError::Format(err) => write!(f, "Cannot parse CodeChain's response as JSON: {}", err),
+            CallRPCError::Serde(err) => err.fmt(f),
+            CallRPCError::Io(err) => err.fmt(f),
+            CallRPCError::NoResponse => write!(f, "CodeChain doesn't respond"),
         }
     }
 }
 
 pub struct RPCClient {
-    rpc_port: u16,
-    http_client: reqwest::Client,
+    path: String,
 }
 
 impl RPCClient {
-    pub fn new(rpc_port: u16) -> Self {
-        let http_client = reqwest::Client::builder().gzip(true).timeout(Duration::from_secs(1)).build().unwrap();
+    pub fn new(path: String) -> Self {
         Self {
-            rpc_port,
-            http_client,
+            path,
         }
     }
 
     /// Return JSONRPC response object
     /// Example: {"jsonrpc": "2.0", "result": 19, "id": 1}
     pub fn call_rpc(&self, method: String, arguments: Vec<Value>) -> Result<Value, CallRPCError> {
-        let params = jsonrpc_core::Params::Array(arguments);
-
         let jsonrpc_request = jsonrpc_core::MethodCall {
             jsonrpc: Some(Version::V2),
             method,
-            params: Some(params),
+            params: Some(jsonrpc_core::Params::Array(arguments)),
             id: jsonrpc_core::Id::Num(1),
         };
 
         ctrace!(PROCESS, "Send JSONRPC to CodeChain {:#?}", jsonrpc_request);
 
-        let url = format!("http://127.0.0.1:{}/", self.rpc_port);
-        let mut response = self.http_client.post(&url).json(&jsonrpc_request).send().map_err(CallRPCError::Web)?;
+        let mut rt = Runtime::new()?;
 
-        let response: jsonrpc_core::Response = response.json().map_err(|err| CallRPCError::Format(err.to_string()))?;
+        let response = Arc::new(Mutex::new(None));
+        let last_error = Arc::new(Mutex::new(None));
 
-        ctrace!(PROCESS, "Receive JSONRPC response from CodeChain {:#?}", response);
-        let value = serde_json::to_value(response).expect("Should success jsonrpc type to Value");
+        let body = serde_json::to_vec(&jsonrpc_request)?;
+        let cloned_response = Arc::clone(&response);
+        let cloned_last_error = Arc::clone(&last_error);
+        let stream = UnixStream::connect(&self.path).map_err(CallRPCError::from).and_then(|stream| {
+            let (read, write) = stream.split();
+            let framed_read = FramedRead::new(read, LinesCodec::new());
 
-        Ok(value)
+            write_all(write, body).map_err(CallRPCError::from).and_then(move |_| {
+                framed_read
+                    .map_err(CallRPCError::from)
+                    .filter_map(move |s| match serde_json::from_str(&s) {
+                        Ok(json) => Some(json),
+                        Err(err) => {
+                            *cloned_last_error.lock() = Some(err);
+                            None
+                        }
+                    })
+                    .take(1)
+                    .for_each(move |response| {
+                        *cloned_response.lock() = Some(response);
+                        Ok(())
+                    })
+            })
+        });
+
+        // TODO: Remove the below thread blocking code.
+        rt.block_on(stream)?;
+
+        let mut response = response.lock();
+        let mut last_error = last_error.lock();
+
+        if let Some(result) = response.take() {
+            ctrace!(PROCESS, "Receive JSONRPC response from CodeChain {:#?}", result);
+            Ok(result)
+        } else if let Some(err) = last_error.take() {
+            Err(err.into())
+        } else {
+            Err(CallRPCError::NoResponse)
+        }
+    }
+}
+
+impl From<SerdeError> for CallRPCError {
+    fn from(err: SerdeError) -> Self {
+        CallRPCError::Serde(err)
+    }
+}
+
+impl From<IoError> for CallRPCError {
+    fn from(err: IoError) -> Self {
+        CallRPCError::Io(err)
     }
 }
