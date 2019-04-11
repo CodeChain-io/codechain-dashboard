@@ -285,12 +285,12 @@ impl Agent {
 
         let (is_error, error_msg) = match reason {
             AgentCleanupReason::Error(err) => {
-                cerror!("Agent cleanuped because {}", err);
+                cerror!("Agent is cleaned up because {}", err);
                 (true, err)
             }
             AgentCleanupReason::Unexpected => {
                 let err = "Unexpected cleanup";
-                cerror!("Agent cleanuped because {}", err);
+                cerror!("Agent is cleaned up because {}", err);
                 (true, err.to_string())
             }
             AgentCleanupReason::AlreadyConnected => {
