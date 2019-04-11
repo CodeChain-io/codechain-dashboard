@@ -130,22 +130,19 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
 }
 
 struct Parameters {
-    parameter_count: i32,
     parameters: Vec<Rc<ToSql>>,
 }
 
 impl Parameters {
     pub fn new() -> Parameters {
         Parameters {
-            parameter_count: 0,
             parameters: Vec::new(),
         }
     }
 
-    pub fn add(&mut self, param: Rc<ToSql>) -> i32 {
+    pub fn add(&mut self, param: Rc<ToSql>) -> usize {
         self.parameters.push(param);
-        self.parameter_count += 1;
-        self.parameter_count
+        self.parameters.len()
     }
 
     pub fn get(&self) -> &Vec<Rc<ToSql>> {
