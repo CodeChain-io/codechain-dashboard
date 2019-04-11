@@ -5,7 +5,6 @@ use std::vec::Vec;
 
 use parking_lot::RwLock;
 
-use super::super::common_rpc_types::NodeName;
 use super::super::db;
 use super::super::jsonrpc;
 use super::agent::{Agent, AgentSender};
@@ -26,7 +25,7 @@ impl ServiceSender {
         self.sender.send(message)
     }
 
-    pub fn get_agent(&self, name: NodeName) -> Option<AgentSender> {
+    pub fn get_agent(&self, name: &str) -> Option<AgentSender> {
         let state = self.state.read();
         let find_result = state.agents.iter().find(|(_, agent)| {
             let agent_state = agent.read_state();
