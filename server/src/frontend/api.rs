@@ -83,11 +83,7 @@ fn node_stop(context: Context, args: (String,)) -> RPCResponse<()> {
 fn node_update(context: Context, args: (NodeName, UpdateCodeChainRequest)) -> RPCResponse<()> {
     let (name, req) = args;
 
-    let agent = context.agent_service.get_agent(&name);
-    if agent.is_none() {
-        return Err(RPCError::AgentNotFound)
-    }
-    let agent = agent.expect("Already checked");
+    let agent = context.agent_service.get_agent(&name).ok_or(RPCError::AgentNotFound)?;
 
     let extra = context.db_service.get_agent_extra(name)?;
     let (env, args) = extra.map(|extra| (extra.prev_env, extra.prev_args)).unwrap_or_default();
