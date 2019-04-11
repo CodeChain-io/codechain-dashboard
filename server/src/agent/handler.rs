@@ -1,6 +1,3 @@
-use std::cell::Cell;
-use std::rc::Rc;
-
 use ws;
 use ws::{CloseCode, Error as WSError, Handler, Handshake, Result, Sender as WSSender};
 
@@ -9,20 +6,20 @@ use super::super::jsonrpc;
 
 pub struct WebSocketHandler {
     pub out: WSSender,
-    pub count: Rc<Cell<u32>>,
+    pub count: usize,
     pub agent_service: agent::ServiceSender,
     pub jsonrpc_context: jsonrpc::Context,
 }
 
 impl WebSocketHandler {
-    pub fn new(out: WSSender, count: Rc<Cell<u32>>, agent_service: agent::ServiceSender) -> Self {
+    pub fn new(out: WSSender, agent_service: agent::ServiceSender) -> Self {
         let jsonrpc_context = jsonrpc::Context::new(out.clone());
         agent_service
             .send(agent::Message::InitializeAgent(jsonrpc_context.clone()))
             .expect("Should success send InitializeAgent to service");
         Self {
             out,
-            count,
+            count: 0,
             agent_service,
             jsonrpc_context,
         }
@@ -32,13 +29,13 @@ impl WebSocketHandler {
 impl Handler for WebSocketHandler {
     fn on_open(&mut self, _: Handshake) -> Result<()> {
         // We have a new connection, so we increment the connection counter
-        self.count.set(self.count.get() + 1);
+        self.count += 1;
         Ok(())
     }
 
     fn on_message(&mut self, msg: ws::Message) -> Result<()> {
         // Tell the user the current count
-        ctrace!("The number of live connections is {}", self.count.get());
+        ctrace!("The number of live connections is {}", self.count);
 
         match msg {
             ws::Message::Text(text) => jsonrpc::on_receive(self.jsonrpc_context.clone(), text),
@@ -58,7 +55,7 @@ impl Handler for WebSocketHandler {
         }
 
         // The connection is going down, so we need to decrement the count
-        self.count.set(self.count.get() - 1)
+        self.count -= 1;
     }
 
     fn on_error(&mut self, err: WSError) {
