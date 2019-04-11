@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::fmt;
 use std::result::Result;
 
@@ -36,8 +35,6 @@ impl fmt::Debug for RPCError {
         fmt::Display::fmt(self, f)
     }
 }
-
-impl Error for RPCError {}
 
 pub fn response<T>(value: T) -> RPCResponse<T> {
     Ok(Some(value))
