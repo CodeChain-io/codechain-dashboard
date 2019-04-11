@@ -130,6 +130,7 @@ impl Context {
     }
 }
 
+#[derive(Debug)]
 pub enum CallError {
     InternalWS(WSError),
     InternalRecv(RecvError),
@@ -275,11 +276,5 @@ impl fmt::Display for CallError {
             CallError::Response(err) => write!(f, "JSONRPC error {:?}", err),
             CallError::Timeout(err) => write!(f, "Timeout {}", err),
         }
-    }
-}
-
-impl fmt::Debug for CallError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
     }
 }
