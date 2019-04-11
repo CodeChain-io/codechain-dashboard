@@ -1,7 +1,5 @@
-use std::cell::Cell;
 use std::error::Error;
 use std::fmt;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use ws;
@@ -24,7 +22,6 @@ impl fmt::Display for CustomError {
 
 pub struct WebSocketHandler {
     pub out: Sender,
-    pub count: Rc<Cell<u32>>,
     pub context: Context,
     pub router: Arc<Router<Context>>,
     pub frontend_service: super::ServiceSender,

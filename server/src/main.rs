@@ -27,9 +27,7 @@ mod router;
 mod rpc;
 mod util;
 
-use std::cell::Cell;
 use std::fmt;
-use std::rc::Rc;
 use std::sync::Arc;
 use std::thread;
 
@@ -63,7 +61,6 @@ fn main() {
     let frontend_join = thread::Builder::new()
         .name("frontend listen".to_string())
         .spawn(move || {
-            let count = Rc::new(Cell::new(0));
             let mut frontend_router = Arc::new(Router::new());
             frontend::add_routing(Arc::get_mut(&mut frontend_router).unwrap());
             let frontend_context = frontend::Context {
@@ -73,7 +70,6 @@ fn main() {
             };
             listen("0.0.0.0:3012", move |out| frontend::WebSocketHandler {
                 out,
-                count: count.clone(),
                 context: frontend_context.clone(),
                 router: frontend_router.clone(),
                 frontend_service: frontend_service_sender.clone(),
@@ -85,11 +81,7 @@ fn main() {
     let agent_join = thread::Builder::new()
         .name("agent listen".to_string())
         .spawn(move || {
-            let count = Rc::new(Cell::new(0));
-            listen("0.0.0.0:4012", |out| {
-                agent::WebSocketHandler::new(out, count.clone(), agent_service_sender.clone())
-            })
-            .unwrap();
+            listen("0.0.0.0:4012", |out| agent::WebSocketHandler::new(out, agent_service_sender.clone())).unwrap();
         })
         .expect("Should success listening agent");
 

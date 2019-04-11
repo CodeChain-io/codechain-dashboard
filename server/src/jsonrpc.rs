@@ -258,9 +258,7 @@ fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
     let mut ws_callback = context.ws_callback.lock();
     let result = {
         let callback = ws_callback.get_mut(&id).ok_or_else(|| format!("Invalid id {}", id))?;
-        callback
-            .send(text.clone())
-            .map_err(|err| format!("Callback call failed, response was {}\n{}", text, err))
+        callback.send(text.clone()).map_err(|err| format!("Callback call failed, response was {}\n{}", text, err))
     };
     ws_callback.remove(&id);
     result
