@@ -184,9 +184,11 @@ impl Agent {
         }
 
         let mut count_of_no_enough_connections = 0usize;
+        let mut previous_best_block_number = 0;
+        let mut count_of_no_block_update = 00usize;
         loop {
             ctrace!("Agent-{} update", self.id);
-            let node_status = self.update()?;
+            let update_result = self.update()?;
             let node_name = match &*self.state.read() {
                 State::Stop {
                     cause,
@@ -199,7 +201,13 @@ impl Agent {
                 } => Some(name.clone()),
             };
             // TODO: Remove the below magic numbers
-            if let Some((network_id, number_of_peers)) = node_status {
+            if let Some(UpdateResult {
+                network_id,
+                number_of_peers,
+                best_block_number,
+            }) = update_result
+            {
+                let node_name = node_name.expect("Updated");
                 if number_of_peers < 5 {
                     count_of_no_enough_connections += 1;
                 } else {
@@ -208,15 +216,28 @@ impl Agent {
                 if count_of_no_enough_connections == 6 {
                     self.noti.warn(
                         &network_id,
-                        &format!("{} failed to establish enough connections in a minute.", node_name.expect("Updated")),
+                        &format!("{} failed to establish enough connections in a minute.", node_name),
                     );
+                }
+
+                if let Some(best_block_number) = best_block_number {
+                    if best_block_number > previous_best_block_number {
+                        count_of_no_block_update = 0;
+                        previous_best_block_number = best_block_number;
+                    } else {
+                        count_of_no_block_update += 1;
+                    }
+
+                    if count_of_no_block_update == 3 {
+                        self.noti.warn(&network_id, &format!("{} no block update in 30 seconds.", node_name));
+                    }
                 }
             }
             thread::sleep(Duration::new(10, 0));
         }
     }
 
-    fn update(&mut self) -> Result<Option<(String, usize)>, String> {
+    fn update(&mut self) -> Result<Option<UpdateResult>, String> {
         let info = self.sender.agent_get_info().map_err(|err| format!("{}", err))?;
 
         let mut state = self.state.write();
@@ -300,7 +321,11 @@ impl Agent {
         let logs = self.codechain_rpc.get_logs(info.status)?;
         self.db_service.write_logs(info.name, logs);
 
-        Ok(Some((network_id.unwrap_or_default(), number_of_peers)))
+        Ok(Some(UpdateResult {
+            network_id: network_id.unwrap_or_default(),
+            number_of_peers,
+            best_block_number: best_block_id.map(|id| id.block_number as u64),
+        }))
     }
 
     fn clean_up(&mut self, reason: AgentCleanupReason) {
@@ -358,6 +383,12 @@ impl Agent {
             cerror!("Agent cleanup error {}", err);
         }
     }
+}
+
+struct UpdateResult {
+    network_id: String,
+    number_of_peers: usize,
+    best_block_number: Option<u64>,
 }
 
 impl Drop for Agent {
