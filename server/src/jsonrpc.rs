@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt;
 use std::option::Option;
 use std::result::Result::{Err, Ok};
@@ -284,5 +283,3 @@ impl fmt::Debug for CallError {
         fmt::Display::fmt(self, f)
     }
 }
-
-impl Error for CallError {}
