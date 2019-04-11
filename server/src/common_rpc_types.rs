@@ -60,7 +60,7 @@ pub struct WhiteList {
 
 pub type BlackList = WhiteList;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct HardwareUsage {
     pub total: i64,

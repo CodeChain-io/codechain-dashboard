@@ -20,6 +20,7 @@ use super::super::rpc::RPCResult;
 use super::codechain_rpc::CodeChainRPC;
 use super::service::{Message as ServiceMessage, ServiceSender};
 use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
+use crate::common_rpc_types::HardwareUsage;
 use crate::noti::Noti;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -185,7 +186,8 @@ impl Agent {
 
         let mut count_of_no_enough_connections = 0usize;
         let mut previous_best_block_number = 0;
-        let mut count_of_no_block_update = 00usize;
+        let mut count_of_no_block_update = 0usize;
+        let mut disk_usage_alert_sent = false;
         loop {
             ctrace!("Agent-{} update", self.id);
             let update_result = self.update()?;
@@ -205,6 +207,7 @@ impl Agent {
                 network_id,
                 number_of_peers,
                 best_block_number,
+                disk_usage,
             }) = update_result
             {
                 let node_name = node_name.expect("Updated");
@@ -231,6 +234,19 @@ impl Agent {
                     if count_of_no_block_update == 3 {
                         self.noti.warn(&network_id, &format!("{} no block update in 30 seconds.", node_name));
                     }
+                }
+
+                const ONE_GB: i64 = 1_000_000_000;
+                if !disk_usage_alert_sent {
+                    if disk_usage.available < ONE_GB {
+                        self.noti.warn(
+                            &network_id,
+                            &format!("{} has only {} MB free space.", node_name, disk_usage.available / 1_000_000),
+                        );
+                        disk_usage_alert_sent = true;
+                    }
+                } else if ONE_GB < disk_usage.available {
+                    disk_usage_alert_sent = false;
                 }
             }
             thread::sleep(Duration::new(10, 0));
@@ -304,6 +320,7 @@ impl Agent {
 
         ctrace!("Update state from {:?} to {:?}", *state, new_state);
         let number_of_peers = peers.len();
+        let disk_usage = hardware.disk_usage;
         self.db_service.update_agent_query_result(db::AgentQueryResult {
             name: info.name.clone(),
             status: info.status,
@@ -325,6 +342,7 @@ impl Agent {
             network_id: network_id.unwrap_or_default(),
             number_of_peers,
             best_block_number: best_block_id.map(|id| id.block_number as u64),
+            disk_usage,
         }))
     }
 
@@ -389,6 +407,7 @@ struct UpdateResult {
     network_id: String,
     number_of_peers: usize,
     best_block_number: Option<u64>,
+    disk_usage: HardwareUsage,
 }
 
 impl Drop for Agent {
