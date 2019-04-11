@@ -10,16 +10,9 @@ use super::super::db;
 use super::super::jsonrpc;
 use super::agent::{Agent, AgentSender};
 
+#[derive(Default)]
 pub struct State {
     agents: Vec<(i32, AgentSender)>,
-}
-
-impl State {
-    pub fn new() -> Self {
-        Self {
-            agents: Vec::new(),
-        }
-    }
 }
 
 #[derive(Clone)]
@@ -63,10 +56,10 @@ pub enum Message {
 impl Service {
     pub fn run_thread(db_service: db::ServiceSender) -> ServiceSender {
         let (sender, rx) = channel();
-        let state = Arc::new(RwLock::new(State::new()));
+        let state = Default::default();
         let service_sender = ServiceSender {
             sender,
-            state: state.clone(),
+            state: Arc::clone(&state),
         };
 
         let mut service = Service::new(service_sender.clone(), state, db_service);
