@@ -11,6 +11,7 @@ pub type RPCResponse<T> = Result<Option<T>, RPCError>;
 
 pub type RPCResult<T> = Result<T, RPCError>;
 
+#[derive(Debug)]
 pub enum RPCError {
     Internal(String),
     FromAgent(JSONRPCError),
@@ -27,12 +28,6 @@ impl fmt::Display for RPCError {
             RPCError::FromDB(err) => write!(f, "JSONRPCError from DB {:?}", err),
             RPCError::AgentNotFound => write!(f, "Agent not found"),
         }
-    }
-}
-
-impl fmt::Debug for RPCError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(self, f)
     }
 }
 
