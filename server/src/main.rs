@@ -41,10 +41,31 @@ use ws::listen;
 
 use self::event_propagator::EventPropagator;
 use self::logger::init as logger_init;
+use self::noti::NotiBuilder;
 use self::router::Router;
 
 fn main() {
     logger_init().expect("Logger should be initialized");
+
+    let mut noti_builder = NotiBuilder::default();
+    if let Ok(slack_hook_url) = std::env::var("SLACK_WEBHOOK_URL") {
+        cinfo!("Set slack");
+        noti_builder.slack(slack_hook_url);
+    }
+    match (std::env::var("SENDGRID_API_KEY"), std::env::var("SENDGRID_TO")) {
+        (Ok(api_key), Ok(to)) => {
+            cinfo!("Set email to {}", to);
+            noti_builder.sendgrid(api_key, to);
+        }
+        (Ok(_), _) => {
+            panic!("You set a sendgrid api key, but not a destination");
+        }
+        (_, Ok(_)) => {
+            panic!("You set a sendgrid destination, but not an api key");
+        }
+        _ => {}
+    }
+    let noti = noti_builder.build();
 
     // FIXME: move to config
     let db_user = "codechain-agent-hub";
@@ -57,7 +78,7 @@ fn main() {
         db_user: db_user.to_string(),
         db_password: db_password.to_string(),
     });
-    let agent_service_sender = agent::Service::run_thread(db_service_sender.clone());
+    let agent_service_sender = agent::Service::run_thread(db_service_sender.clone(), noti);
     let agent_service_for_frontend = agent_service_sender.clone();
     let web_handler = WebHandler::new(agent_service_sender.clone());
 
