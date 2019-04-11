@@ -79,7 +79,7 @@ where
                     .into(),
                 ),
                 Err(RouterError::RPC(err)) => {
-                    cwarn!("Error while handlinig {}({:#?}) : {}", method, params, err);
+                    cwarn!("Error while handling {}({:#?}) : {}", method, params, err);
                     Some(
                         Failure {
                             jsonrpc: None,

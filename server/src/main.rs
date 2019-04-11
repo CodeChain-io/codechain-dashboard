@@ -50,9 +50,9 @@ fn main() {
     let db_password = "preempt-entreat-bell-chanson";
 
     let frontend_service_sender = frontend::Service::run_thread();
-    let event_propagater = Box::new(EventPropagator::new(frontend_service_sender.clone()));
+    let event_propagator = Box::new(EventPropagator::new(frontend_service_sender.clone()));
     let db_service_sender = db::Service::run_thread(db::ServiceNewArg {
-        event_subscriber: event_propagater,
+        event_subscriber: event_propagator,
         db_user: db_user.to_string(),
         db_password: db_password.to_string(),
     });
@@ -101,8 +101,8 @@ fn main() {
         })
         .expect("Should success open webserver");
 
-    frontend_join.join().expect("Join frotend listner");
-    agent_join.join().expect("Join agent listner");
+    frontend_join.join().expect("Join frontend listener");
+    agent_join.join().expect("Join agent listener");
     webserver_join.join().expect("Join webserver");
 }
 
