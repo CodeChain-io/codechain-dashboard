@@ -4,6 +4,7 @@ use std::vec::Vec;
 
 use ws;
 
+#[derive(Default)]
 pub struct Service {
     web_sockets: Vec<ws::Sender>,
 }
@@ -20,7 +21,7 @@ impl Service {
     pub fn run_thread() -> ServiceSender {
         let (service_sender, rx) = channel();
 
-        let mut service = Service::new();
+        let mut service = Service::default();
 
         thread::Builder::new()
             .name("frontend service".to_string())
@@ -42,15 +43,6 @@ impl Service {
             .expect("Should success running agent service thread");
 
         service_sender
-    }
-}
-
-
-impl Service {
-    pub fn new() -> Self {
-        Self {
-            web_sockets: Vec::new(),
-        }
     }
 
     pub fn send_event(&mut self, data: String) {

@@ -34,18 +34,10 @@ pub struct ServiceSender {
     sender: Sender<Message>,
 }
 
+#[derive(Default)]
 struct State {
     agent_query_result: HashMap<NodeName, AgentQueryResult>,
     connection: Connections,
-}
-
-impl State {
-    pub fn new() -> Self {
-        Self {
-            agent_query_result: HashMap::new(),
-            connection: Connections::new(),
-        }
-    }
 }
 
 pub struct Service {
@@ -74,7 +66,7 @@ impl Service {
         queries::config::set_query_timeout(&conn).unwrap();
 
         Self {
-            state: State::new(),
+            state: State::default(),
             event_subscriber,
             db_conn: conn,
         }

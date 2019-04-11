@@ -55,7 +55,7 @@ pub fn insert(conn: &postgres::Connection, node_name: &str, logs: Vec<Structured
 
 pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::Result<Vec<Log>> {
     ctrace!("Search log with {:?}", params);
-    let mut parameters = Parameters::new();
+    let mut parameters = Parameters::default();
     let mut where_conditions = Vec::new();
     if let Some(filter) = params.filter {
         if !filter.node_names.is_empty() {
@@ -129,17 +129,12 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
         .collect())
 }
 
+#[derive(Default)]
 struct Parameters {
     parameters: Vec<Rc<ToSql>>,
 }
 
 impl Parameters {
-    pub fn new() -> Parameters {
-        Parameters {
-            parameters: Vec::new(),
-        }
-    }
-
     pub fn add(&mut self, param: Rc<ToSql>) -> usize {
         self.parameters.push(param);
         self.parameters.len()

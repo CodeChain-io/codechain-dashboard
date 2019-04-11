@@ -37,17 +37,12 @@ pub type Connection = (SocketAddr, SocketAddr);
 /**
  * Connections type shows which codechain node connects to whom in whole netowrk's
  */
+#[derive(Default)]
 pub struct Connections {
     data: HashSet<Connection>,
 }
 
 impl Connections {
-    pub fn new() -> Self {
-        Self {
-            data: HashSet::new(),
-        }
-    }
-
     pub fn update(
         &mut self,
         before: &AgentQueryResult,
