@@ -8,6 +8,7 @@ use parking_lot::RwLock;
 use super::super::db;
 use super::super::jsonrpc;
 use super::agent::{Agent, AgentSender};
+use crate::noti::Noti;
 
 #[derive(Default)]
 pub struct State {
@@ -53,7 +54,7 @@ pub enum Message {
 }
 
 impl Service {
-    pub fn run_thread(db_service: db::ServiceSender) -> ServiceSender {
+    pub fn run_thread(db_service: db::ServiceSender, noti: Arc<Noti>) -> ServiceSender {
         let (sender, rx) = channel();
         let state = Default::default();
         let service_sender = ServiceSender {
@@ -69,7 +70,7 @@ impl Service {
                 for message in rx {
                     match message {
                         Message::InitializeAgent(jsonrpc_context) => {
-                            service.create_agent(jsonrpc_context);
+                            service.create_agent(jsonrpc_context, Arc::clone(&noti));
                         }
                         Message::AddAgent(id, agent_sender) => {
                             service.add_agent(id, agent_sender);
@@ -94,10 +95,10 @@ impl Service {
         }
     }
 
-    fn create_agent(&mut self, jsonrpc_context: jsonrpc::Context) {
+    fn create_agent(&mut self, jsonrpc_context: jsonrpc::Context, noti: Arc<Noti>) {
         let id = self.next_id;
         self.next_id += 1;
-        Agent::run_thread(id, jsonrpc_context, self.sender.clone(), self.db_service.clone());
+        Agent::run_thread(id, jsonrpc_context, self.sender.clone(), self.db_service.clone(), noti);
         cdebug!("Agent {} initialization starts", id);
     }
 

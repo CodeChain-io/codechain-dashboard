@@ -1,5 +1,5 @@
-use sendgrid::{SGClient, Mail, Destination};
 use sendgrid::errors::SendgridResult;
+use sendgrid::{Destination, Mail, SGClient};
 
 pub struct Sendgrid {
     client: SGClient,

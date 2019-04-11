@@ -1,4 +1,4 @@
-use slack_hook::{SlackText, Slack as Hook, PayloadBuilder, Result};
+use slack_hook::{PayloadBuilder, Result, Slack as Hook, SlackText};
 
 pub struct Slack(Hook);
 
@@ -8,9 +8,7 @@ impl Slack {
     }
 
     pub fn send(&self, message: impl Into<SlackText>) -> Result<()> {
-        let p = PayloadBuilder::new()
-            .text(message)
-            .build()?;
+        let p = PayloadBuilder::new().text(message).build()?;
 
         self.0.send(&p)
     }

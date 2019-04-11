@@ -20,6 +20,7 @@ use super::super::rpc::RPCResult;
 use super::codechain_rpc::CodeChainRPC;
 use super::service::{Message as ServiceMessage, ServiceSender};
 use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
+use crate::noti::Noti;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum State {
@@ -88,6 +89,7 @@ pub struct Agent {
     closed: bool,
     db_service: db::ServiceSender,
     codechain_rpc: CodeChainRPC,
+    noti: Arc<Noti>,
 }
 
 pub enum AgentCleanupReason {
@@ -104,6 +106,7 @@ impl Agent {
         jsonrpc_context: jsonrpc::Context,
         service_sender: ServiceSender,
         db_service: db::ServiceSender,
+        noti: Arc<Noti>,
     ) -> Self {
         let state = Arc::new(RwLock::new(State::new()));
         let sender = AgentSender::new(jsonrpc_context, Arc::clone(&state));
@@ -115,6 +118,7 @@ impl Agent {
             closed: false,
             db_service,
             codechain_rpc: CodeChainRPC::new(sender),
+            noti,
         }
     }
 
@@ -123,8 +127,9 @@ impl Agent {
         jsonrpc_context: jsonrpc::Context,
         service_sender: ServiceSender,
         db_service: db::ServiceSender,
+        noti: Arc<Noti>,
     ) -> AgentSender {
-        let mut agent = Self::new(id, jsonrpc_context, service_sender, db_service);
+        let mut agent = Self::new(id, jsonrpc_context, service_sender, db_service, noti);
         let sender = agent.sender.clone();
 
         thread::Builder::new()
@@ -178,21 +183,40 @@ impl Agent {
             }
         }
 
+        let mut count_of_no_enough_connections = 0usize;
         loop {
             ctrace!("Agent-{} update", self.id);
-            self.update()?;
-            if let State::Stop {
-                cause,
-                ..
-            } = *self.state.read()
-            {
-                return Ok(cause)
+            let node_status = self.update()?;
+            let node_name = match &*self.state.read() {
+                State::Stop {
+                    cause,
+                    ..
+                } => return Ok(*cause),
+                State::Initializing => None,
+                State::Normal {
+                    name,
+                    ..
+                } => Some(name.clone()),
+            };
+            // TODO: Remove the below magic numbers
+            if let Some((network_id, number_of_peers)) = node_status {
+                if number_of_peers < 5 {
+                    count_of_no_enough_connections += 1;
+                } else {
+                    count_of_no_enough_connections = 0;
+                }
+                if count_of_no_enough_connections == 6 {
+                    self.noti.warn(
+                        &network_id,
+                        &format!("{} failed to establish enough connections in a minute.", node_name.expect("Updated")),
+                    );
+                }
             }
             thread::sleep(Duration::new(10, 0));
         }
     }
 
-    fn update(&mut self) -> Result<(), String> {
+    fn update(&mut self) -> Result<Option<(String, usize)>, String> {
         let info = self.sender.agent_get_info().map_err(|err| format!("{}", err))?;
 
         let mut state = self.state.write();
@@ -225,11 +249,11 @@ impl Agent {
                     status: info.status,
                     cause: StopCause::AlreadyConnected,
                 };
-                return Ok(())
+                return Ok(None)
             }
 
             *state = new_state;
-            return Ok(())
+            return Ok(None)
         }
 
         let peers: Vec<SocketAddr> = self.codechain_rpc.get_peers(info.status)?;
@@ -252,11 +276,13 @@ impl Agent {
             })
         });
         let pending_transactions = self.codechain_rpc.get_pending_transactions(info.status)?;
+        let network_id = self.codechain_rpc.get_network_id(info.status)?;
         let whitelist = self.codechain_rpc.get_whitelist(info.status)?;
         let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
         let hardware = self.sender.hardware_get().map_err(|err| format!("Agent Update {}", err))?;
 
         ctrace!("Update state from {:?} to {:?}", *state, new_state);
+        let number_of_peers = peers.len();
         self.db_service.update_agent_query_result(db::AgentQueryResult {
             name: info.name.clone(),
             status: info.status,
@@ -274,7 +300,7 @@ impl Agent {
         let logs = self.codechain_rpc.get_logs(info.status)?;
         self.db_service.write_logs(info.name, logs);
 
-        Ok(())
+        Ok(Some((network_id.unwrap_or_default(), number_of_peers)))
     }
 
     fn clean_up(&mut self, reason: AgentCleanupReason) {
