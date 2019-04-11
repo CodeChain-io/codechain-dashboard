@@ -52,20 +52,4 @@ pub fn run(args: &AgentArgs) {
         cinfo!(MAIN, "Unconnected from Hub");
         thread::sleep(Duration::new(1, 0));
     }
-
-    //    cinfo!(MAIN, "Close CodeChain");
-    //    let (tx, rx) = channel();
-    //    if let Err(err) = process.send(ProcessMessage::Quit {
-    //        callback: tx,
-    //    }) {
-    //        cerror!(MAIN, "Error while closing CodeChain {}", err);
-    //        return
-    //    }
-    //    match rx.recv() {
-    //        Err(err) => cerror!(MAIN, "Error while closing CodeChain {}", err),
-    //        Ok(Err(err)) => cerror!(MAIN, "Error while closing CodeChain {:?}", err),
-    //        Ok(_) => {}
-    //    }
-    //
-    //    hardware_service.quit();
 }

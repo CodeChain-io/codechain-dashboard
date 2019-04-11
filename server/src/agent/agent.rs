@@ -46,31 +46,6 @@ impl State {
     pub fn new() -> Self {
         State::Initializing
     }
-
-    //    pub fn status(&self) -> Option<NodeStatus> {
-    //        match self {
-    //            State::Initializing => None,
-    //            State::Normal {
-    //                status,
-    //                ..
-    //            } => Some(*status),
-    //            State::Stop {
-    //                status,
-    //                ..
-    //            } => Some(*status),
-    //        }
-    //    }
-
-    //    pub fn address(&self) -> Option<SocketAddr> {
-    //        match self {
-    //            State::Initializing => None,
-    //            State::Normal {
-    //                address,
-    //                ..
-    //            } => *address,
-    //        }
-    //    }
-    //
     pub fn name(&self) -> Option<NodeName> {
         match self {
             State::Initializing => None,
