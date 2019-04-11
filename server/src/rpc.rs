@@ -37,12 +37,11 @@ pub fn response<T>(value: T) -> RPCResponse<T> {
 
 const ERR_AGENT_NOT_FOUND: i64 = -1;
 
-impl RPCError {
-    pub fn to_jsonrpc_error(&self) -> JSONRPCError {
-        match self {
-            RPCError::Internal(str) => Self::create_internal_rpc_error(str),
-            RPCError::FromAgent(err) => {
-                let mut error = err.clone();
+impl From<RPCError> for JSONRPCError {
+    fn from(err: RPCError) -> Self {
+        match err {
+            RPCError::Internal(str) => RPCError::create_internal_rpc_error(str),
+            RPCError::FromAgent(mut error) => {
                 error.data = match error.data {
                     None => Some(json!("Error from agent")),
                     Some(inner_data) => Some(json!({
@@ -52,20 +51,22 @@ impl RPCError {
                 };
                 error
             }
-            RPCError::FromDB(_err) => Self::create_internal_rpc_error(&self.to_string()),
-            RPCError::AgentNotFound => Self::create_rpc_error(ERR_AGENT_NOT_FOUND, &self.to_string()),
+            RPCError::FromDB(_) => RPCError::create_internal_rpc_error(err.to_string()),
+            RPCError::AgentNotFound => RPCError::create_rpc_error(ERR_AGENT_NOT_FOUND, err.to_string()),
         }
     }
+}
 
-    fn create_internal_rpc_error(msg: &str) -> JSONRPCError {
+impl RPCError {
+    fn create_internal_rpc_error(msg: String) -> JSONRPCError {
         let mut ret = JSONRPCError::new(ErrorCode::InternalError);
-        ret.data = Some(Value::String(msg.to_string()));
+        ret.data = Some(Value::String(msg));
         ret
     }
 
-    fn create_rpc_error(code: i64, msg: &str) -> JSONRPCError {
+    fn create_rpc_error(code: i64, msg: String) -> JSONRPCError {
         let mut ret = JSONRPCError::new(ErrorCode::ServerError(code));
-        ret.message = msg.to_string();
+        ret.message = msg;
         ret
     }
 }

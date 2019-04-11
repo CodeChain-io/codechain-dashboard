@@ -84,7 +84,7 @@ where
                         Failure {
                             jsonrpc: None,
                             id,
-                            error: err.to_jsonrpc_error(),
+                            error: err.into(),
                         }
                         .into(),
                     )
@@ -245,7 +245,7 @@ pub fn on_receive(context: Context, text: String) {
 
 fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
     let json_parsed_result: Output = serde_json::from_str(&text)
-        .map_err(|err| format!("Cannot parse response from agent, data is {}\n{}", text.clone(), err))?;
+        .map_err(|err| format!("Cannot parse response from agent, data is {}\n{}", text, err))?;
 
     let id = json_parsed_result.id();
     let id = match id {
@@ -260,7 +260,7 @@ fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
         let callback = ws_callback.get_mut(&id).ok_or_else(|| format!("Invalid id {}", id))?;
         callback
             .send(text.clone())
-            .map_err(|err| format!("Callback call failed, response was {}\n{}", text.clone(), err))
+            .map_err(|err| format!("Callback call failed, response was {}\n{}", text, err))
     };
     ws_callback.remove(&id);
     result

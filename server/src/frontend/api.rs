@@ -90,10 +90,11 @@ fn node_update(context: Context, args: (NodeName, UpdateCodeChainRequest)) -> RP
     let agent = agent.expect("Already checked");
 
     let extra = context.db_service.get_agent_extra(name)?;
+    let (env, args) = extra.map(|extra| (extra.prev_env, extra.prev_args)).unwrap_or_default();
     agent.shell_update_codechain((
         ShellStartCodeChainRequest {
-            env: extra.as_ref().map(|extra| extra.prev_env.clone()).unwrap_or_default(),
-            args: extra.as_ref().map(|extra| extra.prev_args.clone()).unwrap_or_default(),
+            env,
+            args,
         },
         req,
     ))?;

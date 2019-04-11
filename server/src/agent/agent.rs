@@ -220,7 +220,7 @@ impl Agent {
 
             if !success {
                 *state = State::Stop {
-                    name: info.name.clone(),
+                    name: info.name,
                     address: info.address,
                     status: info.status,
                     cause: StopCause::AlreadyConnected,

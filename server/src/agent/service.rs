@@ -62,10 +62,10 @@ pub enum Message {
 
 impl Service {
     pub fn run_thread(db_service: db::ServiceSender) -> ServiceSender {
-        let (tx, rx) = channel();
+        let (sender, rx) = channel();
         let state = Arc::new(RwLock::new(State::new()));
         let service_sender = ServiceSender {
-            sender: tx.clone(),
+            sender,
             state: state.clone(),
         };
 
