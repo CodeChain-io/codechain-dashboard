@@ -71,7 +71,7 @@ fn main() {
             listen("0.0.0.0:3012", move |out| frontend::WebSocketHandler {
                 out,
                 context: frontend_context.clone(),
-                router: frontend_router.clone(),
+                router: Arc::clone(&frontend_router),
                 frontend_service: frontend_service_sender.clone(),
             })
             .unwrap();
