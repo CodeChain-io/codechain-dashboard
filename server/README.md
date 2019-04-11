@@ -43,3 +43,20 @@ CodeChain Agent Hub will listen 3012 port to communicate with the Dashboard usin
 CodeChain Agent Hub will listen 4012 port to communicate with the Agent using JSON-RPC.
 
 CodeChain Agent Hub will listen 5012 port to serve CodeChain's log file using HTTP.
+
+Alerts
+-------
+
+The server sends an alert via Slack and Email in situations where there likely is a problem.
+
+## Email alerts
+To use email alerts, the server needs the [Sendgird](https://sendgrid.com/) api key.
+```
+SENDGRID_API_KEY={api key} SENDGRID_TO={email address} codechain-agent-hub
+```
+
+## Slack alerts
+The server uses [webhooks](https://api.slack.com/incoming-webhooks)
+```
+SLACK_HOOK_URL={web hook url} codechain-agent-hub
+```
