@@ -55,7 +55,7 @@ fn node_get_info(context: Context, args: (String,)) -> RPCResponse<NodeGetInfoRe
 fn node_start(context: Context, args: (NodeName, ShellStartCodeChainRequest)) -> RPCResponse<()> {
     let (name, req) = args;
 
-    let agent = context.agent_service.get_agent(name.clone());
+    let agent = context.agent_service.get_agent(&name);
     if agent.is_none() {
         return Err(RPCError::AgentNotFound)
     }
@@ -70,7 +70,7 @@ fn node_start(context: Context, args: (NodeName, ShellStartCodeChainRequest)) ->
 fn node_stop(context: Context, args: (String,)) -> RPCResponse<()> {
     let (name,) = args;
 
-    let agent = context.agent_service.get_agent(name);
+    let agent = context.agent_service.get_agent(&name);
     if agent.is_none() {
         return Err(RPCError::AgentNotFound)
     }
@@ -83,7 +83,7 @@ fn node_stop(context: Context, args: (String,)) -> RPCResponse<()> {
 fn node_update(context: Context, args: (NodeName, UpdateCodeChainRequest)) -> RPCResponse<()> {
     let (name, req) = args;
 
-    let agent = context.agent_service.get_agent(name.clone());
+    let agent = context.agent_service.get_agent(&name);
     if agent.is_none() {
         return Err(RPCError::AgentNotFound)
     }

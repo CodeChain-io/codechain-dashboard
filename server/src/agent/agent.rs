@@ -46,17 +46,17 @@ impl State {
     pub fn new() -> Self {
         State::Initializing
     }
-    pub fn name(&self) -> Option<NodeName> {
+    pub fn name(&self) -> Option<&NodeName> {
         match self {
             State::Initializing => None,
             State::Normal {
                 name,
                 ..
-            } => Some(name.clone()),
+            } => Some(name),
             State::Stop {
                 name,
                 ..
-            } => Some(name.clone()),
+            } => Some(name),
         }
     }
 }
@@ -160,7 +160,7 @@ impl Agent {
 
         // get prev data from db
         // if exist, run it.
-        let name = self.state.read().name().expect("Updated");
+        let name = self.state.read().name().expect("Updated").clone();
 
         if let Ok(Some(extra)) = self.db_service.get_agent_extra(name) {
             match ::std::env::var("START_AT_CONNECT") {
