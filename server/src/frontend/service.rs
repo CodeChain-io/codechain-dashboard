@@ -18,8 +18,7 @@ pub enum Message {
 
 impl Service {
     pub fn run_thread() -> ServiceSender {
-        let (tx, rx) = channel();
-        let service_sender = tx.clone();
+        let (service_sender, rx) = channel();
 
         let mut service = Service::new();
 

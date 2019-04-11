@@ -82,7 +82,7 @@ impl Service {
 
     pub fn run_thread(arg: ServiceNewArg) -> ServiceSender {
         let (tx, rx) = channel();
-        let service_sender = ServiceSender::new(tx.clone());
+        let service_sender = ServiceSender::new(tx);
 
         let mut service = Service::new(arg);
 
