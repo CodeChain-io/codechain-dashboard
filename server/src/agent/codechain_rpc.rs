@@ -5,7 +5,7 @@ use serde::de::DeserializeOwned;
 use serde_json;
 use serde_json::Value;
 
-use super::super::common_rpc_types::{BlackList, BlockId, NodeStatus, PendingParcel, StructuredLog, WhiteList};
+use super::super::common_rpc_types::{BlackList, BlockId, NodeStatus, PendingTransaction, StructuredLog, WhiteList};
 use super::agent::{AgentSender, SendAgentRPC};
 use super::types::ChainGetBestBlockIdResponse;
 
@@ -42,8 +42,8 @@ impl CodeChainRPC {
         self.call_rpc(status, "commitHash", Vec::new())
     }
 
-    pub fn get_pending_parcels(&self, _status: NodeStatus) -> Result<Vec<PendingParcel>, String> {
-        //        self.call_rpc(status, "chain_getPendingParcels")
+    pub fn get_pending_transactions(&self, _status: NodeStatus) -> Result<Vec<PendingTransaction>, String> {
+        //        self.call_rpc(status, "mempool_getPendingTransactions")
         Ok(Vec::new())
     }
 

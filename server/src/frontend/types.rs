@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use super::super::agent;
 use super::super::common_rpc_types;
 use super::super::common_rpc_types::{
-    BlackList, BlockId, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion, PendingParcel, WhiteList,
+    BlackList, BlockId, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion, PendingTransaction, WhiteList,
 };
 use super::super::db;
 
@@ -89,7 +89,7 @@ pub struct NodeGetInfoResponse {
     pub address: Option<SocketAddr>,
     pub version: Option<NodeVersion>,
     pub best_block_id: Option<BlockId>,
-    pub pending_parcels: Vec<PendingParcel>,
+    pub pending_transactions: Vec<PendingTransaction>,
     pub peers: Vec<SocketAddr>,
     pub whitelist: Option<WhiteList>,
     pub blacklist: Option<BlackList>,
@@ -113,7 +113,7 @@ impl NodeGetInfoResponse {
                 block_number: 0,
                 hash: Default::default(),
             }),
-            pending_parcels: Vec::new(),
+            pending_transactions: Vec::new(),
             peers: Vec::new(),
             whitelist: Some(WhiteList {
                 list: Vec::new(),
@@ -148,7 +148,7 @@ impl NodeGetInfoResponse {
         dummy.peers = state.peers.clone();
         dummy.best_block_id = state.best_block_id;
         dummy.version = state.version.clone();
-        dummy.pending_parcels = state.pending_parcels.clone();
+        dummy.pending_transactions = state.pending_transactions.clone();
         dummy.whitelist = state.whitelist.clone();
         dummy.blacklist = state.blacklist.clone();
         dummy.start_option = extra.as_ref().map(|extra| StartOption {

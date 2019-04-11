@@ -47,7 +47,7 @@ pub struct NodeVersion {
     pub binary_checksum: String,
 }
 
-pub type PendingParcel = serde_json::Value;
+pub type PendingTransaction = serde_json::Value;
 
 pub type Tag = String;
 

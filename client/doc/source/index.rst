@@ -50,14 +50,14 @@ This protocol is based on the JSON RPC 2.0 spec
 Types
 =======
 
-.. _type-parcel:
+.. _type-transaction:
 
-Parcel
+Transaction
 -------
 
 ::
 
-  interface Parcel {
+  interface Transaction {
     // ...
   }
 
@@ -195,7 +195,7 @@ NodeInfo
     startOptions?: { env: string, args: string };
     version?: { version: string, hash: string };
     bestBlockId?: { blockNumber: number, hash: H256 };
-    pendingParcels: Parcel[];
+    pendingTransactions: Transaction[];
     peers: SocketAddr[];
     whitelist?: WhiteList;
     blacklist?: BlackList;
@@ -208,7 +208,7 @@ NodeInfo
     events: Event[];
   }
 
-links: type-NodeStatus_, type-SocketAddr_, type-Parcel_, type-WhiteList_, type-BlackList_
+links: type-NodeStatus_, type-SocketAddr_, type-Transaction_, type-WhiteList_, type-BlackList_
 
 .. _type-UFONodeInfo:
 
@@ -537,48 +537,48 @@ Argument is the other node's name.
 ``string``
 
 
-event_parcelSent ➡️ 
+event_transactionSent ➡️ 
 -------------------
 
-This event fires when a node propagate parcels to another node.
+This event fires when a node propagate transactions to another node.
 
 Arguments
 """"""""""
 
-First argument is the node's name which received the parcels.
-Second argument is the content of the parcels.
+First argument is the node's name which received the transactions.
+Second argument is the content of the transactions.
 
-``[string, Parcel[]]``
+``[string, Transaction[]]``
 
-links: type-Parcel_
+links: type-Transaction_
 
 
-event_parcelReceived ➡️ 
+event_transactionReceived ➡️ 
 -------------------------
 
-This event fires when a node receives parcels from another node.
+This event fires when a node receives transactions from another node.
 
 Arguments
 """""""""
 
-First argument is the node's name which sent a parcel.
+First argument is the node's name which sent a transaction.
 
-``[string, Parcel[]]``
+``[string, Transaction[]]``
 
-links: type-Parcel_
+links: type-Transaction_
 
 
-event_parcelRecevedByRPC ➡️ 
+event_transactionRecevedByRPC ➡️ 
 -----------------------------
 
-This event fires when a node receives a parcel by `chain_sendSignedParcel` RPC.
+This event fires when a node receives a transaction by `chain_sendSignedTransaction` RPC.
 
 Arguments
 """""""""
 
-``[Parcel]``
+``[Transaction]``
 
-links: type-Parcel_
+links: type-Transaction_
 
 event_blockSent ➡️ 
 -------------------
@@ -734,7 +734,7 @@ Arguments
     status?: NodeStatus;
     version?: { version: string, hash: string };
     bestBlockId?: { blockNumber: number, hash: H256 };
-    pendingParcels?: Parcel[];
+    pendingTransactions?: Transaction[];
     peers?: SocketAddr[];
     whitelist?: WhiteList;
     blacklist?: BlackList;
