@@ -13,6 +13,7 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
+extern crate slack_hook;
 extern crate ws;
 
 #[macro_use]
@@ -23,6 +24,7 @@ mod db;
 mod event_propagator;
 mod frontend;
 mod jsonrpc;
+mod noti;
 mod router;
 mod rpc;
 mod util;
