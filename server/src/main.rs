@@ -8,6 +8,7 @@ extern crate parking_lot;
 extern crate postgres;
 extern crate primitives as cprimitives;
 extern crate rand;
+extern crate sendgrid;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
