@@ -5,7 +5,7 @@ use std::hash::{Hash, Hasher};
 use std::net::SocketAddr;
 
 use super::super::common_rpc_types::{
-    BlackList, BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, PendingParcel, WhiteList,
+    BlackList, BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, PendingTransaction, WhiteList,
 };
 
 
@@ -17,7 +17,7 @@ pub struct AgentQueryResult {
     pub peers: Vec<SocketAddr>,
     pub best_block_id: Option<BlockId>,
     pub version: Option<NodeVersion>,
-    pub pending_parcels: Vec<PendingParcel>,
+    pub pending_transactions: Vec<PendingTransaction>,
     pub whitelist: Option<WhiteList>,
     pub blacklist: Option<BlackList>,
     pub hardware: Option<HardwareInfo>,

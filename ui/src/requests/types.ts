@@ -48,7 +48,7 @@ export interface NodeInfo {
   status: NodeStatus;
   version?: { version: string; hash: string; binaryChecksum: string };
   bestBlockId?: { blockNumber: number; hash: string };
-  pendingParcels?: object[];
+  pendingTransactions?: object[];
   peers?: SocketAddr[];
   whitelist?: WhiteList;
   blacklist?: BlackList;
@@ -67,7 +67,7 @@ export interface NodeUpdateInfo {
   status?: NodeStatus;
   version?: { version: string; hash: string };
   bestBlockId?: { blockNumber: number; hash: string };
-  pendingParcels?: object[];
+  pendingTransactions?: object[];
   peers?: SocketAddr[];
   whitelist?: { list: SocketAddr[]; enabled: boolean };
   blacklist?: { list: SocketAddr[]; enabled: boolean };
