@@ -132,6 +132,13 @@
     "@types/history" "*"
     "@types/react" "*"
 
+"@types/react-widgets@^4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@types/react-widgets/-/react-widgets-4.3.3.tgz#dac3061e70d974e6d92b3e8269e9a9c8ff499ef6"
+  integrity sha512-7fL7+1FIOWdFTpoYK2d+tLnewX6l302du1QnQzSaaNOovew1z6hZ3VJsHnFwO57Tl0Y27tAkNz10UODy5NK8PA==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react@*", "@types/react@^16.4.14":
   version "16.4.14"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.4.14.tgz#47c604c8e46ed674bbdf4aabf82b34b9041c6a04"
@@ -2194,6 +2201,11 @@ data-urls@^1.0.0:
     abab "^2.0.0"
     whatwg-mimetype "^2.1.0"
     whatwg-url "^7.0.0"
+
+date-arithmetic@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/date-arithmetic/-/date-arithmetic-3.1.0.tgz#1fcd03dbd504b9dbee2b9078c85a5f1c7d3cc2d3"
+  integrity sha1-H80D29UEudvuK5B4yFpfHH08wtM=
 
 date-now@^0.1.4:
   version "0.1.4"
@@ -6076,6 +6088,14 @@ promise@^7.1.1:
   dependencies:
     asap "~2.0.3"
 
+prop-types-extra@^1.0.1:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/prop-types-extra/-/prop-types-extra-1.1.0.tgz#32609910ea2dcf190366bacd3490d5a6412a605f"
+  integrity sha512-QFyuDxvMipmIVKD2TwxLVPzMnO4e5oOf1vr3tJIomL8E7d0lr6phTHd5nkPhFIzTD1idBLLEPeylL9g+rrTzRg==
+  dependencies:
+    react-is "^16.3.2"
+    warning "^3.0.0"
+
 prop-types@^15.5.10, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2:
   version "15.6.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.2.tgz#05d5ca77b4453e985d60fc7ff8c859094a497102"
@@ -6236,6 +6256,14 @@ react-color@^2.14.1:
     reactcss "^1.2.0"
     tinycolor2 "^1.4.1"
 
+react-component-managers@^3.1.0:
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/react-component-managers/-/react-component-managers-3.2.2.tgz#b02a965465a32118ffc967f59730618370432412"
+  integrity sha512-SqtB09hS1ir0koBNybvNbNAB3k/r7IbIGbXSxvkkTV0m50s+4oJ59KYsbPAQ/2DhE169Rc5V26d674EcGcDbGA==
+  dependencies:
+    prop-types "^15.6.1"
+    spy-on-component "^1.1.0"
+
 react-confirm-alert@^2.0.5:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/react-confirm-alert/-/react-confirm-alert-2.0.5.tgz#a450c4c773484da774298c3fa6c584f442ccfa4b"
@@ -6291,6 +6319,11 @@ react-dom@^16.5.0:
 react-error-overlay@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/react-error-overlay/-/react-error-overlay-4.0.1.tgz#417addb0814a90f3a7082eacba7cee588d00da89"
+
+react-is@^16.3.2:
+  version "16.8.6"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.8.6.tgz#5bbc1e2d29141c9fbdfed456343fe2bc430a6a16"
+  integrity sha512-aUk3bHfZ2bRSVFFbbeVS4i+lNPZr3/WM5jT2J5omUVV1zzcs1nAaf3l51ctA5FFvCRbhrH0bdAsRRQddFJZPtA==
 
 react-lifecycles-compat@^3.0.0, react-lifecycles-compat@^3.0.4:
   version "3.0.4"
@@ -6439,6 +6472,22 @@ react-vis-force@^0.3.1:
     global "^4.3.0"
     lodash.reduce "^4.6.0"
     prop-types "^15.5.10"
+
+react-widgets@^4.4.10:
+  version "4.4.10"
+  resolved "https://registry.yarnpkg.com/react-widgets/-/react-widgets-4.4.10.tgz#e752c57902421d333a5b702ad0d526b96691c998"
+  integrity sha512-ERPwWxgfHv20ddNuUeINA9Od/b6DTcDgdAWrcwRf+DtMlN1UtiyLVVCb7V0H44kDVX/TUkG91wQ07FIZyNSV2A==
+  dependencies:
+    classnames "^2.2.6"
+    date-arithmetic "^3.1.0"
+    dom-helpers "^3.3.1"
+    invariant "^2.2.4"
+    prop-types-extra "^1.0.1"
+    react-component-managers "^3.1.0"
+    react-lifecycles-compat "^3.0.4"
+    react-transition-group "^2.4.0"
+    uncontrollable "^5.0.0"
+    warning "^3.0.0"
 
 react@^16.5.0:
   version "16.5.0"
@@ -7290,6 +7339,11 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
 
+spy-on-component@^1.1.0:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/spy-on-component/-/spy-on-component-1.1.2.tgz#70cec3a0b87dfb9d5356e288135fd349d138d407"
+  integrity sha512-ndyPLiqAPcDETg2VO0TM35uq6kLKvhss2ILBV+jfXZz55lRk5zphmbrHKwwIu9++n56+56KLbY/zhJnPF6Yqyg==
+
 sshpk@^1.7.0:
   version "1.14.2"
   resolved "https://registry.yarnpkg.com/sshpk/-/sshpk-1.14.2.tgz#c6fc61648a3d9c4e764fd3fcdf4ea105e492ba98"
@@ -7873,6 +7927,13 @@ uglifyjs-webpack-plugin@^1.1.8:
     uglify-es "^3.3.4"
     webpack-sources "^1.1.0"
     worker-farm "^1.5.2"
+
+uncontrollable@^5.0.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/uncontrollable/-/uncontrollable-5.1.0.tgz#7e9a1c50ea24e3c78b625e52d21ff3f758c7bd59"
+  integrity sha512-5FXYaFANKaafg4IVZXUNtGyzsnYEvqlr9wQ3WpZxFpEUxl29A3H6Q4G1Dnnorvq9TGOGATBApWR4YpLAh+F5hw==
+  dependencies:
+    invariant "^2.2.4"
 
 union-value@^1.0.0:
   version "1.0.0"
