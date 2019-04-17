@@ -3,6 +3,7 @@ import * as React from "react";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import * as ReactDOM from "react-dom";
 import { Provider } from "react-redux";
+import "react-widgets/dist/css/react-widgets.css";
 import { applyMiddleware, createStore } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension/logOnlyInProduction";
 import thunkMiddleware from "redux-thunk";
