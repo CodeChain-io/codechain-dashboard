@@ -1,34 +1,34 @@
 language: rust
 rust:
-  - 1.32.0
+  - 1.34.0
 jobs:
     include:
         - name: server
           before_install:
             - cd $TRAVIS_JOB_NAME
           install:
-            - rustup toolchain install nightly-2018-12-06
-            - rustup component add rustfmt-preview --toolchain nightly-2018-12-06
-            - rustup component add clippy-preview --toolchain nightly-2018-12-06
+            - rustup toolchain install nightly-2019-04-11
+            - rustup component add rustfmt-preview --toolchain nightly-2019-04-11
+            - rustup component add clippy-preview --toolchain nightly-2019-04-11
           before_script:
             - cargo fetch --verbose
           script:
-            - cargo +nightly-2018-12-06 fmt -- --check
+            - cargo +nightly-2019-04-11 fmt -- --check
               && RUST_BACKTRACE=1 cargo test --verbose --all
-              && cargo +nightly-2018-12-06 clippy --all --all-targets -- -D warnings
+              && cargo +nightly-2019-04-11 clippy --all --all-targets -- -D warnings
         - name: client
           before_install:
             - cd $TRAVIS_JOB_NAME
           install:
-            - rustup toolchain install nightly-2018-12-06
-            - rustup component add rustfmt-preview --toolchain nightly-2018-12-06
-            - rustup component add clippy-preview --toolchain nightly-2018-12-06
+            - rustup toolchain install nightly-2019-04-11
+            - rustup component add rustfmt-preview --toolchain nightly-2019-04-11
+            - rustup component add clippy-preview --toolchain nightly-2019-04-11
           before_script:
             - cargo fetch --verbose
           script:
-            - cargo +nightly-2018-12-06 fmt -- --check
+            - cargo +nightly-2019-04-11 fmt -- --check
               && RUST_BACKTRACE=1 cargo test --verbose --all
-              && cargo +nightly-2018-12-06 clippy --all --all-targets -- -D warnings
+              && cargo +nightly-2019-04-11 clippy --all --all-targets -- -D warnings
         - name: ui
           before_install:
             - cd $TRAVIS_JOB_NAME

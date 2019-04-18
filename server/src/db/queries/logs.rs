@@ -45,7 +45,7 @@ pub fn insert(conn: &postgres::Connection, node_name: &str, logs: Vec<Structured
             "INSERT INTO logs (name, level, target, message, timestamp, thread_name) VALUES {}",
             parameters_positions.join(", ")
         );
-        let parameters_ref: Vec<&ToSql> = parameters.iter().map(|param| param.as_ref()).collect();
+        let parameters_ref: Vec<&ToSql> = parameters.iter().map(AsRef::as_ref).collect();
         ctrace!("Full query is {}", full_sql);
         conn.execute(&full_sql, &parameters_ref)?;
     }
@@ -113,7 +113,7 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
     let query_string =
         vec!["SELECT * FROM logs", &where_clause, &order_by_clause, &limit_clause, &offset_clause].join(" ");
 
-    let query_params: Vec<&ToSql> = parameters.get().iter().map(|param| param.borrow()).collect();
+    let query_params: Vec<&ToSql> = parameters.get().iter().map(Borrow::borrow).collect();
     let rows = conn.query(&query_string, &query_params[..])?;
 
     Ok(rows
