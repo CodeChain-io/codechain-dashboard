@@ -20,7 +20,7 @@ impl Sendgrid {
                 address: self.to.as_str(),
                 name: self.to.as_str(),
             })
-            .add_from("no-reply@dashboard.codechan.io")
+            .add_from("no-reply+dashboard-server@devop.codechan.io")
             .add_subject(subject.as_ref())
             .add_text(text.as_ref());
         let result = self.client.send(mail)?;

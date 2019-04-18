@@ -3,6 +3,8 @@ mod slack;
 
 use std::sync::Arc;
 
+use chrono::Utc;
+
 use self::sendgrid::Sendgrid;
 use self::slack::Slack;
 
@@ -58,7 +60,10 @@ impl Noti {
             }
         }
         if let Some(sendgrid) = self.sendgrid.as_ref() {
-            if let Err(err) = sendgrid.send(format!("[warn][{}] Warning from dashboard", network_id), message) {
+            if let Err(err) = sendgrid.send(
+                format!("[warn][{}][dashboard-server] Warning at {}", network_id, Utc::now().to_rfc3339()),
+                message,
+            ) {
                 cwarn!("Cannot send an email({}): {}", message, err);
             }
         }
