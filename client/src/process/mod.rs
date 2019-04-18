@@ -475,7 +475,7 @@ fn run(
     }
 
     let args_iter = args.split_whitespace();
-    let args_vec: Vec<String> = args_iter.map(|str| str.to_string()).collect();
+    let args_vec: Vec<String> = args_iter.map(ToString::to_string).collect();
     let (p2p_port, ipc_path) = parse_flags(&args_vec);
     let envs = parse_env(env)?;
 
@@ -490,7 +490,7 @@ fn run(
 }
 
 fn check_running(child: &Option<CodeChainProcess>) -> bool {
-    child.as_ref().map_or(false, |child| child.is_running())
+    child.as_ref().map_or(false, CodeChainProcess::is_running)
 }
 
 fn parse_env(env: &str) -> Result<Vec<(&str, &str)>, Error> {
@@ -599,7 +599,7 @@ fn get_log(levels: Vec<String>, codechain_status: &CodeChainStatus) -> Result<Ve
             let target = log.pointer("/level").unwrap_or(&empty_string).as_str().unwrap_or("");
             levels.iter().any(|t| target.to_lowercase() == t.to_lowercase())
         })
-        .map(|value| value.take());
+        .map(Value::take);
 
     Ok(filtered_logs.collect())
 }
