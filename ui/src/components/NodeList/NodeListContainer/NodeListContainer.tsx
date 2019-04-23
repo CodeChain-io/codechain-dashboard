@@ -36,7 +36,6 @@ interface State {
 }
 type Props = DispatchProps & OwnProps;
 class NodeListContainer extends React.Component<Props, State> {
-  private arrangement = ["asc", "desc"];
   private sortCriteria = [
     "name",
     "socketAddress",
@@ -83,11 +82,24 @@ class NodeListContainer extends React.Component<Props, State> {
           </div>
           <div className="ml-3">
             <h6>Arrangement</h6>
-            <Combobox
-              data={this.arrangement}
-              defaultValue={this.state.arrangement}
+            <input
+              type="radio"
+              id="asc"
+              name="arrangement-radio"
+              value="asc"
+              checked={this.state.arrangement === "asc"}
               onChange={this.handleOnChangeArrangement}
             />
+            <label>asc</label>
+            <input
+              type="radio"
+              id="desc-1"
+              name="arrangement-radio"
+              value="desc"
+              checked={this.state.arrangement === "desc"}
+              onChange={this.handleOnChangeArrangement}
+            />
+            <label>desc</label>
           </div>
         </div>
         <SelectNodesModal
@@ -118,8 +130,10 @@ class NodeListContainer extends React.Component<Props, State> {
       </div>
     );
   }
-  private handleOnChangeArrangement = (newArrangement: string) => {
-    this.setState({ arrangement: newArrangement });
+  private handleOnChangeArrangement = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    this.setState({ arrangement: event.target.value });
   };
   private handleOnChangeSortingCriterion = (newCriterion: string) => {
     this.setState({ sortBy: newCriterion });
