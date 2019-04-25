@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::net::SocketAddr;
 use std::ops::Drop;
 use std::sync::Arc;
@@ -316,6 +317,7 @@ impl Agent {
         let network_id = self.codechain_rpc.get_network_id(info.status)?;
         let whitelist = self.codechain_rpc.get_whitelist(info.status)?;
         let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
+        let network_usage = self.codechain_rpc.get_network_usage(info.status)?;
         let hardware = self.sender.hardware_get().map_err(|err| format!("Agent Update {}", err))?;
 
         ctrace!("Update state from {:?} to {:?}", *state, new_state);
@@ -334,6 +336,16 @@ impl Agent {
             hardware: Some(hardware),
         });
         *state = new_state;
+
+        let now = chrono::Utc::now();
+        if let Some(network_usage) = network_usage {
+            self.db_service.write_network_usage(info.name.clone(), network_usage, now);
+            self.db_service.write_peer_count(
+                info.name.clone(),
+                i32::try_from(number_of_peers).map_err(|err| err.to_string())?,
+                now,
+            );
+        }
 
         let logs = self.codechain_rpc.get_logs(info.status)?;
         self.db_service.write_logs(info.name, logs);

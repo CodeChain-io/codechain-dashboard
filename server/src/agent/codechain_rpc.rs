@@ -5,7 +5,9 @@ use serde::de::DeserializeOwned;
 use serde_json;
 use serde_json::Value;
 
-use super::super::common_rpc_types::{BlackList, BlockId, NodeStatus, PendingTransaction, StructuredLog, WhiteList};
+use super::super::common_rpc_types::{
+    BlackList, BlockId, NetworkUsage, NodeStatus, PendingTransaction, StructuredLog, WhiteList,
+};
 use super::agent::{AgentSender, SendAgentRPC};
 use super::types::ChainGetBestBlockIdResponse;
 
@@ -57,6 +59,10 @@ impl CodeChainRPC {
 
     pub fn get_blacklist(&self, status: NodeStatus) -> Result<Option<BlackList>, String> {
         self.call_rpc(status, "net_getBlacklist", Vec::new())
+    }
+
+    pub fn get_network_usage(&self, status: NodeStatus) -> Result<Option<NetworkUsage>, String> {
+        self.call_rpc(status, "net_recentNetworkUsage", Vec::new())
     }
 
     pub fn get_logs(&self, status: NodeStatus) -> Result<Vec<StructuredLog>, String> {

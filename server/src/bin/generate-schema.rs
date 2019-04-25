@@ -66,6 +66,7 @@ fn create_network_usage_schema(conn: &Connection) {
             id BIGSERIAL PRIMARY KEY,
             time TIMESTAMP WITH TIME ZONE NOT NULL,
             name VARCHAR NOT NULL,
+            extension VARCHAR NOT NULL,
             target_ip VARCHAR NOT NULL,
             bytes INTEGER NOT NULL
         )",

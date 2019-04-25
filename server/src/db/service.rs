@@ -13,6 +13,7 @@ use super::super::common_rpc_types::{NodeName, NodeStatus, StructuredLog};
 use super::event::{Event, EventSubscriber};
 use super::queries;
 use super::types::{AgentExtra, AgentQueryResult, Connection, Connections, Error as DBError, Log, LogQueryParams};
+use common_rpc_types::NetworkUsage;
 use util;
 
 #[derive(Debug, Clone)]
@@ -27,6 +28,8 @@ pub enum Message {
     GetLogs(LogQueryParams, Sender<Vec<Log>>),
     WriteLogs(NodeName, Vec<StructuredLog>),
     GetLogTargets(Sender<Vec<String>>),
+    WriteNetworkUsage(NodeName, NetworkUsage, chrono::DateTime<chrono::Utc>),
+    WritePeerCount(NodeName, i32, chrono::DateTime<chrono::Utc>),
 }
 
 #[derive(Clone)]
@@ -121,6 +124,12 @@ impl Service {
                             if let Err(err) = result {
                                 cerror!("Error at {}", err);
                             }
+                        }
+                        Message::WriteNetworkUsage(node_name, network_usage, time) => {
+                            util::log_error(&node_name, service.write_network_usage(&node_name, network_usage, time));
+                        }
+                        Message::WritePeerCount(node_name, peer_count, time) => {
+                            util::log_error(&node_name, service.write_peer_count(&node_name, peer_count, time));
                         }
                     }
                 }
@@ -276,6 +285,26 @@ impl Service {
         callback.send(targets)?;
         Ok(())
     }
+
+    fn write_network_usage(
+        &self,
+        node_name: &str,
+        network_usage: NetworkUsage,
+        time: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), Box<error::Error>> {
+        queries::network_usage::insert(&self.db_conn, node_name, network_usage, time)?;
+        Ok(())
+    }
+
+    fn write_peer_count(
+        &self,
+        node_name: &str,
+        peer_count: i32,
+        time: chrono::DateTime<chrono::Utc>,
+    ) -> Result<(), Box<error::Error>> {
+        queries::peer_count::insert(&self.db_conn, node_name, peer_count, time)?;
+        Ok(())
+    }
 }
 
 impl ServiceSender {
@@ -346,5 +375,20 @@ impl ServiceSender {
         self.sender.send(Message::GetLogTargets(tx)).expect("Should success");
         let targets = rx.recv().map_err(|_| DBError::Timeout)?;
         Ok(targets)
+    }
+
+    pub fn write_network_usage(
+        &self,
+        node_name: NodeName,
+        network_usage: NetworkUsage,
+        time: chrono::DateTime<chrono::Utc>,
+    ) {
+        self.sender
+            .send(Message::WriteNetworkUsage(node_name, network_usage, time))
+            .expect("Should success send request");
+    }
+
+    pub fn write_peer_count(&self, node_name: NodeName, peer_count: i32, time: chrono::DateTime<chrono::Utc>) {
+        self.sender.send(Message::WritePeerCount(node_name, peer_count, time)).expect("Should success send request");
     }
 }

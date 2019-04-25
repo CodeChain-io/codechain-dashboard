@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::net::IpAddr;
 
 use cprimitives::H256;
@@ -59,6 +60,8 @@ pub struct WhiteList {
 }
 
 pub type BlackList = WhiteList;
+
+pub type NetworkUsage = HashMap<String, i32>;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
