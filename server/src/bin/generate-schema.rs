@@ -18,6 +18,8 @@ fn main() {
 
     create_agent_extra_schema(&conn);
     create_logs_schema(&conn);
+    create_network_usage_schema(&conn);
+    create_peer_count_schema(&conn)
 }
 
 fn create_agent_extra_schema(conn: &Connection) {
@@ -55,4 +57,39 @@ fn create_logs_schema(conn: &Connection) {
 
     cinfo!("Create logs_target index");
     conn.execute("CREATE INDEX IF NOT EXISTS logs_targets ON logs (target)", &[]).unwrap();
+}
+
+fn create_network_usage_schema(conn: &Connection) {
+    cinfo!("Create network_usage table");
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS network_usage (
+            id BIGSERIAL PRIMARY KEY,
+            time TIMESTAMP WITH TIME ZONE NOT NULL,
+            name VARCHAR NOT NULL,
+            target_ip VARCHAR NOT NULL,
+            bytes INTEGER NOT NULL
+        )",
+        &[],
+    )
+    .unwrap();
+
+    cinfo!("Create network_usage_time_index");
+    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_index ON network_usage (time)", &[]).unwrap();
+}
+
+fn create_peer_count_schema(conn: &Connection) {
+    cinfo!("Create peer_count table");
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS peer_count (
+            id BIGSERIAL PRIMARY KEY,
+            time TIMESTAMP WITH TIME ZONE NOT NULL,
+            name VARCHAR NOT NULL,
+            peer_count INTEGER NOT NULL
+        )",
+        &[],
+    )
+    .unwrap();
+
+    cinfo!("Create peer_count_time_index");
+    conn.execute("CREATE INDEX IF NOT EXISTS peer_count_time_index ON peer_count (time)", &[]).unwrap();
 }
