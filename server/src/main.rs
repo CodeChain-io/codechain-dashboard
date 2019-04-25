@@ -4,10 +4,13 @@ extern crate log;
 extern crate chrono;
 extern crate iron;
 extern crate jsonrpc_core;
+#[macro_use]
+extern crate lazy_static;
 extern crate parking_lot;
 extern crate postgres;
 extern crate primitives as cprimitives;
 extern crate rand;
+extern crate regex;
 extern crate sendgrid;
 extern crate serde;
 #[macro_use]
