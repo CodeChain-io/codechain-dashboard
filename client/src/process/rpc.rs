@@ -1,4 +1,5 @@
 use std::io::Error as IoError;
+use std::path::Path;
 use std::sync::Arc;
 
 use jsonrpc_core;
@@ -51,6 +52,10 @@ impl RPCClient {
         };
 
         ctrace!(PROCESS, "Send JSONRPC to CodeChain {:#?}", jsonrpc_request);
+
+        if !Path::new(&self.path).exists() {
+            cerror!(PROCESS, "IPC file does not exist, please check CodeChain's config whether ipc is disabled or not");
+        }
 
         let mut rt = Runtime::new()?;
 
