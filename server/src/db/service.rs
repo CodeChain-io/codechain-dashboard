@@ -317,7 +317,7 @@ impl ServiceSender {
     pub fn initialize_agent_query_result(&self, agent_query_result: AgentQueryResult) -> Result<bool, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::InitializeAgent(agent_query_result.into(), tx)).expect("Should success update agent");
-        let result = rx.recv().map_err(|_| DBError::Timeout)?;
+        let result = rx.recv()?;
         Ok(result)
     }
 
@@ -328,21 +328,21 @@ impl ServiceSender {
     pub fn get_agent_query_result(&self, name: &str) -> Result<Option<AgentQueryResult>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetAgent(name.to_string(), tx)).expect("Should success send request");
-        let agent_query_result = rx.recv().map_err(|_| DBError::Timeout)?;
+        let agent_query_result = rx.recv()?;
         Ok(agent_query_result)
     }
 
     pub fn get_agents_state(&self) -> Result<Vec<AgentQueryResult>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetAgents(tx)).expect("Should success send request");
-        let agents_state = rx.recv().map_err(|_| DBError::Timeout)?;
+        let agents_state = rx.recv()?;
         Ok(agents_state)
     }
 
     pub fn get_connections(&self) -> Result<Vec<rpc_type::Connection>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetConnections(tx)).expect("Should success send request");
-        let connections = rx.recv().map_err(|_| DBError::Timeout)?;
+        let connections = rx.recv()?;
         Ok(connections)
     }
 
@@ -355,14 +355,14 @@ impl ServiceSender {
     pub fn get_agent_extra(&self, node_name: NodeName) -> Result<Option<AgentExtra>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetAgentExtra(node_name, tx)).expect("Should success send request");
-        let agent_extra = rx.recv().map_err(|_| DBError::Timeout)?;
+        let agent_extra = rx.recv()?;
         Ok(agent_extra)
     }
 
     pub fn get_logs(&self, params: LogQueryParams) -> Result<Vec<Log>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetLogs(params, tx)).expect("Should success send request");
-        let logs = rx.recv().map_err(|_| DBError::Timeout)?;
+        let logs = rx.recv()?;
         Ok(logs)
     }
 
@@ -373,7 +373,7 @@ impl ServiceSender {
     pub fn get_log_targets(&self) -> Result<Vec<String>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetLogTargets(tx)).expect("Should success");
-        let targets = rx.recv().map_err(|_| DBError::Timeout)?;
+        let targets = rx.recv()?;
         Ok(targets)
     }
 
