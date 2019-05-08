@@ -3,11 +3,11 @@ use std::collections::HashSet;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::net::SocketAddr;
+use std::sync::mpsc::RecvError;
 
 use super::super::common_rpc_types::{
     BlackList, BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, PendingTransaction, WhiteList,
 };
-
 
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct AgentQueryResult {
@@ -176,5 +176,11 @@ pub struct Log {
 
 #[derive(Debug, Clone)]
 pub enum Error {
-    Timeout,
+    Internal(String),
+}
+
+impl From<RecvError> for Error {
+    fn from(error: RecvError) -> Self {
+        Error::Internal(error.to_string())
+    }
 }
