@@ -98,3 +98,9 @@ export type UpdateCodeChainRequest =
       binaryURL: string;
       binaryChecksum: string;
     };
+
+export interface GraphNetworkOutAllRow {
+  nodeName: string;
+  time: string;
+  value: number;
+}

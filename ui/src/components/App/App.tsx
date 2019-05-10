@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import RequestAgent from "../../RequestAgent";
 import Dashboard from "../Dashboard/Dashboard";
 import { GlobalNavigationBar } from "../GlobalNavigationBar/GlobalNavigationBar";
+import Graph from "../Graph/Graph";
 import { Header } from "../Header/Header";
 import Log from "../Log/Log";
 import NodeList from "../NodeList/NodeList";
@@ -34,6 +35,7 @@ class App extends React.Component<DispatchProp> {
             <Route path="/nodelist" component={NodeList} />
             <Route path="/rpc" component={RPC} />
             <Route path="/log" component={Log} />
+            <Route path="/graph" component={Graph} />
           </div>
           <ToastContainer autoClose={false} />
         </div>
