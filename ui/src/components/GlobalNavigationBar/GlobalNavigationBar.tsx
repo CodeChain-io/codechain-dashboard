@@ -1,4 +1,5 @@
 import {
+  faChartLine,
   faCoins,
   faHistory,
   faRetweet,
@@ -48,6 +49,7 @@ export const GlobalNavigationBar = withRouter(props => {
         )}
         {getGnbMenu("rpc", "RPC", faRetweet, pathname === "/rpc")}
         {getGnbMenu("log", "Log", faHistory, pathname === "/log")}
+        {getGnbMenu("graph", "Graph", faChartLine, pathname === "/graph")}
       </ul>
     </div>
   );
