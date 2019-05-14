@@ -3,14 +3,17 @@ import { ReducerConfigure } from "../reducers";
 import RequestAgent from "../RequestAgent";
 import {
   GraphNetworkOutAllAVGRow,
-  GraphNetworkOutAllRow
+  GraphNetworkOutAllRow,
+  GraphNetworkOutNodeExtensionRow
 } from "../requests/types";
 
 export type GraphAction =
   | SetNetworkOutAllGraph
   | ChangeNetworkOutAllFilters
   | SetNetworkOutAllAVGGraph
-  | ChangeNetworkOutAllAVGFilters;
+  | ChangeNetworkOutAllAVGFilters
+  | SetNetworkOutNodeExtensionGraph
+  | ChangeNetworkOutNodeExtensionFilters;
 
 export interface SetNetworkOutAllGraph {
   type: "SetNetworkOutAllGraph";
@@ -121,5 +124,71 @@ export const fetchNetworkOutAllAVGGraph = () => {
       }
     ]);
     dispatch(setNetworkOutAllAVGGraph(response.rows));
+  };
+};
+
+export interface SetNetworkOutNodeExtensionGraph {
+  type: "SetNetworkOutNodeExtensionGraph";
+  data: GraphNetworkOutNodeExtensionRow[];
+}
+
+const setNetworkOutNodeExtensionGraph = (
+  data: GraphNetworkOutNodeExtensionRow[]
+) => ({
+  type: "SetNetworkOutNodeExtensionGraph",
+  data
+});
+
+export interface ChangeNetworkOutNodeExtensionFilters {
+  type: "ChangeNetworkOutNodeExtensionFilters";
+  data: {
+    nodeId: string;
+    time: {
+      fromTime: number;
+      toTime: number;
+    };
+  };
+}
+
+export const changeNetworkOutNodeExtensionFilters = (params: {
+  nodeId: string;
+  time: {
+    fromTime: number;
+    toTime: number;
+  };
+}) => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    dispatch({
+      type: "ChangeNetworkOutNodeExtensionFilters",
+      data: {
+        nodeId: params.nodeId,
+        time: params.time
+      }
+    });
+    dispatch(fetchNetworkOutNodeExtensionGraph());
+  };
+};
+
+export const fetchNetworkOutNodeExtensionGraph = () => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    const response = await RequestAgent.getInstance().call<{
+      rows: GraphNetworkOutNodeExtensionRow[];
+    }>("graph_network_out_node_extension", [
+      getState().graphReducer.networkOutNodeExtensionGraph.nodeId,
+      {
+        from: moment
+          .unix(
+            getState().graphReducer.networkOutNodeExtensionGraph.time.fromTime
+          )
+          .toISOString(),
+        to: moment
+          .unix(
+            getState().graphReducer.networkOutNodeExtensionGraph.time.toTime
+          )
+          .toISOString(),
+        period: "minutes5"
+      }
+    ]);
+    dispatch(setNetworkOutNodeExtensionGraph(response.rows));
   };
 };

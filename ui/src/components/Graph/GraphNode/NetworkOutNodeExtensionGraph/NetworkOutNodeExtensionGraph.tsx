@@ -9,21 +9,21 @@ import Plot from "react-plotly.js";
 import { connect } from "react-redux";
 import { Label } from "reactstrap";
 import {
-  changeNetworkOutAllFilters,
-  fetchNetworkOutAllGraph
-} from "../../../actions/graph";
-import { ReducerConfigure } from "../../../reducers";
-import { GraphNetworkOutAllRow } from "../../../requests/types";
-import "./NetworkOutAllGraph.css";
+  changeNetworkOutNodeExtensionFilters,
+  fetchNetworkOutNodeExtensionGraph
+} from "../../../../actions/graph";
+import { ReducerConfigure } from "../../../../reducers";
+import { GraphNetworkOutNodeExtensionRow } from "../../../../requests/types";
+import "./NetworkOutNodeExtensionGraph.css";
 
 interface OwnProps {
-  history: any;
+  nodeId: string;
 }
 
 interface StateProps {
   fromTime: number;
   toTime: number;
-  data: GraphNetworkOutAllRow[];
+  data: GraphNetworkOutNodeExtensionRow[];
 }
 
 interface DispatchProps {
@@ -31,20 +31,20 @@ interface DispatchProps {
 }
 
 type Props = OwnProps & StateProps & DispatchProps;
-class NetworkOutAllGraph extends Component<Props> {
+class NetworkOutNodeExtensionGraph extends Component<Props> {
   public constructor(props: any) {
     super(props);
   }
 
   public componentDidMount(): void {
-    this.props.dispatch(fetchNetworkOutAllGraph());
+    this.props.dispatch(fetchNetworkOutNodeExtensionGraph());
   }
 
   public render() {
     const { fromTime, toTime } = this.props;
-    const rowsByNodeName = _.groupBy(this.props.data, row => row.nodeName);
+    const rowsByExtension = _.groupBy(this.props.data, row => row.extension);
     return (
-      <div className="network-out-all-graph">
+      <div className="network-out-node-extension-graph">
         <div className="from-time">
           <Label className="form-check-label" for="from-time-check">
             From
@@ -76,35 +76,32 @@ class NetworkOutAllGraph extends Component<Props> {
         <div className="plot">
           <Plot
             data={_.map<any, Partial<PlotData>>(
-              rowsByNodeName,
-              (rows, nodeName) => ({
+              rowsByExtension,
+              (rows, extension) => ({
                 x: _.map(rows, row => row.time),
                 y: _.map(rows, row => row.value),
                 type: "scatter",
                 mode: "lines+markers",
-                name: nodeName,
+                name: extension,
                 showlegend: true
               })
             )}
-            onLegendClick={this.handleLegendClick}
-            layout={{ width: 1000, height: 600, title: "Network Out All" }}
+            layout={{
+              width: 1000,
+              height: 600,
+              title: "Network Out by Extension"
+            }}
           />
         </div>
       </div>
     );
   }
 
-  private handleLegendClick = (
-    eventData: Readonly<Plotly.LegendClickEvent>
-  ): boolean => {
-    const nodeName = eventData.data[eventData.curveNumber].name;
-    this.props.history.push(`/graph/${nodeName}`);
-    return false;
-  };
-
   private handleChangeFromTime = (date: moment.Moment) => {
+    const nodeId = this.props.nodeId;
     this.props.dispatch(
-      changeNetworkOutAllFilters({
+      changeNetworkOutNodeExtensionFilters({
+        nodeId,
         time: {
           fromTime: date.unix(),
           toTime: this.props.toTime
@@ -113,10 +110,12 @@ class NetworkOutAllGraph extends Component<Props> {
     );
   };
   private handleChangeFromTimeRawDate = (event: any) => {
+    const nodeId = this.props.nodeId;
     const newDate = moment(event.target.value);
     if (newDate.isValid()) {
       this.props.dispatch(
-        changeNetworkOutAllFilters({
+        changeNetworkOutNodeExtensionFilters({
+          nodeId,
           time: {
             fromTime: newDate.unix(),
             toTime: this.props.toTime
@@ -127,8 +126,10 @@ class NetworkOutAllGraph extends Component<Props> {
   };
 
   private handleChangeToTime = (date: moment.Moment) => {
+    const nodeId = this.props.nodeId;
     this.props.dispatch(
-      changeNetworkOutAllFilters({
+      changeNetworkOutNodeExtensionFilters({
+        nodeId,
         time: {
           fromTime: this.props.fromTime,
           toTime: date.unix()
@@ -137,10 +138,12 @@ class NetworkOutAllGraph extends Component<Props> {
     );
   };
   private handleChangeToTimeRawDate = (event: any) => {
+    const nodeId = this.props.nodeId;
     const newDate = moment(event.target.value);
     if (newDate.isValid()) {
       this.props.dispatch(
-        changeNetworkOutAllFilters({
+        changeNetworkOutNodeExtensionFilters({
+          nodeId,
           time: {
             fromTime: this.props.toTime,
             toTime: newDate.unix()
@@ -153,10 +156,10 @@ class NetworkOutAllGraph extends Component<Props> {
 
 const mapStateToProps = (state: ReducerConfigure) => {
   return {
-    data: state.graphReducer.networkOutAllGraph.data,
-    fromTime: state.graphReducer.networkOutAllGraph.time.fromTime,
-    toTime: state.graphReducer.networkOutAllGraph.time.toTime
+    data: state.graphReducer.networkOutNodeExtensionGraph.data,
+    fromTime: state.graphReducer.networkOutNodeExtensionGraph.time.fromTime,
+    toTime: state.graphReducer.networkOutNodeExtensionGraph.time.toTime
   };
 };
 
-export default connect(mapStateToProps)(NetworkOutAllGraph);
+export default connect(mapStateToProps)(NetworkOutNodeExtensionGraph);
