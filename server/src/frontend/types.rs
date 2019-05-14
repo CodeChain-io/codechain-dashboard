@@ -3,8 +3,8 @@ use std::net::SocketAddr;
 use super::super::agent;
 use super::super::common_rpc_types;
 use super::super::common_rpc_types::{
-    BlackList, BlockId, GraphNetworkOutAllRow, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion,
-    PendingTransaction, WhiteList,
+    BlackList, BlockId, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, HardwareInfo, HardwareUsage, NodeName,
+    NodeStatus, NodeVersion, PendingTransaction, WhiteList,
 };
 use super::super::db;
 
@@ -179,4 +179,10 @@ pub struct LogGetResponse {
 #[serde(rename_all = "camelCase")]
 pub struct GraphNetworkOutAllResponse {
     pub rows: Vec<GraphNetworkOutAllRow>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphNetworkOutAllAVGResponse {
+    pub rows: Vec<GraphNetworkOutAllAVGRow>,
 }

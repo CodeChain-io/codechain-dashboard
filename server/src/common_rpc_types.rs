@@ -131,6 +131,8 @@ pub struct GraphNetworkOutAllRow {
     pub value: f32,
 }
 
+pub type GraphNetworkOutAllAVGRow = GraphNetworkOutAllRow;
+
 #[cfg(test)]
 mod tests {
     use super::*;
