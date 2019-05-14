@@ -14,6 +14,7 @@ import {
 } from "../../../actions/graph";
 import { ReducerConfigure } from "../../../reducers";
 import { GraphNetworkOutAllRow } from "../../../requests/types";
+import "./NetworkOutAllGraph.css";
 
 interface StateProps {
   fromTime: number;
@@ -68,20 +69,22 @@ class NetworkOutAllGraph extends Component<Props> {
             dateFormat="YYYY-MM-DD HH:mm:ssZ"
           />
         </div>
-        <Plot
-          data={_.map<any, Partial<PlotData>>(
-            rowsByNodeName,
-            (rows, nodeName) => ({
-              x: _.map(rows, row => row.time),
-              y: _.map(rows, row => row.value),
-              type: "scatter",
-              mode: "lines+markers",
-              name: nodeName,
-              showlegend: true
-            })
-          )}
-          layout={{ width: 1000, height: 600, title: "Network Out All" }}
-        />
+        <div className="plot">
+          <Plot
+            data={_.map<any, Partial<PlotData>>(
+              rowsByNodeName,
+              (rows, nodeName) => ({
+                x: _.map(rows, row => row.time),
+                y: _.map(rows, row => row.value),
+                type: "scatter",
+                mode: "lines+markers",
+                name: nodeName,
+                showlegend: true
+              })
+            )}
+            layout={{ width: 1000, height: 600, title: "Network Out All" }}
+          />
+        </div>
       </div>
     );
   }
