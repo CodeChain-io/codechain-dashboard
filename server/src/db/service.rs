@@ -13,7 +13,9 @@ use super::super::common_rpc_types::{NodeName, NodeStatus, StructuredLog};
 use super::event::{Event, EventSubscriber};
 use super::queries;
 use super::types::{AgentExtra, AgentQueryResult, Connection, Connections, Error as DBError, Log, LogQueryParams};
-use common_rpc_types::{GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, NetworkUsage};
+use common_rpc_types::{
+    GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow, NetworkUsage,
+};
 use util;
 
 #[derive(Debug, Clone)]
@@ -32,6 +34,11 @@ pub enum Message {
     WritePeerCount(NodeName, i32, chrono::DateTime<chrono::Utc>),
     GetGraphNetworkOutAll(GraphCommonArgs, Sender<Result<Vec<GraphNetworkOutAllRow>, DBError>>),
     GetGraphNetworkOutAllAVG(GraphCommonArgs, Sender<Result<Vec<GraphNetworkOutAllAVGRow>, DBError>>),
+    GetGraphNetworkOutNodeExtension(
+        NodeName,
+        GraphCommonArgs,
+        Sender<Result<Vec<GraphNetworkOutNodeExtensionRow>, DBError>>,
+    ),
 }
 
 #[derive(Clone)]
@@ -144,6 +151,14 @@ impl Service {
                         Message::GetGraphNetworkOutAllAVG(args, callback) => {
                             let result = service
                                 .get_network_out_all_avg_graph(args)
+                                .map_err(|err| DBError::Internal(err.to_string()));
+                            if let Err(callback_err) = callback.send(result) {
+                                cerror!("Error at {}", callback_err);
+                            }
+                        }
+                        Message::GetGraphNetworkOutNodeExtension(node_name, args, callback) => {
+                            let result = service
+                                .get_network_out_node_extension_graph(node_name, args)
                                 .map_err(|err| DBError::Internal(err.to_string()));
                             if let Err(callback_err) = callback.send(result) {
                                 cerror!("Error at {}", callback_err);
@@ -339,6 +354,15 @@ impl Service {
         let rows = queries::network_usage_graph::query_network_out_all_avg(&self.db_conn, args)?;
         Ok(rows)
     }
+
+    fn get_network_out_node_extension_graph(
+        &self,
+        node_name: NodeName,
+        args: GraphCommonArgs,
+    ) -> Result<Vec<GraphNetworkOutNodeExtensionRow>, Box<error::Error>> {
+        let rows = queries::network_usage_graph::query_network_out_node_extension(&self.db_conn, node_name, args)?;
+        Ok(rows)
+    }
 }
 
 impl ServiceSender {
@@ -438,6 +462,18 @@ impl ServiceSender {
     ) -> Result<Vec<GraphNetworkOutAllAVGRow>, DBError> {
         let (tx, rx) = channel();
         self.sender.send(Message::GetGraphNetworkOutAllAVG(args, tx)).expect("Should success send request");
+        rx.recv()?
+    }
+
+    pub fn get_network_out_node_extension_graph(
+        &self,
+        node_name: NodeName,
+        args: GraphCommonArgs,
+    ) -> Result<Vec<GraphNetworkOutNodeExtensionRow>, DBError> {
+        let (tx, rx) = channel();
+        self.sender
+            .send(Message::GetGraphNetworkOutNodeExtension(node_name, args, tx))
+            .expect("should success send request");
         rx.recv()?
     }
 }

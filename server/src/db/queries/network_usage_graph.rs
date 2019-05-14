@@ -1,4 +1,6 @@
-use common_rpc_types::{GraphCommonArgs, GraphNetworkOutAllRow, GraphPeriod};
+use common_rpc_types::{
+    GraphCommonArgs, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow, GraphPeriod, NodeName,
+};
 use postgres;
 
 pub fn query_network_out_all(
@@ -64,6 +66,37 @@ pub fn query_network_out_all_avg(
         .into_iter()
         .map(|row| GraphNetworkOutAllRow {
             node_name: row.get("name"),
+            time: row.get("rounded_time"),
+            value: row.get("value"),
+        })
+        .collect())
+}
+
+pub fn query_network_out_node_extension(
+    conn: &postgres::Connection,
+    node_name: NodeName,
+    graph_args: GraphCommonArgs,
+) -> postgres::Result<Vec<GraphNetworkOutNodeExtensionRow>> {
+    let query_stmt = format!(
+        "\
+         SELECT \
+         extension, \
+         {}, \
+         CAST (AVG(bytes) AS REAL) as value \
+         FROM \"network_usage\" \
+         WHERE \"network_usage\".\"time\"<$1 AND \"network_usage\".\"time\">$2 \
+           AND \"network_usage\".\"name\"=$3
+         GROUP BY \"network_usage\".\"extension\", \"rounded_time\" \
+         ORDER BY \"network_usage\".\"extension\", \"rounded_time\" ASC",
+        get_sql_round_period_expression(graph_args.period)
+    );
+
+    let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from, &node_name])?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| GraphNetworkOutNodeExtensionRow {
+            extension: row.get("extension"),
             time: row.get("rounded_time"),
             value: row.get("value"),
         })

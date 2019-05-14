@@ -106,3 +106,9 @@ export interface GraphNetworkOutAllRow {
 }
 
 export type GraphNetworkOutAllAVGRow = GraphNetworkOutAllRow;
+
+export interface GraphNetworkOutNodeExtensionRow {
+  extension: string;
+  time: string;
+  value: number;
+}

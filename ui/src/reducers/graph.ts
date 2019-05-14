@@ -3,13 +3,15 @@ import { GraphAction } from "../actions/graph";
 import NetworkOutAllGraph from "../components/Graph/NetworkOutAllGraph/NetworkOutAllGraph";
 import {
   GraphNetworkOutAllAVGRow,
-  GraphNetworkOutAllRow
+  GraphNetworkOutAllRow,
+  GraphNetworkOutNodeExtensionRow
 } from "../requests/types";
 const merge = require("deepmerge").default;
 
 export interface GraphState {
   networkOutAllGraph: NetworkOutAllGraph;
   networkOutAllAVGGraph: NetworkOutAllAVGGraph;
+  networkOutNodeExtensionGraph: NetworkOutNodeExtensionGraph;
 }
 
 export interface NetworkOutAllGraph {
@@ -28,6 +30,15 @@ export interface NetworkOutAllAVGGraph {
   };
 }
 
+export interface NetworkOutNodeExtensionGraph {
+  nodeId: string;
+  data: GraphNetworkOutNodeExtensionRow[];
+  time: {
+    fromTime: number;
+    toTime: number;
+  };
+}
+
 const initialState: GraphState = {
   networkOutAllGraph: {
     data: [],
@@ -39,6 +50,16 @@ const initialState: GraphState = {
     }
   },
   networkOutAllAVGGraph: {
+    data: [],
+    time: {
+      fromTime: moment()
+        .subtract(7, "days")
+        .unix(),
+      toTime: moment().unix()
+    }
+  },
+  networkOutNodeExtensionGraph: {
+    nodeId: "",
     data: [],
     time: {
       fromTime: moment()
@@ -68,6 +89,18 @@ export const graphReducer = (state = initialState, action: GraphAction) => {
         ...state,
         networkOutAllAVGGraph: {
           ...state.networkOutAllAVGGraph,
+          data: action.data
+        }
+      };
+    case "ChangeNetworkOutNodeExtensionFilters":
+      return merge(state, {
+        networkOutNodeExtensionGraph: action.data
+      });
+    case "SetNetworkOutNodeExtensionGraph":
+      return {
+        ...state,
+        networkOutNodeExtensionGraph: {
+          ...state.networkOutNodeExtensionGraph,
           data: action.data
         }
       };
