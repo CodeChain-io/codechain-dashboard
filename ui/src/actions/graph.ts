@@ -1,9 +1,16 @@
 import * as moment from "moment";
 import { ReducerConfigure } from "../reducers";
 import RequestAgent from "../RequestAgent";
-import { GraphNetworkOutAllRow } from "../requests/types";
+import {
+  GraphNetworkOutAllAVGRow,
+  GraphNetworkOutAllRow
+} from "../requests/types";
 
-export type GraphAction = SetNetworkOutAllGraph | ChangeNetworkOutAllFilters;
+export type GraphAction =
+  | SetNetworkOutAllGraph
+  | ChangeNetworkOutAllFilters
+  | SetNetworkOutAllAVGGraph
+  | ChangeNetworkOutAllAVGFilters;
 
 export interface SetNetworkOutAllGraph {
   type: "SetNetworkOutAllGraph";
@@ -58,5 +65,61 @@ export const fetchNetworkOutAllGraph = () => {
       }
     ]);
     dispatch(setNetworkOutAllGraph(response.rows));
+  };
+};
+
+export interface SetNetworkOutAllAVGGraph {
+  type: "SetNetworkOutAllAVGGraph";
+  data: GraphNetworkOutAllAVGRow[];
+}
+
+const setNetworkOutAllAVGGraph = (data: GraphNetworkOutAllAVGRow[]) => ({
+  type: "SetNetworkOutAllAVGGraph",
+  data
+});
+
+export interface ChangeNetworkOutAllAVGFilters {
+  type: "ChangeNetworkOutAllAVGFilters";
+  data: {
+    time: {
+      fromTime: number;
+      toTime: number;
+    };
+  };
+}
+
+export const changeNetworkOutAllAVGFilters = (params: {
+  time: {
+    fromTime: number;
+    toTime: number;
+  };
+}) => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    dispatch({
+      type: "ChangeNetworkOutAllAVGFilters",
+      data: {
+        time: params.time
+      }
+    });
+    dispatch(fetchNetworkOutAllAVGGraph());
+  };
+};
+
+export const fetchNetworkOutAllAVGGraph = () => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    const response = await RequestAgent.getInstance().call<{
+      rows: GraphNetworkOutAllAVGRow[];
+    }>("graph_network_out_all_node_avg", [
+      {
+        from: moment
+          .unix(getState().graphReducer.networkOutAllAVGGraph.time.fromTime)
+          .toISOString(),
+        to: moment
+          .unix(getState().graphReducer.networkOutAllAVGGraph.time.toTime)
+          .toISOString(),
+        period: "minutes5"
+      }
+    ]);
+    dispatch(setNetworkOutAllAVGGraph(response.rows));
   };
 };

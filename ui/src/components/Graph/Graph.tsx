@@ -1,5 +1,6 @@
 import { Component } from "react";
 import * as React from "react";
+import NetworkOutAllAVGGraph from "./NetworkOutAllAVGGraph/NetworkOutAllAVGGraph";
 import NetworkOutAllGraph from "./NetworkOutAllGraph/NetworkOutAllGraph";
 
 export default class Graph extends Component<any> {
@@ -7,6 +8,7 @@ export default class Graph extends Component<any> {
     return (
       <div className="graph">
         <NetworkOutAllGraph />
+        <NetworkOutAllAVGGraph />
       </div>
     );
   }

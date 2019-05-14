@@ -9,16 +9,16 @@ import Plot from "react-plotly.js";
 import { connect } from "react-redux";
 import { Label } from "reactstrap";
 import {
-  changeNetworkOutAllFilters,
-  fetchNetworkOutAllGraph
+  changeNetworkOutAllAVGFilters,
+  fetchNetworkOutAllAVGGraph
 } from "../../../actions/graph";
 import { ReducerConfigure } from "../../../reducers";
-import { GraphNetworkOutAllRow } from "../../../requests/types";
+import { GraphNetworkOutAllAVGRow } from "../../../requests/types";
 
 interface StateProps {
   fromTime: number;
   toTime: number;
-  data: GraphNetworkOutAllRow[];
+  data: GraphNetworkOutAllAVGRow[];
 }
 
 interface DispatchProps {
@@ -26,20 +26,20 @@ interface DispatchProps {
 }
 
 type Props = StateProps & DispatchProps;
-class NetworkOutAllGraph extends Component<Props> {
+class NetworkOutAllAVGGraph extends Component<Props> {
   public constructor(props: any) {
     super(props);
   }
 
   public componentDidMount(): void {
-    this.props.dispatch(fetchNetworkOutAllGraph());
+    this.props.dispatch(fetchNetworkOutAllAVGGraph());
   }
 
   public render() {
     const { fromTime, toTime } = this.props;
     const rowsByNodeName = _.groupBy(this.props.data, row => row.nodeName);
     return (
-      <div className="network-out-all-graph">
+      <div className="network-out-all-avg-graph">
         <div className="from-time">
           <Label className="form-check-label" for="from-time-check">
             From
@@ -80,7 +80,7 @@ class NetworkOutAllGraph extends Component<Props> {
               showlegend: true
             })
           )}
-          layout={{ width: 1000, height: 600, title: "Network Out All" }}
+          layout={{ width: 1000, height: 600, title: "Network Out All AVG" }}
         />
       </div>
     );
@@ -88,7 +88,7 @@ class NetworkOutAllGraph extends Component<Props> {
 
   private handleChangeFromTime = (date: moment.Moment) => {
     this.props.dispatch(
-      changeNetworkOutAllFilters({
+      changeNetworkOutAllAVGFilters({
         time: {
           fromTime: date.unix(),
           toTime: this.props.toTime
@@ -100,7 +100,7 @@ class NetworkOutAllGraph extends Component<Props> {
     const newDate = moment(event.target.value);
     if (newDate.isValid()) {
       this.props.dispatch(
-        changeNetworkOutAllFilters({
+        changeNetworkOutAllAVGFilters({
           time: {
             fromTime: newDate.unix(),
             toTime: this.props.toTime
@@ -112,7 +112,7 @@ class NetworkOutAllGraph extends Component<Props> {
 
   private handleChangeToTime = (date: moment.Moment) => {
     this.props.dispatch(
-      changeNetworkOutAllFilters({
+      changeNetworkOutAllAVGFilters({
         time: {
           fromTime: this.props.fromTime,
           toTime: date.unix()
@@ -124,7 +124,7 @@ class NetworkOutAllGraph extends Component<Props> {
     const newDate = moment(event.target.value);
     if (newDate.isValid()) {
       this.props.dispatch(
-        changeNetworkOutAllFilters({
+        changeNetworkOutAllAVGFilters({
           time: {
             fromTime: this.props.toTime,
             toTime: newDate.unix()
@@ -135,12 +135,10 @@ class NetworkOutAllGraph extends Component<Props> {
   };
 }
 
-const mapStateToProps = (state: ReducerConfigure) => {
-  return {
-    data: state.graphReducer.networkOutAllGraph.data,
-    fromTime: state.graphReducer.networkOutAllGraph.time.fromTime,
-    toTime: state.graphReducer.networkOutAllGraph.time.toTime
-  };
-};
+const mapStateToProps = (state: ReducerConfigure) => ({
+  data: state.graphReducer.networkOutAllAVGGraph.data,
+  fromTime: state.graphReducer.networkOutAllAVGGraph.time.fromTime,
+  toTime: state.graphReducer.networkOutAllAVGGraph.time.toTime
+});
 
-export default connect(mapStateToProps)(NetworkOutAllGraph);
+export default connect(mapStateToProps)(NetworkOutAllAVGGraph);
