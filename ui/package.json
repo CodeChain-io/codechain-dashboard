@@ -44,9 +44,9 @@
   "scripts": {
     "build-css": "node-sass-chokidar --include-path ./src --include-path ./node_modules src/ -o src/",
     "watch-css": "npm run build-css && node-sass-chokidar --include-path ./src --include-path ./node_modules src/ -o src/ --watch --recursive",
-    "start-js": "react-scripts start",
+    "start-js": "react-scripts --max_old_space_size=4096 start",
     "start": "npm-run-all -p watch-css start-js",
-    "build-js": "react-scripts build",
+    "build-js": "react-scripts --max_old_space_size=4096 build",
     "build": "npm-run-all build-css build-js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
