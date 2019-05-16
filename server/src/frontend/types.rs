@@ -3,8 +3,9 @@ use std::net::SocketAddr;
 use super::super::agent;
 use super::super::common_rpc_types;
 use super::super::common_rpc_types::{
-    BlackList, BlockId, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow, HardwareInfo,
-    HardwareUsage, NodeName, NodeStatus, NodeVersion, PendingTransaction, WhiteList,
+    BlackList, BlockId, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
+    GraphNetworkOutNodePeerRow, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion, PendingTransaction,
+    WhiteList,
 };
 use super::super::db;
 
@@ -191,4 +192,10 @@ pub struct GraphNetworkOutAllAVGResponse {
 #[serde(rename_all = "camelCase")]
 pub struct GraphNetworkOutNodeExtensionResponse {
     pub rows: Vec<GraphNetworkOutNodeExtensionRow>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphNetworkOutNodePeerResponse {
+    pub rows: Vec<GraphNetworkOutNodePeerRow>,
 }

@@ -1,5 +1,6 @@
 import * as React from "react";
 import NetworkOutNodeExtensionGraph from "./NetworkOutNodeExtensionGraph/NetworkOutNodeExtensionGraph";
+import NetworkOutNodePeerGraph from "./NetworkOutNodePeerGraph/NetworkOutNodePeerGraph";
 
 interface OwnProps {
   match: {
@@ -17,6 +18,7 @@ export default class GraphNode extends React.Component<OwnProps> {
         <h2>Node {match.params.nodeId}</h2>
 
         <NetworkOutNodeExtensionGraph nodeId={match.params.nodeId} />
+        <NetworkOutNodePeerGraph nodeId={match.params.nodeId} />
       </div>
     );
   }

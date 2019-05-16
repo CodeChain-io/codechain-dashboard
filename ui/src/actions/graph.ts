@@ -4,7 +4,8 @@ import RequestAgent from "../RequestAgent";
 import {
   GraphNetworkOutAllAVGRow,
   GraphNetworkOutAllRow,
-  GraphNetworkOutNodeExtensionRow
+  GraphNetworkOutNodeExtensionRow,
+  GraphNetworkOutNodePeerRow
 } from "../requests/types";
 
 export type GraphAction =
@@ -13,7 +14,9 @@ export type GraphAction =
   | SetNetworkOutAllAVGGraph
   | ChangeNetworkOutAllAVGFilters
   | SetNetworkOutNodeExtensionGraph
-  | ChangeNetworkOutNodeExtensionFilters;
+  | ChangeNetworkOutNodeExtensionFilters
+  | SetNetworkOutNodePeerGraph
+  | ChangeNetworkOutNodePeerFilters;
 
 export interface SetNetworkOutAllGraph {
   type: "SetNetworkOutAllGraph";
@@ -190,5 +193,65 @@ export const fetchNetworkOutNodeExtensionGraph = () => {
       }
     ]);
     dispatch(setNetworkOutNodeExtensionGraph(response.rows));
+  };
+};
+
+export interface SetNetworkOutNodePeerGraph {
+  type: "SetNetworkOutNodePeerGraph";
+  data: GraphNetworkOutNodePeerRow[];
+}
+
+const setNetworkOutNodePeerGraph = (data: GraphNetworkOutNodePeerRow[]) => ({
+  type: "SetNetworkOutNodePeerGraph",
+  data
+});
+
+export interface ChangeNetworkOutNodePeerFilters {
+  type: "ChangeNetworkOutNodePeerFilters";
+  data: {
+    nodeId: string;
+    time: {
+      fromTime: number;
+      toTime: number;
+    };
+  };
+}
+
+export const changeNetworkOutNodePeerFilters = (params: {
+  nodeId: string;
+  time: {
+    fromTime: number;
+    toTime: number;
+  };
+}) => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    dispatch({
+      type: "ChangeNetworkOutNodePeerFilters",
+      data: {
+        nodeId: params.nodeId,
+        time: params.time
+      }
+    });
+    dispatch(fetchNetworkOutNodePeerGraph());
+  };
+};
+
+export const fetchNetworkOutNodePeerGraph = () => {
+  return async (dispatch: any, getState: () => ReducerConfigure) => {
+    const response = await RequestAgent.getInstance().call<{
+      rows: GraphNetworkOutNodePeerRow[];
+    }>("graph_network_out_node_peer", [
+      getState().graphReducer.networkOutNodePeerGraph.nodeId,
+      {
+        from: moment
+          .unix(getState().graphReducer.networkOutNodePeerGraph.time.fromTime)
+          .toISOString(),
+        to: moment
+          .unix(getState().graphReducer.networkOutNodePeerGraph.time.toTime)
+          .toISOString(),
+        period: "minutes5"
+      }
+    ]);
+    dispatch(setNetworkOutNodePeerGraph(response.rows));
   };
 };
