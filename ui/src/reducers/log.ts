@@ -1,5 +1,4 @@
-import * as _ from "lodash";
-import * as moment from "moment";
+import moment from "moment";
 import { LogAction } from "../actions/log";
 import Log from "../components/Log/Log";
 import { getObjectFromStorage, saveObjectToStorage } from "../utils/storage";

@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import { NodeInfoAction } from "../actions/nodeInfo";
 import { NodeInfo } from "../requests/types";
 const merge = require("deepmerge").default;

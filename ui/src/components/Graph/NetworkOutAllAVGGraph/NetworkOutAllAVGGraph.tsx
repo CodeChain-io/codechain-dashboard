@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import * as moment from "moment";
+import moment from "moment";
 import { PlotData } from "plotly.js";
 import { Component } from "react";
 import * as React from "react";

@@ -1,4 +1,4 @@
-import * as moment from "moment";
+import moment from "moment";
 import Log from "../components/Log/Log";
 import { ReducerConfigure } from "../reducers";
 import { LogState } from "../reducers/log";
@@ -189,7 +189,7 @@ export const setAutoRefresh = (isOn: boolean) => {
         changeFilters({
           time: {
             fromTime: logReducer.time.fromTime,
-            toTime: moment().unix()
+            toTime: moment.now()
           },
           orderBy: "DESC",
           setToTime: true

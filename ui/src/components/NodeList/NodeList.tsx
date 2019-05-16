@@ -8,9 +8,6 @@ interface Props {
   match: any;
 }
 export default class NodeList extends Component<Props> {
-  constructor(props: Props) {
-    super(props);
-  }
   public render() {
     const { match } = this.props;
     return (

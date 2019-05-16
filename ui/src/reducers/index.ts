@@ -16,5 +16,5 @@ const rootReducer = combineReducers({
   chainNetworksReducer,
   logReducer,
   graphReducer
-});
+} as any);
 export default rootReducer;

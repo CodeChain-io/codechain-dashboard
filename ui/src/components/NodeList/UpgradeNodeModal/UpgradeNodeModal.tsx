@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as _ from "lodash";
 import * as React from "react";
-import * as Modal from "react-modal";
+import Modal from "react-modal";
 import { Label } from "reactstrap";
 import { UpdateCodeChainRequest } from "../../../requests/types";
 import "./UpgradeNodeModal.css";
@@ -319,6 +319,7 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
             commitHash: selectedBranch.commit.sha
           };
         }
+        break;
       }
       case "upgrade-by-tag": {
         const selectedTagName = this.state.selectedTagName;
@@ -333,6 +334,7 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
             commitHash
           };
         }
+        break;
       }
       case "upgrade-by-binary": {
         const { binaryURL, binaryChecksum } = this.state;
@@ -343,6 +345,7 @@ export default class UpgradeNodeModal extends React.Component<Props, State> {
             binaryChecksum: this.state.binaryChecksum
           };
         }
+        break;
       }
     }
     return null;
