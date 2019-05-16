@@ -13,10 +13,6 @@ interface Props {
   onDeselect: () => void;
 }
 export class ConnectionGraphContainer extends React.Component<Props, {}> {
-  constructor(props: Props) {
-    super(props);
-  }
-
   public render() {
     const { className, chainNetworks, onSelectNode, onDeselect } = this.props;
     return (

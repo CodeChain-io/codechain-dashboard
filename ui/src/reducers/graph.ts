@@ -1,4 +1,4 @@
-import * as moment from "moment";
+import moment from "moment";
 import { GraphAction } from "../actions/graph";
 import NetworkOutAllGraph from "../components/Graph/NetworkOutAllGraph/NetworkOutAllGraph";
 import {

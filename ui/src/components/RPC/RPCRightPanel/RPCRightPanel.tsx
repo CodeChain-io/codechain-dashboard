@@ -74,6 +74,7 @@ class RPCRightPanel extends React.Component<Props, State> {
           <a
             href="https://github.com/CodeChain-io/codechain/blob/master/spec/JSON-RPC.md"
             target="_blank"
+            rel="noopener noreferrer"
             className="float-right"
           >
             JSON-RPC List

@@ -1,12 +1,12 @@
+import { toast } from "react-toastify";
+import { updateChainNetworks } from "./actions/chainNetworks";
+import { updateNodeInfo } from "./actions/nodeInfo";
 import {
   ChainNetworksUpdate,
   CommonError,
   NodeUpdateInfo
 } from "./requests/types";
 const WebSocket = require("rpc-websockets").Client;
-import { toast } from "react-toastify";
-import { updateChainNetworks } from "./actions/chainNetworks";
-import { updateNodeInfo } from "./actions/nodeInfo";
 
 export interface JsonRPCError {
   code: number;

@@ -4,9 +4,9 @@ import {
   faCopy
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as moment from "moment";
+import moment from "moment";
 import * as React from "react";
-import * as CopyToClipboard from "react-copy-to-clipboard";
+import CopyToClipboard from "react-copy-to-clipboard";
 import { connect } from "react-redux";
 import { ReducerConfigure } from "../../../../reducers";
 import { Log } from "../../../../requests/types";

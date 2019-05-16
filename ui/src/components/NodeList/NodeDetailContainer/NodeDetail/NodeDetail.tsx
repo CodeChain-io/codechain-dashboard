@@ -1,6 +1,10 @@
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as _ from "lodash";
 import * as React from "react";
 import { Doughnut, HorizontalBar } from "react-chartjs-2";
+// import { Transaction } from "codechain-sdk/lib/core/classes";
+import { toast } from "react-toastify";
 import { JsonRPCError } from "../../../../RequestAgent";
 import { Apis } from "../../../../requests";
 import {
@@ -8,15 +12,11 @@ import {
   NodeStatus,
   UpdateCodeChainRequest
 } from "../../../../requests/types";
+import { getStatusClass } from "../../../../utils/getStatusClass";
+import UpgradeNodeModal from "../../UpgradeNodeModal/UpgradeNodeModal";
 import "./NodeDetail.css";
 import StartNodeModal from "./StartNodeModal/StartNodeModal";
 const { confirmAlert } = require("react-confirm-alert");
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import { Transaction } from "codechain-sdk/lib/core/classes";
-import { toast } from "react-toastify";
-import { getStatusClass } from "../../../../utils/getStatusClass";
-import UpgradeNodeModal from "../../UpgradeNodeModal/UpgradeNodeModal";
 
 interface Props {
   nodeInfo: NodeInfo;
@@ -175,6 +175,7 @@ export default class NodeDetail extends React.Component<Props, State> {
           <div className="text-right">
             <a
               target="_blank"
+              rel="noopener noreferrer"
               className="link-text"
               href={`${this.logFileHost}/log/${nodeInfo.name}`}
             >

@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactModal from "react-modal";
+import ReactModal from "react-modal";
 import { connect, DispatchProp } from "react-redux";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
@@ -16,7 +16,9 @@ import "./App.css";
 
 class App extends React.Component<DispatchProp> {
   public componentDidMount() {
-    ReactModal.setAppElement("#app");
+    if (process.env.NODE_ENV !== "test") {
+      ReactModal.setAppElement("#app");
+    }
   }
   public componentWillMount() {
     RequestAgent.getInstance().setDispatch(this.props.dispatch);

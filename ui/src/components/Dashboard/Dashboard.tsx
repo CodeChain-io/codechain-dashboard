@@ -306,6 +306,7 @@ class Dashboard extends React.Component<Props, State> {
             <a
               href="https://github.com/codechain-io/codechain-agent"
               target="_blank"
+              rel="noopener noreferrer"
             >
               <span className="view-details">Install agent</span>
             </a>

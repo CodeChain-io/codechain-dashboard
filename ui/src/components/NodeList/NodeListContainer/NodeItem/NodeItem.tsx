@@ -32,6 +32,7 @@ const NodeItem = (props: Props) => {
               <a
                 href="https://github.com/codechain-io/codechain-agent"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 <button type="button" className="btn btn-secondary">
                   Install Agent

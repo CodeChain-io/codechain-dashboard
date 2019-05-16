@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Link, withRouter } from "react-router-dom";
 import "./GlobalNavigationBar.css";
-import * as arrowImg from "./img/arrow.svg";
+import { ReactComponent as ArrowImg } from "./img/arrow.svg";
 const getGnbMenu = (
   url: string,
   title: string,
@@ -22,7 +22,7 @@ const getGnbMenu = (
       <Link to={`/${url}`}>
         <div className={`gnb-list-item ${isSelected ? "active" : null}`}>
           {isSelected ? (
-            <img className="gnb-list-item-selected-arrow" src={arrowImg} />
+            <ArrowImg className="gnb-list-item-selected-arrow" />
           ) : null}
           <div className="gnb-list-item-icon text-center">
             <FontAwesomeIcon icon={icon} />

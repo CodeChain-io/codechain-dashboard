@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as Modal from "react-modal";
+import Modal from "react-modal";
 import { Form, Label } from "reactstrap";
 import "./StartNodeModal.css";
 const customStyles = {

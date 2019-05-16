@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import * as React from "react";
-import * as Modal from "react-modal";
+import Modal from "react-modal";
 import { ChainNetworks, NetworkNodeInfo } from "../../../../requests/types";
 import SelectNodeCheckbox from "./SelectNodeCheckbox";
 
