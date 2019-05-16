@@ -1,10 +1,12 @@
 import moment from "moment";
 import { GraphAction } from "../actions/graph";
+import NetworkOutNodePeerGraph from "../components/Graph/GraphNode/NetworkOutNodePeerGraph/NetworkOutNodePeerGraph";
 import NetworkOutAllGraph from "../components/Graph/NetworkOutAllGraph/NetworkOutAllGraph";
 import {
   GraphNetworkOutAllAVGRow,
   GraphNetworkOutAllRow,
-  GraphNetworkOutNodeExtensionRow
+  GraphNetworkOutNodeExtensionRow,
+  GraphNetworkOutNodePeerRow
 } from "../requests/types";
 const merge = require("deepmerge").default;
 
@@ -12,6 +14,7 @@ export interface GraphState {
   networkOutAllGraph: NetworkOutAllGraph;
   networkOutAllAVGGraph: NetworkOutAllAVGGraph;
   networkOutNodeExtensionGraph: NetworkOutNodeExtensionGraph;
+  networkOutNodePeerGraph: NetworkOutNodePeerGraph;
 }
 
 export interface NetworkOutAllGraph {
@@ -39,6 +42,15 @@ export interface NetworkOutNodeExtensionGraph {
   };
 }
 
+export interface NetworkOutNodePeerGraph {
+  nodeId: string;
+  data: GraphNetworkOutNodePeerRow[];
+  time: {
+    fromTime: number;
+    toTime: number;
+  };
+}
+
 const initialState: GraphState = {
   networkOutAllGraph: {
     data: [],
@@ -59,6 +71,16 @@ const initialState: GraphState = {
     }
   },
   networkOutNodeExtensionGraph: {
+    nodeId: "",
+    data: [],
+    time: {
+      fromTime: moment()
+        .subtract(7, "days")
+        .unix(),
+      toTime: moment().unix()
+    }
+  },
+  networkOutNodePeerGraph: {
     nodeId: "",
     data: [],
     time: {
@@ -101,6 +123,18 @@ export const graphReducer = (state = initialState, action: GraphAction) => {
         ...state,
         networkOutNodeExtensionGraph: {
           ...state.networkOutNodeExtensionGraph,
+          data: action.data
+        }
+      };
+    case "ChangeNetworkOutNodePeerFilters":
+      return merge(state, {
+        networkOutNodePeerGraph: action.data
+      });
+    case "SetNetworkOutNodePeerGraph":
+      return {
+        ...state,
+        networkOutNodePeerGraph: {
+          ...state.networkOutNodePeerGraph,
           data: action.data
         }
       };

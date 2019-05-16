@@ -112,3 +112,9 @@ export interface GraphNetworkOutNodeExtensionRow {
   time: string;
   value: number;
 }
+
+export interface GraphNetworkOutNodePeerRow {
+  peer: string;
+  time: string;
+  value: number;
+}

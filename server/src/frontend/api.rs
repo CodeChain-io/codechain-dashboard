@@ -4,8 +4,8 @@ use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
     Context, DashboardGetNetworkResponse, DashboardNode, GraphNetworkOutAllAVGResponse, GraphNetworkOutAllResponse,
-    GraphNetworkOutNodeExtensionResponse, LogGetRequest, LogGetResponse, LogGetTargetsResponse, NodeConnection,
-    NodeGetInfoResponse,
+    GraphNetworkOutNodeExtensionResponse, GraphNetworkOutNodePeerResponse, LogGetRequest, LogGetResponse,
+    LogGetTargetsResponse, NodeConnection, NodeGetInfoResponse,
 };
 use common_rpc_types::{GraphCommonArgs, UpdateCodeChainRequest};
 
@@ -49,7 +49,14 @@ pub fn add_routing(router: &mut Router<Context>) {
             graph_network_out_node_extension
                 as fn(Context, (NodeName, GraphCommonArgs)) -> RPCResponse<GraphNetworkOutNodeExtensionResponse>,
         ),
-    )
+    );
+    router.add_route(
+        "graph_network_out_node_peer",
+        Box::new(
+            graph_network_out_node_peer
+                as fn(Context, (NodeName, GraphCommonArgs)) -> RPCResponse<GraphNetworkOutNodePeerResponse>,
+        ),
+    );
 }
 
 fn ping(_: Context) -> RPCResponse<String> {
@@ -163,6 +170,18 @@ fn graph_network_out_node_extension(
 
     let rows = context.db_service.get_network_out_node_extension_graph(node_name, graph_args)?;
     response(GraphNetworkOutNodeExtensionResponse {
+        rows,
+    })
+}
+
+fn graph_network_out_node_peer(
+    context: Context,
+    args: (NodeName, GraphCommonArgs),
+) -> RPCResponse<GraphNetworkOutNodePeerResponse> {
+    let (node_name, graph_args) = args;
+
+    let rows = context.db_service.get_network_out_node_peer_graph(node_name, graph_args)?;
+    response(GraphNetworkOutNodePeerResponse {
         rows,
     })
 }

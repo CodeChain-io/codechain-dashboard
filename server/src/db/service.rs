@@ -14,7 +14,8 @@ use super::event::{Event, EventSubscriber};
 use super::queries;
 use super::types::{AgentExtra, AgentQueryResult, Connection, Connections, Error as DBError, Log, LogQueryParams};
 use common_rpc_types::{
-    GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow, NetworkUsage,
+    GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
+    GraphNetworkOutNodePeerRow, NetworkUsage,
 };
 use util;
 
@@ -39,6 +40,7 @@ pub enum Message {
         GraphCommonArgs,
         Sender<Result<Vec<GraphNetworkOutNodeExtensionRow>, DBError>>,
     ),
+    GetGraphNetworkOutNodePeer(NodeName, GraphCommonArgs, Sender<Result<Vec<GraphNetworkOutNodePeerRow>, DBError>>),
 }
 
 #[derive(Clone)]
@@ -84,6 +86,7 @@ impl Service {
         }
     }
 
+    #[allow(clippy::cognitive_complexity)]
     pub fn run_thread(arg: ServiceNewArg) -> ServiceSender {
         let (tx, rx) = channel();
         let service_sender = ServiceSender::new(tx);
@@ -159,6 +162,14 @@ impl Service {
                         Message::GetGraphNetworkOutNodeExtension(node_name, args, callback) => {
                             let result = service
                                 .get_network_out_node_extension_graph(node_name, args)
+                                .map_err(|err| DBError::Internal(err.to_string()));
+                            if let Err(callback_err) = callback.send(result) {
+                                cerror!("Error at {}", callback_err);
+                            }
+                        }
+                        Message::GetGraphNetworkOutNodePeer(node_name, args, callback) => {
+                            let result = service
+                                .get_network_out_node_peer_graph(node_name, args)
                                 .map_err(|err| DBError::Internal(err.to_string()));
                             if let Err(callback_err) = callback.send(result) {
                                 cerror!("Error at {}", callback_err);
@@ -363,6 +374,15 @@ impl Service {
         let rows = queries::network_usage_graph::query_network_out_node_extension(&self.db_conn, node_name, args)?;
         Ok(rows)
     }
+
+    fn get_network_out_node_peer_graph(
+        &self,
+        node_name: NodeName,
+        args: GraphCommonArgs,
+    ) -> Result<Vec<GraphNetworkOutNodePeerRow>, Box<error::Error>> {
+        let rows = queries::network_usage_graph::query_network_out_node_peer(&self.db_conn, node_name, args)?;
+        Ok(rows)
+    }
 }
 
 impl ServiceSender {
@@ -474,6 +494,18 @@ impl ServiceSender {
         self.sender
             .send(Message::GetGraphNetworkOutNodeExtension(node_name, args, tx))
             .expect("should success send request");
+        rx.recv()?
+    }
+
+    pub fn get_network_out_node_peer_graph(
+        &self,
+        node_name: NodeName,
+        args: GraphCommonArgs,
+    ) -> Result<Vec<GraphNetworkOutNodePeerRow>, DBError> {
+        let (tx, rx) = channel();
+        self.sender
+            .send(Message::GetGraphNetworkOutNodePeer(node_name, args, tx))
+            .expect("Should success send request");
         rx.recv()?
     }
 }
