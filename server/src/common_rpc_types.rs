@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::net::IpAddr;
 
+use chrono::{DateTime, Utc};
 use cprimitives::H256;
 use serde_json;
 
@@ -103,4 +104,50 @@ pub enum UpdateCodeChainRequest {
         binary_url: String,
         binary_checksum: String,
     },
+}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GraphPeriod {
+    Minutes5,
+    Hour,
+    Day,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphCommonArgs {
+    pub from: DateTime<Utc>,
+    pub to: DateTime<Utc>,
+    pub period: GraphPeriod,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphNetworkOutAllRow {
+    pub node_name: String,
+    pub time: DateTime<Utc>,
+    pub value: f32,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn serialize_day() {
+        let period = GraphPeriod::Day;
+        assert_eq!("\"day\"", &serde_json::to_string(&period).unwrap());
+    }
+    #[test]
+    fn serialize_minutes5() {
+        let period = GraphPeriod::Minutes5;
+        assert_eq!("\"minutes5\"", &serde_json::to_string(&period).unwrap());
+    }
+    #[test]
+    fn serialize_hour() {
+        let period = GraphPeriod::Hour;
+        assert_eq!("\"hour\"", &serde_json::to_string(&period).unwrap());
+    }
 }
