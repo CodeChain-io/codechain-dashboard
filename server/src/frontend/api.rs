@@ -6,7 +6,8 @@ use super::types::{
     Context, DashboardGetNetworkResponse, DashboardNode, LogGetRequest, LogGetResponse, LogGetTargetsResponse,
     NodeConnection, NodeGetInfoResponse,
 };
-use common_rpc_types::UpdateCodeChainRequest;
+use common_rpc_types::{GraphCommonArgs, UpdateCodeChainRequest};
+use frontend::GraphNetworkOutAllResponse;
 
 pub fn add_routing(router: &mut Router<Context>) {
     router.add_route("ping", Box::new(ping as fn(Context) -> RPCResponse<String>));
@@ -29,6 +30,19 @@ pub fn add_routing(router: &mut Router<Context>) {
     );
     router.add_route("log_getTargets", Box::new(log_get_targets as fn(Context) -> RPCResponse<LogGetTargetsResponse>));
     router.add_route("log_get", Box::new(log_get as fn(Context, (LogGetRequest,)) -> RPCResponse<LogGetResponse>));
+    router.add_route(
+        "graph_network_out_all_node",
+        Box::new(
+            graph_network_out_all_node as fn(Context, (GraphCommonArgs,)) -> RPCResponse<GraphNetworkOutAllResponse>,
+        ),
+    );
+    router.add_route(
+        "graph_network_out_all_node_avg",
+        Box::new(
+            graph_network_out_all_node_avg
+                as fn(Context, (GraphCommonArgs,)) -> RPCResponse<GraphNetworkOutAllResponse>,
+        ),
+    );
 }
 
 fn ping(_: Context) -> RPCResponse<String> {
@@ -111,4 +125,20 @@ fn log_get(context: Context, args: (LogGetRequest,)) -> RPCResponse<LogGetRespon
     response(LogGetResponse {
         logs,
     })
+}
+
+fn graph_network_out_all_node(context: Context, args: (GraphCommonArgs,)) -> RPCResponse<GraphNetworkOutAllResponse> {
+    let (graph_args,) = args;
+
+    let rows = context.db_service.get_network_out_all_graph(graph_args)?;
+    response(GraphNetworkOutAllResponse {
+        rows,
+    })
+}
+
+fn graph_network_out_all_node_avg(
+    _context: Context,
+    _args: (GraphCommonArgs,),
+) -> RPCResponse<GraphNetworkOutAllResponse> {
+    unimplemented!()
 }
