@@ -16,6 +16,10 @@ import { ReducerConfigure } from "../../../reducers";
 import { GraphNetworkOutAllAVGRow } from "../../../requests/types";
 import "./NetworkOutAllAVGGraph.css";
 
+interface OwnProps {
+  history: any;
+}
+
 interface StateProps {
   fromTime: number;
   toTime: number;
@@ -26,7 +30,7 @@ interface DispatchProps {
   dispatch: any;
 }
 
-type Props = StateProps & DispatchProps;
+type Props = StateProps & DispatchProps & OwnProps;
 class NetworkOutAllAVGGraph extends Component<Props> {
   public constructor(props: any) {
     super(props);
@@ -82,12 +86,35 @@ class NetworkOutAllAVGGraph extends Component<Props> {
                 showlegend: true
               })
             )}
-            layout={{ width: 1000, height: 600, title: "Network Out All AVG" }}
+            onLegendClick={this.handleLegendClick}
+            onClick={this.handlePointClick}
+            layout={{
+              width: 1000,
+              height: 600,
+              title: "Network Out All AVG",
+              hovermode: "closest"
+            }}
           />
         </div>
       </div>
     );
   }
+
+  private handleLegendClick = (
+    eventData: Readonly<Plotly.LegendClickEvent>
+  ): boolean => {
+    const nodeName = eventData.data[eventData.curveNumber].name;
+    this.props.history.push(`/graph/${nodeName}`);
+    return false;
+  };
+
+  private handlePointClick = (
+    eventData: Readonly<Plotly.PlotMouseEvent>
+  ): boolean => {
+    const nodeName = eventData.points[0].data.name;
+    this.props.history.push(`graph/${nodeName}`);
+    return false;
+  };
 
   private handleChangeFromTime = (date: moment.Moment) => {
     this.props.dispatch(

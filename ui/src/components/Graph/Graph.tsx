@@ -25,7 +25,7 @@ export default class Graph extends Component<Props> {
     return (
       <div className="graph">
         <NetworkOutAllGraph history={this.props.history} />
-        <NetworkOutAllAVGGraph />
+        <NetworkOutAllAVGGraph history={this.props.history} />
       </div>
     );
   };
