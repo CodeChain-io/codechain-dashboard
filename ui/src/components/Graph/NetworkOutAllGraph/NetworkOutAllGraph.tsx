@@ -87,7 +87,13 @@ class NetworkOutAllGraph extends Component<Props> {
               })
             )}
             onLegendClick={this.handleLegendClick}
-            layout={{ width: 1000, height: 600, title: "Network Out All" }}
+            onClick={this.handlePointClick}
+            layout={{
+              width: 1000,
+              height: 600,
+              title: "Network Out All",
+              hovermode: "closest"
+            }}
           />
         </div>
       </div>
@@ -99,6 +105,14 @@ class NetworkOutAllGraph extends Component<Props> {
   ): boolean => {
     const nodeName = eventData.data[eventData.curveNumber].name;
     this.props.history.push(`/graph/${nodeName}`);
+    return false;
+  };
+
+  private handlePointClick = (
+    eventData: Readonly<Plotly.PlotMouseEvent>
+  ): boolean => {
+    const nodeName = eventData.points[0].data.name;
+    this.props.history.push(`graph/${nodeName}`);
     return false;
   };
 
