@@ -9,7 +9,7 @@ import { composeWithDevTools } from "redux-devtools-extension/logOnlyInProductio
 import thunkMiddleware from "redux-thunk";
 import App from "./components/App/App";
 import appReducer from "./reducers";
-import registerServiceWorker from "./registerServiceWorker";
+import { unregister } from "./registerServiceWorker";
 import "./styles/index.css";
 
 const composeEnhancers = composeWithDevTools({});
@@ -24,4 +24,4 @@ ReactDOM.render(
   </Provider>,
   document.getElementById("root") as HTMLElement
 );
-registerServiceWorker();
+unregister();
