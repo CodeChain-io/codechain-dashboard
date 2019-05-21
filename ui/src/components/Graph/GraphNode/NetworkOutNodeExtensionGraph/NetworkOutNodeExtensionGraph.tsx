@@ -8,10 +8,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Plot from "react-plotly.js";
 import { connect } from "react-redux";
 import { Label } from "reactstrap";
-import {
-  changeNetworkOutNodeExtensionFilters,
-  fetchNetworkOutNodeExtensionGraph
-} from "../../../../actions/graph";
+import { changeNetworkOutNodeExtensionFilters } from "../../../../actions/graph";
 import { ReducerConfigure } from "../../../../reducers";
 import { GraphNetworkOutNodeExtensionRow } from "../../../../requests/types";
 import "./NetworkOutNodeExtensionGraph.css";
@@ -37,7 +34,15 @@ class NetworkOutNodeExtensionGraph extends Component<Props> {
   }
 
   public componentDidMount(): void {
-    this.props.dispatch(fetchNetworkOutNodeExtensionGraph());
+    this.props.dispatch(
+      changeNetworkOutNodeExtensionFilters({
+        nodeId: this.props.nodeId,
+        time: {
+          fromTime: this.props.fromTime,
+          toTime: this.props.toTime
+        }
+      })
+    );
   }
 
   public render() {

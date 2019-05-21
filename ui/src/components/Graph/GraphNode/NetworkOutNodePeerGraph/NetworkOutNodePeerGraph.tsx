@@ -34,15 +34,16 @@ class NetworkOutNodePeerGraph extends Component<Props> {
   }
 
   public componentDidMount(): void {
-    changeNetworkOutNodePeerFilters({
-      nodeId: this.props.nodeId,
-      time: {
-        fromTime: moment()
-          .subtract(7, "days")
-          .unix(),
-        toTime: moment().unix()
-      }
-    });
+    console.log("componentDidMount of networkOutNodePeerGraph");
+    this.props.dispatch(
+      changeNetworkOutNodePeerFilters({
+        nodeId: this.props.nodeId,
+        time: {
+          fromTime: this.props.fromTime,
+          toTime: this.props.toTime
+        }
+      })
+    );
   }
 
   public render() {
