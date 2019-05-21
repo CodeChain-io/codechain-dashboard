@@ -13,7 +13,7 @@ pub fn query_network_out_all(
          SELECT \
          name, \
          {}, \
-         CAST (AVG(bytes) AS REAL) as value \
+         CAST (SUM(bytes) AS REAL) as value \
          FROM \"network_usage\" \
          WHERE \"time\"<$1 and \"time\">$2 \
          GROUP BY \"name\", \"rounded_time\" \
@@ -52,7 +52,7 @@ pub fn query_network_out_all_avg(
          SELECT \
          \"network_usage\".name, \
          {}, \
-         CAST (AVG(bytes/\"peer_count\".\"peer_count\") AS REAL) as value \
+         CAST (SUM(bytes/\"peer_count\".\"peer_count\") AS REAL) as value \
          FROM \"network_usage\" \
          LEFT JOIN peer_count ON (\"network_usage\".\"time\"=\"peer_count\".\"time\") \
          WHERE \"network_usage\".\"time\"<$1 and \"network_usage\".\"time\">$2 \
@@ -83,7 +83,7 @@ pub fn query_network_out_node_extension(
          SELECT \
          extension, \
          {}, \
-         CAST (AVG(bytes) AS REAL) as value \
+         CAST (SUM(bytes) AS REAL) as value \
          FROM \"network_usage\" \
          WHERE \"network_usage\".\"time\"<$1 AND \"network_usage\".\"time\">$2 \
            AND \"network_usage\".\"name\"=$3
@@ -114,7 +114,7 @@ pub fn query_network_out_node_peer(
          SELECT \
          \"target_ip\", \
          {}, \
-         CAST (AVG(bytes) AS REAL) as value \
+         CAST (SUM(bytes) AS REAL) as value \
          FROM \"network_usage\" \
          WHERE \"network_usage\".\"time\"<$1 AND \"network_usage\".\"time\">$2 \
            AND \"network_usage\".\"name\"=$3
