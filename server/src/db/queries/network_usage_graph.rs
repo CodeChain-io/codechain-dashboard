@@ -8,6 +8,7 @@ pub fn query_network_out_all(
     conn: &postgres::Connection,
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutAllRow>> {
+    let time_column_name = get_sql_column_name_by_period(graph_args.period);
     let query_stmt = format!(
         "\
          SELECT \
@@ -15,10 +16,10 @@ pub fn query_network_out_all(
          {}, \
          CAST (SUM(bytes) AS REAL) as value \
          FROM \"network_usage\" \
-         WHERE \"time\"<$1 and \"time\">$2 \
-         GROUP BY \"name\", \"rounded_time\" \
-         ORDER BY \"name\", \"rounded_time\" ASC",
-        get_sql_round_period_expression(graph_args.period)
+         WHERE \"{}\"<$1 and \"{}\">$2 \
+         GROUP BY \"name\", \"{}\" \
+         ORDER BY \"name\", \"{}\" ASC",
+        time_column_name, time_column_name, time_column_name, time_column_name, time_column_name
     );
 
     let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from])?;
@@ -27,19 +28,17 @@ pub fn query_network_out_all(
         .into_iter()
         .map(|row| GraphNetworkOutAllRow {
             node_name: row.get("name"),
-            time: row.get("rounded_time"),
+            time: row.get(time_column_name),
             value: row.get("value"),
         })
         .collect())
 }
 
-fn get_sql_round_period_expression(period: GraphPeriod) -> &'static str {
+fn get_sql_column_name_by_period(period: GraphPeriod) -> &'static str {
     match period {
-        GraphPeriod::Minutes5 => {
-            "date_trunc('hour', \"network_usage\".time) + INTERVAL '5 min' * ROUND(date_part('minute', \"network_usage\".time) / 5.0) as \"rounded_time\""
-        }
-        GraphPeriod::Hour => "date_trunc('hour', \"network_usage\".time) as \"rounded_time\"",
-        GraphPeriod::Day => "date_trunc('day', \"network_usage\".time) as \"rounded_time\"",
+        GraphPeriod::Minutes5 => "time_5min",
+        GraphPeriod::Hour => "time_hour",
+        GraphPeriod::Day => "time_day",
     }
 }
 
@@ -47,6 +46,7 @@ pub fn query_network_out_all_avg(
     conn: &postgres::Connection,
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutAllRow>> {
+    let time_column_name = get_sql_column_name_by_period(graph_args.period);
     let query_stmt = format!(
         "\
          SELECT \
@@ -55,11 +55,11 @@ pub fn query_network_out_all_avg(
          CAST (SUM(bytes/\"peer_count\".\"peer_count\") AS REAL) as value \
          FROM \"network_usage\" \
          LEFT JOIN peer_count ON (\"network_usage\".\"time\"=\"peer_count\".\"time\" AND \
-           \"network_usage\".\"name\"=\"peer_count\".\"name\") \
-         WHERE \"network_usage\".\"time\"<$1 and \"network_usage\".\"time\">$2 \
-         GROUP BY \"network_usage\".\"name\", \"rounded_time\" \
-         ORDER BY \"network_usage\".\"name\", \"rounded_time\" ASC",
-        get_sql_round_period_expression(graph_args.period)
+         \"network_usage\".\"name\"=\"peer_count\".\"name\") \
+         WHERE \"network_usage\".\"{}\"<$1 and \"network_usage\".\"{}\">$2 \
+         GROUP BY \"network_usage\".\"name\", \"{}\" \
+         ORDER BY \"network_usage\".\"name\", \"{}\" ASC",
+        time_column_name, time_column_name, time_column_name, time_column_name, time_column_name
     );
 
     let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from])?;
@@ -68,7 +68,7 @@ pub fn query_network_out_all_avg(
         .into_iter()
         .map(|row| GraphNetworkOutAllRow {
             node_name: row.get("name"),
-            time: row.get("rounded_time"),
+            time: row.get(time_column_name),
             value: row.get("value"),
         })
         .collect())
@@ -79,6 +79,7 @@ pub fn query_network_out_node_extension(
     node_name: NodeName,
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutNodeExtensionRow>> {
+    let time_column_name = get_sql_column_name_by_period(graph_args.period);
     let query_stmt = format!(
         "\
          SELECT \
@@ -86,11 +87,11 @@ pub fn query_network_out_node_extension(
          {}, \
          CAST (SUM(bytes) AS REAL) as value \
          FROM \"network_usage\" \
-         WHERE \"network_usage\".\"time\"<$1 AND \"network_usage\".\"time\">$2 \
+         WHERE \"network_usage\".\"{}\"<$1 AND \"network_usage\".\"{}\">$2 \
            AND \"network_usage\".\"name\"=$3
-         GROUP BY \"network_usage\".\"extension\", \"rounded_time\" \
-         ORDER BY \"network_usage\".\"extension\", \"rounded_time\" ASC",
-        get_sql_round_period_expression(graph_args.period)
+         GROUP BY \"network_usage\".\"extension\", \"{}\" \
+         ORDER BY \"network_usage\".\"extension\", \"{}\" ASC",
+        time_column_name, time_column_name, time_column_name, time_column_name, time_column_name
     );
 
     let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from, &node_name])?;
@@ -99,7 +100,7 @@ pub fn query_network_out_node_extension(
         .into_iter()
         .map(|row| GraphNetworkOutNodeExtensionRow {
             extension: row.get("extension"),
-            time: row.get("rounded_time"),
+            time: row.get(time_column_name),
             value: row.get("value"),
         })
         .collect())
@@ -110,6 +111,7 @@ pub fn query_network_out_node_peer(
     node_name: NodeName,
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutNodePeerRow>> {
+    let time_column_name = get_sql_column_name_by_period(graph_args.period);
     let query_stmt = format!(
         "\
          SELECT \
@@ -117,11 +119,11 @@ pub fn query_network_out_node_peer(
          {}, \
          CAST (SUM(bytes) AS REAL) as value \
          FROM \"network_usage\" \
-         WHERE \"network_usage\".\"time\"<$1 AND \"network_usage\".\"time\">$2 \
+         WHERE \"network_usage\".\"{}\"<$1 AND \"network_usage\".\"{}\">$2 \
            AND \"network_usage\".\"name\"=$3
-         GROUP BY \"network_usage\".\"target_ip\", \"rounded_time\" \
-         ORDER BY \"network_usage\".\"target_ip\", \"rounded_time\" ASC",
-        get_sql_round_period_expression(graph_args.period)
+         GROUP BY \"network_usage\".\"target_ip\", \"{}\" \
+         ORDER BY \"network_usage\".\"target_ip\", \"{}\" ASC",
+        time_column_name, time_column_name, time_column_name, time_column_name, time_column_name
     );
 
     let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from, &node_name])?;
@@ -130,7 +132,7 @@ pub fn query_network_out_node_peer(
         .into_iter()
         .map(|row| GraphNetworkOutNodePeerRow {
             peer: row.get("target_ip"),
-            time: row.get("rounded_time"),
+            time: row.get(time_column_name),
             value: row.get("value"),
         })
         .collect())

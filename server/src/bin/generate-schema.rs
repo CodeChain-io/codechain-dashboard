@@ -68,7 +68,10 @@ fn create_network_usage_schema(conn: &Connection) {
             name VARCHAR NOT NULL,
             extension VARCHAR NOT NULL,
             target_ip VARCHAR NOT NULL,
-            bytes INTEGER NOT NULL
+            bytes INTEGER NOT NULL,
+            time_5min TIMESTAMP WITH TIME ZONE NOT NULL,
+            time_hour TIMESTAMP WITH TIME ZONE NOT NULL,
+            time_day TIMESTAMP WITH TIME ZONE NOT NULL
         )",
         &[],
     )
@@ -76,6 +79,9 @@ fn create_network_usage_schema(conn: &Connection) {
 
     cinfo!("Create network_usage_time_index");
     conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_index ON network_usage (time)", &[]).unwrap();
+    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_5min_index ON network_usage (time_5min)", &[]).unwrap();
+    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_hour_index ON network_usage (time_hour)", &[]).unwrap();
+    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_day_index ON network_usage (time_day)", &[]).unwrap();
 }
 
 fn create_peer_count_schema(conn: &Connection) {

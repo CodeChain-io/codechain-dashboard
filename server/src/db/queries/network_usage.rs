@@ -3,6 +3,7 @@ use postgres;
 use regex::{Captures, Regex};
 
 use common_rpc_types::NetworkUsage;
+use util::{floor_to_5min, start_of_day, start_of_hour};
 
 pub fn insert(
     conn: &postgres::Connection,
@@ -16,8 +17,10 @@ pub fn insert(
         return Ok(())
     }
 
-    let stmt = conn
-        .prepare("INSERT INTO network_usage (time, name, extension, target_ip, bytes) VALUES ($1, $2, $3, $4, $5)")?;
+    let stmt = conn.prepare(
+        "INSERT INTO network_usage (time, name, extension, target_ip, bytes, time_5min, time_hour, time_day) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    )?;
     for key in network_usage.keys() {
         let parse_result = parse_network_usage_key(key);
         let (extension, ip) = match parse_result {
@@ -29,7 +32,17 @@ pub fn insert(
             }
         };
         let bytes = network_usage[key];
-        stmt.execute(&[&time, &node_name, &extension, &ip, &bytes])?;
+
+        stmt.execute(&[
+            &time,
+            &node_name,
+            &extension,
+            &ip,
+            &bytes,
+            &floor_to_5min(&time),
+            &start_of_hour(&time),
+            &start_of_day(&time),
+        ])?;
     }
 
     Ok(())
