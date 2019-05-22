@@ -54,7 +54,8 @@ pub fn query_network_out_all_avg(
          {}, \
          CAST (SUM(bytes/\"peer_count\".\"peer_count\") AS REAL) as value \
          FROM \"network_usage\" \
-         LEFT JOIN peer_count ON (\"network_usage\".\"time\"=\"peer_count\".\"time\") \
+         LEFT JOIN peer_count ON (\"network_usage\".\"time\"=\"peer_count\".\"time\" AND \
+           \"network_usage\".\"name\"=\"peer_count\".\"name\") \
          WHERE \"network_usage\".\"time\"<$1 and \"network_usage\".\"time\">$2 \
          GROUP BY \"network_usage\".\"name\", \"rounded_time\" \
          ORDER BY \"network_usage\".\"name\", \"rounded_time\" ASC",
