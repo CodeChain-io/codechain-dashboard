@@ -79,9 +79,68 @@ fn create_network_usage_schema(conn: &Connection) {
 
     cinfo!("Create network_usage_time_index");
     conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_index ON network_usage (time)", &[]).unwrap();
-    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_5min_index ON network_usage (time_5min)", &[]).unwrap();
-    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_hour_index ON network_usage (time_hour)", &[]).unwrap();
-    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_day_index ON network_usage (time_day)", &[]).unwrap();
+    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_5min_index ON network_usage (name, time_5min)", &[])
+        .unwrap();
+    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_hour_index ON network_usage (name, time_hour)", &[])
+        .unwrap();
+    conn.execute("CREATE INDEX IF NOT EXISTS network_usage_time_day_index ON network_usage (name, time_day)", &[])
+        .unwrap();
+
+    cinfo!("Create materialized views");
+    conn.execute(
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS time_5min_report_view_materialized AS SELECT
+        name,
+        time_5min,
+        CAST (SUM(bytes) AS REAL) AS value
+        FROM network_usage
+        WHERE time_5min > NOW() - interval '7 days'
+        GROUP BY name, time_5min
+        ORDER BY name, time_5min",
+        &[],
+    )
+    .unwrap();
+
+    conn.execute(
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS time_5min_avg_report_view_materialized AS SELECT
+        network_usage.name,
+        time_5min,
+        CAST (SUM(bytes/greatest(peer_count.peer_count, 1)) AS REAL) AS value
+        FROM network_usage
+        LEFT JOIN peer_count ON (network_usage.time=peer_count.time AND network_usage.name=peer_count.name)
+        WHERE time_5min > NOW() - interval '7 days'
+        GROUP BY network_usage.name, time_5min
+        ORDER BY network_usage.name, time_5min",
+        &[],
+    )
+    .unwrap();
+
+    conn.execute(
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS time_5min_extension_report_view_materialized AS SELECT
+        name,
+        extension,
+        time_5min,
+        CAST (SUM(bytes) AS REAL) AS value
+        FROM network_usage
+        WHERE time_5min > NOW() - interval '7 days'
+        GROUP BY name, time_5min, network_usage.extension
+        ORDER BY name, time_5min, network_usage.extension",
+        &[],
+    )
+    .unwrap();
+
+    conn.execute(
+        "CREATE MATERIALIZED VIEW IF NOT EXISTS time_5min_peer_report_view_materialized AS SELECT
+        name,
+        target_ip,
+        time_5min,
+        CAST (SUM(bytes) AS REAL) AS value
+        FROM network_usage
+        WHERE time_5min > NOW() - interval '7 days'
+        GROUP BY name, time_5min, network_usage.target_ip
+        ORDER BY name, time_5min, network_usage.target_ip",
+        &[],
+    )
+    .unwrap();
 }
 
 fn create_peer_count_schema(conn: &Connection) {
@@ -98,5 +157,5 @@ fn create_peer_count_schema(conn: &Connection) {
     .unwrap();
 
     cinfo!("Create peer_count_time_index");
-    conn.execute("CREATE INDEX IF NOT EXISTS peer_count_time_index ON peer_count (time)", &[]).unwrap();
+    conn.execute("CREATE INDEX IF NOT EXISTS peer_count_time_index ON peer_count (name, time)", &[]).unwrap();
 }
