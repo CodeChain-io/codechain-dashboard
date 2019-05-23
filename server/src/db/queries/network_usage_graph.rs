@@ -9,18 +9,13 @@ pub fn query_network_out_all(
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutAllRow>> {
     let time_column_name = get_sql_column_name_by_period(graph_args.period);
-    let query_stmt = format!(
-        "\
-         SELECT \
-         name, \
-         {}, \
-         CAST (SUM(bytes) AS REAL) as value \
-         FROM \"network_usage\" \
-         WHERE \"{}\"<$1 and \"{}\">$2 \
-         GROUP BY \"name\", \"{}\" \
-         ORDER BY \"name\", \"{}\" ASC",
-        time_column_name, time_column_name, time_column_name, time_column_name, time_column_name
-    );
+    let query_stmt = "\
+                      SELECT \
+                      name, \
+                      time_5min, \
+                      value \
+                      FROM time_5min_report_view_materialized \
+                      WHERE time_5min<$1 and time_5min>$2";
 
     let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from])?;
 
@@ -47,20 +42,13 @@ pub fn query_network_out_all_avg(
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutAllRow>> {
     let time_column_name = get_sql_column_name_by_period(graph_args.period);
-    let query_stmt = format!(
-        "\
-         SELECT \
-         \"network_usage\".name, \
-         {}, \
-         CAST (SUM(bytes/greatest(\"peer_count\".\"peer_count\", 1)) AS REAL) as value \
-         FROM \"network_usage\" \
-         LEFT JOIN peer_count ON (\"network_usage\".\"time\"=\"peer_count\".\"time\" AND \
-         \"network_usage\".\"name\"=\"peer_count\".\"name\") \
-         WHERE \"network_usage\".\"{}\"<$1 and \"network_usage\".\"{}\">$2 \
-         GROUP BY \"network_usage\".\"name\", \"{}\" \
-         ORDER BY \"network_usage\".\"name\", \"{}\" ASC",
-        time_column_name, time_column_name, time_column_name, time_column_name, time_column_name
-    );
+    let query_stmt = "\
+                      SELECT \
+                      name, \
+                      time_5min, \
+                      value \
+                      FROM time_5min_avg_report_view_materialized \
+                      WHERE time_5min<$1 and time_5min>$2";
 
     let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from])?;
 
@@ -80,19 +68,14 @@ pub fn query_network_out_node_extension(
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutNodeExtensionRow>> {
     let time_column_name = get_sql_column_name_by_period(graph_args.period);
-    let query_stmt = format!(
-        "\
-         SELECT \
-         extension, \
-         {}, \
-         CAST (SUM(bytes) AS REAL) as value \
-         FROM \"network_usage\" \
-         WHERE \"network_usage\".\"{}\"<$1 AND \"network_usage\".\"{}\">$2 \
-           AND \"network_usage\".\"name\"=$3
-         GROUP BY \"network_usage\".\"extension\", \"{}\" \
-         ORDER BY \"network_usage\".\"extension\", \"{}\" ASC",
-        time_column_name, time_column_name, time_column_name, time_column_name, time_column_name
-    );
+    let query_stmt = "\
+                      SELECT \
+                      extension, \
+                      time_5min, \
+                      value \
+                      FROM time_5min_extension_report_view_materialized \
+                      WHERE time_5min<$1 AND time_5min>$2 \
+                      AND name=$3";
 
     let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from, &node_name])?;
 
@@ -112,19 +95,14 @@ pub fn query_network_out_node_peer(
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutNodePeerRow>> {
     let time_column_name = get_sql_column_name_by_period(graph_args.period);
-    let query_stmt = format!(
-        "\
-         SELECT \
-         \"target_ip\", \
-         {}, \
-         CAST (SUM(bytes) AS REAL) as value \
-         FROM \"network_usage\" \
-         WHERE \"network_usage\".\"{}\"<$1 AND \"network_usage\".\"{}\">$2 \
-           AND \"network_usage\".\"name\"=$3
-         GROUP BY \"network_usage\".\"target_ip\", \"{}\" \
-         ORDER BY \"network_usage\".\"target_ip\", \"{}\" ASC",
-        time_column_name, time_column_name, time_column_name, time_column_name, time_column_name
-    );
+    let query_stmt = "\
+                      SELECT \
+                      target_ip, \
+                      time_5min, \
+                      value \
+                      FROM time_5min_peer_report_view_materialized \
+                      WHERE time_5min<$1 AND time_5min>$2 \
+                      AND name=$3";
 
     let rows = conn.query(&query_stmt, &[&graph_args.to, &graph_args.from, &node_name])?;
 
