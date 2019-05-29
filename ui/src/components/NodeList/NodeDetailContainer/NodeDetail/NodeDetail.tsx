@@ -106,11 +106,6 @@ const getCpuUsage = (cpuUsage: number[]) => {
 };
 
 export default class NodeDetail extends React.Component<Props, State> {
-  private logFileHost = `${
-    process.env.REACT_APP_LOG_SERVER_HOST
-      ? process.env.REACT_APP_LOG_SERVER_HOST
-      : "http://localhost:5012"
-  }`;
   public constructor(props: Props) {
     super(props);
     this.state = {
@@ -172,16 +167,6 @@ export default class NodeDetail extends React.Component<Props, State> {
               </div>
             </div>
           )}
-          <div className="text-right">
-            <a
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-text"
-              href={`${this.logFileHost}/log/${nodeInfo.name}`}
-            >
-              Show logs
-            </a>
-          </div>
           <hr />
           <div className="data-row">
             <div>Version</div>

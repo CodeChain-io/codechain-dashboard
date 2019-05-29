@@ -42,8 +42,6 @@ CodeChain Agent Hub will listen 3012 port to communicate with the Dashboard usin
 
 CodeChain Agent Hub will listen 4012 port to communicate with the Agent using JSON-RPC.
 
-CodeChain Agent Hub will listen 5012 port to serve CodeChain's log file using HTTP.
-
 Alerts
 -------
 

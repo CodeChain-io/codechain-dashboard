@@ -2,7 +2,6 @@
 extern crate log;
 
 extern crate chrono;
-extern crate iron;
 extern crate jsonrpc_core;
 #[macro_use]
 extern crate lazy_static;
@@ -33,13 +32,9 @@ mod router;
 mod rpc;
 mod util;
 
-use std::fmt;
 use std::sync::Arc;
 use std::thread;
 
-use iron::prelude::*;
-use iron::status;
-use parking_lot::Mutex;
 use ws::listen;
 
 use self::event_propagator::EventPropagator;
@@ -83,7 +78,6 @@ fn main() {
     });
     let agent_service_sender = agent::Service::run_thread(db_service_sender.clone(), noti);
     let agent_service_for_frontend = agent_service_sender.clone();
-    let web_handler = WebHandler::new(agent_service_sender.clone());
 
     let frontend_join = thread::Builder::new()
         .name("frontend listen".to_string())
@@ -112,73 +106,6 @@ fn main() {
         })
         .expect("Should success listening agent");
 
-    let webserver_join = thread::Builder::new()
-        .name("webserver".to_string())
-        .spawn(move || {
-            let _server = Iron::new(web_handler).http("0.0.0.0:5012").unwrap();
-            cinfo!("Webserver listening on 5012");
-        })
-        .expect("Should success open webserver");
-
     frontend_join.join().expect("Join frontend listener");
     agent_join.join().expect("Join agent listener");
-    webserver_join.join().expect("Join webserver");
 }
-
-struct WebHandler {
-    #[allow(dead_code)]
-    agent_service_sender: Mutex<agent::ServiceSender>,
-}
-
-impl WebHandler {
-    fn new(agent_service_sender: agent::ServiceSender) -> Self {
-        Self {
-            agent_service_sender: Mutex::new(agent_service_sender),
-        }
-    }
-}
-
-impl iron::Handler for WebHandler {
-    fn handle(&self, req: &mut iron::Request) -> IronResult<iron::Response> {
-        let paths = req.url.path();
-        if paths.len() != 2 {
-            cwarn!("Invalid web request {}", req.url);
-            return Ok(Response::with(status::NotFound))
-        }
-
-        if paths.get(0).expect("Already checked") != &"log" {
-            cwarn!("Invalid web request {}", req.url);
-            return Ok(Response::with(status::NotFound))
-        }
-
-        let node_name = *paths.get(1).expect("Already checked");
-        ctrace!("Get log for agent-{}", node_name);
-
-        use iron::mime;
-        let content_type = "text/plain".parse::<mime::Mime>().unwrap();
-        Ok(Response::with((content_type, status::Ok, "")))
-    }
-}
-
-#[derive(Debug)]
-#[allow(dead_code)]
-struct WebError {
-    value: String,
-}
-
-impl WebError {
-    #[allow(dead_code)]
-    fn new(s: &str) -> Self {
-        WebError {
-            value: s.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for WebError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(self, f)
-    }
-}
-
-impl std::error::Error for WebError {}
