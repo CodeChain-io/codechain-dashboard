@@ -186,7 +186,7 @@ impl Service {
     fn initialize_agent(&mut self, state: &AgentQueryResult, callback: Sender<bool>) {
         let name = state.name.clone();
         let before = match self.state.agent_query_result.entry(name) {
-            Entry::Occupied(mut before) => before.into_mut(),
+            Entry::Occupied(before) => before.into_mut(),
             Entry::Vacant(e) => {
                 self.event_subscriber.on_event(Event::AgentUpdated {
                     before: None.into(),
