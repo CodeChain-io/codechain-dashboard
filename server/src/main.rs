@@ -23,6 +23,7 @@ extern crate ws;
 mod logger;
 mod agent;
 mod common_rpc_types;
+mod daily_reporter;
 mod db;
 mod event_propagator;
 mod frontend;
@@ -76,7 +77,7 @@ fn main() {
         db_user: db_user.to_string(),
         db_password: db_password.to_string(),
     });
-    let agent_service_sender = agent::Service::run_thread(db_service_sender.clone(), noti);
+    let agent_service_sender = agent::Service::run_thread(db_service_sender.clone(), Arc::clone(&noti));
     let agent_service_for_frontend = agent_service_sender.clone();
 
     let frontend_join = thread::Builder::new()
@@ -106,6 +107,9 @@ fn main() {
         })
         .expect("Should success listening agent");
 
+    let daily_reporter_join = daily_reporter::start(noti);
+
     frontend_join.join().expect("Join frontend listener");
     agent_join.join().expect("Join agent listener");
+    daily_reporter_join.join().expect("Join daily reporter");
 }
