@@ -101,14 +101,15 @@ fn main() {
         })
         .expect("Should success listening frontend");
 
+    let agent_service_for_agent = agent_service_sender.clone();
     let agent_join = thread::Builder::new()
         .name("agent listen".to_string())
         .spawn(move || {
-            listen("0.0.0.0:4012", |out| agent::WebSocketHandler::new(out, agent_service_sender.clone())).unwrap();
+            listen("0.0.0.0:4012", |out| agent::WebSocketHandler::new(out, agent_service_for_agent.clone())).unwrap();
         })
         .expect("Should success listening agent");
 
-    let daily_reporter_join = daily_reporter::start(noti, db_service_sender.clone());
+    let daily_reporter_join = daily_reporter::start(noti, db_service_sender, agent_service_sender);
 
     frontend_join.join().expect("Join frontend listener");
     agent_join.join().expect("Join agent listener");
