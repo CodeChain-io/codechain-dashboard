@@ -7,7 +7,7 @@ use parking_lot::RwLock;
 
 use super::super::db;
 use super::super::jsonrpc;
-use super::agent::{Agent, AgentSender};
+use super::agent::{Agent, AgentSender, State as AgentState};
 use crate::noti::Noti;
 
 #[derive(Default)]
@@ -37,6 +37,17 @@ impl ServiceSender {
         });
 
         find_result.map(|(_, agent)| agent.clone())
+    }
+
+    pub fn get_agents_states(&self) -> Vec<AgentState> {
+        let state = self.state.read();
+        let mut result = Vec::new();
+        for (_, agent) in state.agents.iter() {
+            let state = agent.read_state().clone();
+            result.push(state);
+        }
+
+        result
     }
 }
 

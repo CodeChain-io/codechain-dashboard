@@ -1,3 +1,4 @@
+use std::cmp::PartialEq;
 use std::convert::TryFrom;
 use std::net::SocketAddr;
 use std::ops::Drop;
@@ -24,13 +25,14 @@ use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
 use crate::common_rpc_types::HardwareUsage;
 use crate::noti::Noti;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug)]
 pub enum State {
     Initializing,
     Normal {
         name: NodeName,
         address: Option<SocketAddr>,
         status: NodeStatus,
+        recent_update_result: Option<UpdateResult>,
     },
     Stop {
         name: NodeName,
@@ -38,6 +40,48 @@ pub enum State {
         status: NodeStatus,
         cause: StopCause,
     },
+}
+
+impl PartialEq for State {
+    fn eq(&self, other: &State) -> bool {
+        match (self, other) {
+            (State::Initializing, State::Initializing) => true,
+            (
+                State::Normal {
+                    name: self_name,
+                    address: self_address,
+                    status: self_status,
+                    recent_update_result: _self_recent_update_result,
+                },
+                State::Normal {
+                    name: other_name,
+                    address: other_address,
+                    status: other_status,
+                    recent_update_result: _other_recent_update_result,
+                },
+            ) => self_name == other_name && self_address == other_address && self_status == other_status,
+            (
+                State::Stop {
+                    name: self_name,
+                    address: self_address,
+                    status: self_status,
+                    cause: self_cause,
+                },
+                State::Stop {
+                    name: other_name,
+                    address: other_address,
+                    status: other_status,
+                    cause: other_cause,
+                },
+            ) => {
+                self_name == other_name
+                    && self_address == other_address
+                    && self_status == other_status
+                    && self_cause == other_cause
+            }
+            _ => false,
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -60,6 +104,21 @@ impl State {
                 name,
                 ..
             } => Some(name),
+        }
+    }
+
+    pub fn update_recent_update_result(&mut self, update_result: UpdateResult) {
+        match self {
+            State::Normal {
+                recent_update_result,
+                ..
+            } => {
+                *recent_update_result = Some(update_result);
+            }
+            State::Initializing => {}
+            State::Stop {
+                ..
+            } => {}
         }
     }
 }
@@ -262,6 +321,7 @@ impl Agent {
             name: info.name.clone(),
             address: info.address,
             status: info.status,
+            recent_update_result: None,
         };
 
         if let State::Initializing = *state {
@@ -350,12 +410,16 @@ impl Agent {
         let logs = self.codechain_rpc.get_logs(info.status)?;
         self.db_service.write_logs(info.name, logs);
 
-        Ok(Some(UpdateResult {
+        let update_result = UpdateResult {
             network_id: network_id.unwrap_or_default(),
             number_of_peers,
             best_block_number: best_block_id.map(|id| id.block_number as u64),
             disk_usage,
-        }))
+        };
+
+        state.update_recent_update_result(update_result.clone());
+
+        Ok(Some(update_result))
     }
 
     fn clean_up(&mut self, reason: AgentCleanupReason) {
@@ -415,11 +479,12 @@ impl Agent {
     }
 }
 
-struct UpdateResult {
-    network_id: String,
-    number_of_peers: usize,
-    best_block_number: Option<u64>,
-    disk_usage: HardwareUsage,
+#[derive(Clone, Debug)]
+pub struct UpdateResult {
+    pub network_id: String,
+    pub number_of_peers: usize,
+    pub best_block_number: Option<u64>,
+    pub disk_usage: HardwareUsage,
 }
 
 impl Drop for Agent {
