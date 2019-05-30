@@ -49,6 +49,13 @@ impl ServiceSender {
 
         result
     }
+
+    pub fn reset_maximum_memory_usages(&self) {
+        let state = self.state.write();
+        for (_, agent) in state.agents.iter() {
+            agent.reset_maximum_memory_usage();
+        }
+    }
 }
 
 pub struct Service {
