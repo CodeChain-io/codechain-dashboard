@@ -21,6 +21,7 @@ use util;
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    CheckConnection(Sender<Result<(), DBError>>),
     InitializeAgent(Box<AgentQueryResult>, Sender<bool>),
     UpdateAgent(Box<AgentQueryResult>),
     GetAgent(NodeName, Sender<Option<AgentQueryResult>>),
@@ -98,6 +99,9 @@ impl Service {
             .spawn(move || {
                 for message in rx {
                     match message {
+                        Message::CheckConnection(callback) => {
+                            service.check_connection(callback);
+                        }
                         Message::InitializeAgent(agent_query_result, callback) => {
                             service.initialize_agent(&agent_query_result, callback);
                         }
@@ -181,6 +185,13 @@ impl Service {
             .expect("Should success running db service thread");
 
         service_sender
+    }
+
+    fn check_connection(&self, callback: Sender<Result<(), DBError>>) {
+        let result = self.db_conn.execute(&"SELECT 1", &[]).map_err(|err| DBError::Internal(err.to_string()));
+        if let Err(err) = callback.send(result.map(|_| ())) {
+            cerror!("Cannot send callback : {}", err);
+        }
     }
 
     fn initialize_agent(&mut self, state: &AgentQueryResult, callback: Sender<bool>) {
@@ -390,6 +401,12 @@ impl ServiceSender {
         Self {
             sender,
         }
+    }
+
+    pub fn check_connection(&self) -> Result<(), DBError> {
+        let (tx, rx) = channel();
+        self.sender.send(Message::CheckConnection(tx)).expect("Should success check connection");
+        rx.recv()?
     }
 
     pub fn initialize_agent_query_result(&self, agent_query_result: AgentQueryResult) -> Result<bool, DBError> {

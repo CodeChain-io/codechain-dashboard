@@ -80,6 +80,7 @@ fn main() {
     let agent_service_sender = agent::Service::run_thread(db_service_sender.clone(), Arc::clone(&noti));
     let agent_service_for_frontend = agent_service_sender.clone();
 
+    let db_service_sender_for_frontend = db_service_sender.clone();
     let frontend_join = thread::Builder::new()
         .name("frontend listen".to_string())
         .spawn(move || {
@@ -87,7 +88,7 @@ fn main() {
             frontend::add_routing(Arc::get_mut(&mut frontend_router).unwrap());
             let frontend_context = frontend::Context {
                 agent_service: agent_service_for_frontend,
-                db_service: db_service_sender.clone(),
+                db_service: db_service_sender_for_frontend.clone(),
                 passphrase: std::env::var("PASSPHRASE").unwrap_or_else(|_| "passphrase".to_string()),
             };
             listen("0.0.0.0:3012", move |out| frontend::WebSocketHandler {
@@ -107,7 +108,7 @@ fn main() {
         })
         .expect("Should success listening agent");
 
-    let daily_reporter_join = daily_reporter::start(noti);
+    let daily_reporter_join = daily_reporter::start(noti, db_service_sender.clone());
 
     frontend_join.join().expect("Join frontend listener");
     agent_join.join().expect("Join agent listener");
