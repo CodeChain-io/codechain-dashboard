@@ -33,12 +33,14 @@ pub enum State {
         address: Option<SocketAddr>,
         status: NodeStatus,
         recent_update_result: Option<UpdateResult>,
+        maximum_memory_usage: Option<HardwareUsage>,
     },
     Stop {
         name: NodeName,
         address: Option<SocketAddr>,
         status: NodeStatus,
         cause: StopCause,
+        maximum_memory_usage: Option<HardwareUsage>,
     },
 }
 
@@ -52,12 +54,14 @@ impl PartialEq for State {
                     address: self_address,
                     status: self_status,
                     recent_update_result: _self_recent_update_result,
+                    maximum_memory_usage: _self_maximum_memory_usage,
                 },
                 State::Normal {
                     name: other_name,
                     address: other_address,
                     status: other_status,
                     recent_update_result: _other_recent_update_result,
+                    maximum_memory_usage: _other_maximum_memory_usage,
                 },
             ) => self_name == other_name && self_address == other_address && self_status == other_status,
             (
@@ -66,12 +70,14 @@ impl PartialEq for State {
                     address: self_address,
                     status: self_status,
                     cause: self_cause,
+                    maximum_memory_usage: _self_maximum_memory_usage,
                 },
                 State::Stop {
                     name: other_name,
                     address: other_address,
                     status: other_status,
                     cause: other_cause,
+                    maximum_memory_usage: _other_maximum_memory_usage,
                 },
             ) => {
                 self_name == other_name
@@ -111,14 +117,49 @@ impl State {
         match self {
             State::Normal {
                 recent_update_result,
+                maximum_memory_usage,
                 ..
             } => {
+                match *maximum_memory_usage {
+                    None => *maximum_memory_usage = Some(update_result.memory_usage),
+                    Some(prev_memory_usage) => {
+                        if prev_memory_usage.available > update_result.memory_usage.available {
+                            *maximum_memory_usage = Some(update_result.memory_usage)
+                        }
+                    }
+                }
                 *recent_update_result = Some(update_result);
             }
             State::Initializing => {}
             State::Stop {
+                maximum_memory_usage,
                 ..
-            } => {}
+            } => match *maximum_memory_usage {
+                None => *maximum_memory_usage = Some(update_result.memory_usage),
+                Some(prev_memory_usage) => {
+                    if prev_memory_usage.available > update_result.memory_usage.available {
+                        *maximum_memory_usage = Some(update_result.memory_usage)
+                    }
+                }
+            },
+        }
+    }
+
+    pub fn reset_maximum_memory_usage(&mut self) {
+        match self {
+            State::Normal {
+                maximum_memory_usage,
+                ..
+            } => {
+                *maximum_memory_usage = None;
+            }
+            State::Stop {
+                maximum_memory_usage,
+                ..
+            } => {
+                *maximum_memory_usage = None;
+            }
+            State::Initializing => {}
         }
     }
 }
@@ -139,6 +180,10 @@ impl AgentSender {
 
     pub fn read_state(&self) -> RwLockReadGuard<State> {
         self.state.read()
+    }
+
+    pub fn reset_maximum_memory_usage(&self) {
+        self.state.write().reset_maximum_memory_usage();
     }
 }
 
@@ -268,6 +313,7 @@ impl Agent {
                 number_of_peers,
                 best_block_number,
                 disk_usage,
+                ..
             }) = update_result
             {
                 let node_name = node_name.expect("Updated");
@@ -322,6 +368,7 @@ impl Agent {
             address: info.address,
             status: info.status,
             recent_update_result: None,
+            maximum_memory_usage: None,
         };
 
         if let State::Initializing = *state {
@@ -346,6 +393,7 @@ impl Agent {
                     address: info.address,
                     status: info.status,
                     cause: StopCause::AlreadyConnected,
+                    maximum_memory_usage: None,
                 };
                 return Ok(None)
             }
@@ -383,6 +431,7 @@ impl Agent {
         ctrace!("Update state from {:?} to {:?}", *state, new_state);
         let number_of_peers = peers.len();
         let disk_usage = hardware.disk_usage;
+        let memory_usage = hardware.memory_usage;
         self.db_service.update_agent_query_result(db::AgentQueryResult {
             name: info.name.clone(),
             status: info.status,
@@ -415,6 +464,7 @@ impl Agent {
             number_of_peers,
             best_block_number: best_block_id.map(|id| id.block_number as u64),
             disk_usage,
+            memory_usage,
         };
 
         state.update_recent_update_result(update_result.clone());
@@ -485,6 +535,7 @@ pub struct UpdateResult {
     pub number_of_peers: usize,
     pub best_block_number: Option<u64>,
     pub disk_usage: HardwareUsage,
+    pub memory_usage: HardwareUsage,
 }
 
 impl Drop for Agent {

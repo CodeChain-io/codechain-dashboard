@@ -46,6 +46,7 @@ pub fn send_daily_report(
     let mut messages = vec!["CodeChain Server is running".to_string(), db_status];
 
     let agent_states = agent_service.get_agents_states();
+    agent_service.reset_maximum_memory_usages();
     for agent_state in agent_states {
         match agent_state {
             AgentState::Initializing => {}
@@ -54,6 +55,7 @@ pub fn send_daily_report(
                 address,
                 status,
                 recent_update_result,
+                maximum_memory_usage,
             } => {
                 messages.push(format!("Agent: {}", name));
                 messages.push(format!("  address: {:?}", address));
@@ -63,16 +65,28 @@ pub fn send_daily_report(
                     messages.push(format!("  best block number: {:?}", update_result.best_block_number));
                     messages.push(format!("  available disk: {} MB", update_result.disk_usage.available / 1_000_000));
                 }
+                if let Some(maximum_memory_usage) = maximum_memory_usage {
+                    let total_mb = maximum_memory_usage.total / 1_000_000;
+                    let used_mb = (maximum_memory_usage.total - maximum_memory_usage.available) / 1_000_000;
+                    messages.push(format!("  memory usage: {} MB / {} MB", used_mb, total_mb));
+                }
             }
             AgentState::Stop {
                 name,
                 address,
                 status,
+                maximum_memory_usage,
                 ..
             } => {
                 messages.push(format!("Agent: {}", name));
                 messages.push(format!("  address: {:?}", address));
                 messages.push(format!("  status: {:?}", status));
+
+                if let Some(maximum_memory_usage) = maximum_memory_usage {
+                    let total_mb = maximum_memory_usage.total / 1_000_000;
+                    let used_mb = (maximum_memory_usage.total - maximum_memory_usage.available) / 1_000_000;
+                    messages.push(format!("  memory usage: {} MB / {} MB", used_mb, total_mb));
+                }
             }
         };
     }
