@@ -65,13 +65,18 @@ impl CodeChainRPC {
         self.call_rpc(status, "net_recentNetworkUsage", Vec::new())
     }
 
-    pub fn get_logs(&self, status: NodeStatus) -> Result<Vec<StructuredLog>, String> {
+    pub fn get_logs(&self, status: NodeStatus) -> Vec<StructuredLog> {
         if status != NodeStatus::Run {
-            return Ok(Default::default())
+            return Vec::new()
         }
-        let response = self.sender.shell_get_codechain_log().map_err(|err| format!("{}", err))?;
-
-        Ok(response)
+        let response = self.sender.shell_get_codechain_log().map_err(|err| format!("{}", err));
+        match response {
+            Ok(logs) => logs,
+            Err(err) => {
+                cerror!("Fail to get logs {}", err);
+                Vec::new()
+            }
+        }
     }
 
     fn call_rpc<T>(&self, status: NodeStatus, method: &str, params: Vec<Value>) -> Result<T, String>

@@ -456,7 +456,7 @@ impl Agent {
             );
         }
 
-        let logs = self.codechain_rpc.get_logs(info.status)?;
+        let logs = self.codechain_rpc.get_logs(info.status);
         self.db_service.write_logs(info.name, logs);
 
         let update_result = UpdateResult {
