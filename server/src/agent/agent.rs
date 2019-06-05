@@ -322,10 +322,10 @@ impl Agent {
                 } else {
                     count_of_no_enough_connections = 0;
                 }
-                if count_of_no_enough_connections == 6 {
+                if count_of_no_enough_connections == 12 {
                     self.noti.warn(
                         &network_id,
-                        &format!("{} failed to establish enough connections in a minute.", node_name),
+                        &format!("{} failed to establish enough connections in two minutes.", node_name),
                     );
                 }
 
