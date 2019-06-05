@@ -13,7 +13,7 @@ pub fn start(
     db_service: DBServiceSender,
     agent_service: AgentServiceSender,
 ) -> thread::JoinHandle<()> {
-    let network_id = std::env::var("NETWORK_ID").unwrap();
+    let network_id = std::env::var("NETWORK_ID").expect("NETWORK_ID environment variable is needed");
 
     thread::Builder::new()
         .name("daily reporter".to_string())
