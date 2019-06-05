@@ -18,8 +18,8 @@ fn main() {
 
     create_agent_extra_schema(&conn);
     create_logs_schema(&conn);
+    create_peer_count_schema(&conn);
     create_network_usage_schema(&conn);
-    create_peer_count_schema(&conn)
 }
 
 fn create_agent_extra_schema(conn: &Connection) {
