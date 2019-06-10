@@ -344,7 +344,7 @@ impl Agent {
 
                 const ONE_GB: i64 = 1_000_000_000;
                 if !disk_usage_alert_sent {
-                    if disk_usage.available < ONE_GB {
+                    if disk_usage.total != 0 && disk_usage.available < ONE_GB {
                         self.noti.warn(
                             &network_id,
                             &format!("{} has only {} MB free space.", node_name, disk_usage.available / 1_000_000),
