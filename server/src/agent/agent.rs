@@ -293,6 +293,7 @@ impl Agent {
         let mut previous_best_block_number = 0;
         let mut count_of_no_block_update = 0usize;
         let mut disk_usage_alert_sent = false;
+        let mut memory_usage_alert_sent = false;
         loop {
             ctrace!("Agent-{} update", self.id);
             let update_result = self.update()?;
@@ -313,7 +314,7 @@ impl Agent {
                 number_of_peers,
                 best_block_number,
                 disk_usage,
-                ..
+                memory_usage,
             }) = update_result
             {
                 let node_name = node_name.expect("Updated");
@@ -347,12 +348,24 @@ impl Agent {
                     if disk_usage.available < ONE_GB {
                         self.noti.warn(
                             &network_id,
-                            &format!("{} has only {} MB free space.", node_name, disk_usage.available / 1_000_000),
+                            &format!("{} has only {} MB free disk space.", node_name, disk_usage.available / 1_000_000),
                         );
                         disk_usage_alert_sent = true;
                     }
                 } else if ONE_GB < disk_usage.available {
                     disk_usage_alert_sent = false;
+                }
+
+                if !memory_usage_alert_sent {
+                    if memory_usage.total != 0 && memory_usage.available < (ONE_GB / 4) {
+                        self.noti.error(
+                            &network_id,
+                            &format!("{} has only {} MB free memory.", node_name, memory_usage.available / 1_000_000),
+                        );
+                        memory_usage_alert_sent = true;
+                    } else if (ONE_GB / 4) < memory_usage.available {
+                        memory_usage_alert_sent = false;
+                    }
                 }
             }
             thread::sleep(Duration::new(10, 0));
