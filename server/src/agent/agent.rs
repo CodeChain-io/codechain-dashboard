@@ -289,6 +289,7 @@ impl Agent {
             }
         }
 
+        const REQUIRED_NUMBER_OF_PEERS: usize = 5usize;
         let mut count_of_no_enough_connections = 0usize;
         let mut previous_best_block_number = 0;
         let mut count_of_no_block_update = 0usize;
@@ -318,7 +319,7 @@ impl Agent {
             }) = update_result
             {
                 let node_name = node_name.expect("Updated");
-                if number_of_peers < 5 {
+                if number_of_peers < REQUIRED_NUMBER_OF_PEERS {
                     count_of_no_enough_connections += 1;
                 } else {
                     count_of_no_enough_connections = 0;
@@ -326,7 +327,12 @@ impl Agent {
                 if count_of_no_enough_connections == 12 {
                     self.noti.warn(
                         &network_id,
-                        &format!("{} failed to establish enough connections in two minutes.", node_name),
+                        &format!(
+                            "{} failed to establish enough connections in two minutes. (current connection count/required connection count) = ({}/{})",
+                            node_name,
+                            number_of_peers,
+                            REQUIRED_NUMBER_OF_PEERS
+                        ),
                     );
                 }
 
