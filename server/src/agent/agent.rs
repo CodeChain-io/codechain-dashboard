@@ -364,7 +364,7 @@ impl Agent {
 
                 if !memory_usage_alert_sent {
                     if memory_usage.total != 0 && memory_usage.available < (ONE_GB / 4) {
-                        self.noti.error(
+                        self.noti.warn(
                             &network_id,
                             &format!("{} has only {} MB free memory.", node_name, memory_usage.available / 1_000_000),
                         );
