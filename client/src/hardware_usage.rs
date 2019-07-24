@@ -94,7 +94,8 @@ impl HardwareService {
             Vec::new()
         };
 
-        let disk_usage = get_disk_usage(sysinfo_sys);
+        let disk_usages = get_disk_usages(sysinfo_sys);
+        let disk_usage = merge_disk_usages(&disk_usages);
         let mut systemstat_sys = systemstat::System::new();
         let memory_usage = get_memory_usage(&mut systemstat_sys);
 
@@ -102,6 +103,7 @@ impl HardwareService {
             *hardware_info = HardwareInfo {
                 cpu_usage,
                 disk_usage,
+                disk_usages,
                 memory_usage,
             };
         } else {
@@ -136,30 +138,52 @@ pub struct HardwareUsage {
 #[serde(rename_all = "camelCase")]
 pub struct HardwareInfo {
     pub cpu_usage: Vec<f64>,
+    // disk_usage field is deprecated. The field will be removed later update
     pub disk_usage: HardwareUsage,
+    pub disk_usages: Vec<HardwareUsage>,
     pub memory_usage: HardwareUsage,
 }
 
-fn get_disk_usage(sys: &mut sysinfo::System) -> HardwareUsage {
+fn get_disk_usages(sys: &mut sysinfo::System) -> Vec<HardwareUsage> {
     sys.refresh_disk_list();
     sys.refresh_disks();
 
-    let mut total: i64 = 0;
-    let mut available: i64 = 0;
+    let mut result: Vec<HardwareUsage> = Vec::new();
     for disk in sys.get_disks() {
-        total += disk.get_total_space() as i64;
-        available += disk.get_available_space() as i64;
+        let total = disk.get_total_space() as i64;
+        let available = disk.get_available_space() as i64;
+
+        let percentage_used = if total == 0 {
+            0f64
+        } else {
+            (total - available) as f64 / total as f64
+        };
+        result.push(HardwareUsage {
+            total,
+            available,
+            percentage_used,
+        });
     }
-    let percentage_used = if total == 0 {
+
+    result
+}
+
+fn merge_disk_usages(usages: &[HardwareUsage]) -> HardwareUsage {
+    let mut result = HardwareUsage::default();
+
+    for usage in usages {
+        result.total += usage.total;
+        result.available += usage.available;
+    }
+
+    let percentage_used = if result.total == 0 {
         0f64
     } else {
-        (total - available) as f64 / total as f64
+        (result.total - result.available) as f64 / result.total as f64
     };
-    HardwareUsage {
-        total,
-        available,
-        percentage_used,
-    }
+    result.percentage_used = percentage_used;
+
+    result
 }
 
 fn get_memory_usage(sys: &mut systemstat::System) -> HardwareUsage {
