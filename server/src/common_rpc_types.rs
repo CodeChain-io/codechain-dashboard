@@ -76,8 +76,10 @@ pub struct HardwareUsage {
 #[serde(rename_all = "camelCase")]
 pub struct HardwareInfo {
     pub cpu_usage: Vec<f64>,
-    pub disk_usage: HardwareUsage,
-    pub disk_usages: Vec<HardwareUsage>,
+    #[serde(default)]
+    pub disk_usage: Option<HardwareUsage>,
+    #[serde(default)]
+    pub disk_usages: Option<Vec<HardwareUsage>>,
     pub memory_usage: HardwareUsage,
 }
 
