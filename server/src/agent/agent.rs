@@ -351,11 +351,11 @@ impl Agent {
                     }
                 }
 
-                const ONE_GB: i64 = 1_000_000_000;
+                const THREE_GB: i64 = 3_000_000_000;
                 if !disk_usage_alert_sent {
                     if let Some(disk_usages) = disk_usages {
                         let less_space_disks: Vec<&HardwareUsage> =
-                            disk_usages.iter().filter(|usage| usage.total != 0 && usage.available < ONE_GB).collect();
+                            disk_usages.iter().filter(|usage| usage.total != 0 && usage.available < THREE_GB).collect();
                         if !less_space_disks.is_empty() {
                             let disk_spaces: String = less_space_disks
                                 .into_iter()
@@ -371,7 +371,7 @@ impl Agent {
                             disk_usage_alert_sent = false;
                         }
                     } else if let Some(disk_usage) = disk_usage {
-                        if disk_usage.total != 0 && disk_usage.available < ONE_GB {
+                        if disk_usage.total != 0 && disk_usage.available < THREE_GB {
                             self.noti.warn(
                                 &network_id,
                                 &format!(
@@ -381,12 +381,13 @@ impl Agent {
                                 ),
                             );
                             disk_usage_alert_sent = true;
-                        } else if ONE_GB < disk_usage.available {
+                        } else if THREE_GB < disk_usage.available {
                             disk_usage_alert_sent = false;
                         }
                     }
                 }
 
+                const ONE_GB: i64 = 1_000_000_000;
                 if !memory_usage_alert_sent {
                     if memory_usage.total != 0 && memory_usage.available < (ONE_GB / 4) {
                         self.noti.warn(
