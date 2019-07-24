@@ -25,6 +25,7 @@ use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
 use crate::common_rpc_types::HardwareUsage;
 use crate::noti::Noti;
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug)]
 pub enum State {
     Initializing,
@@ -315,6 +316,7 @@ impl Agent {
                 number_of_peers,
                 best_block_number,
                 disk_usage,
+                disk_usages,
                 memory_usage,
             }) = update_result
             {
@@ -351,15 +353,38 @@ impl Agent {
 
                 const ONE_GB: i64 = 1_000_000_000;
                 if !disk_usage_alert_sent {
-                    if disk_usage.total != 0 && disk_usage.available < ONE_GB {
-                        self.noti.warn(
-                            &network_id,
-                            &format!("{} has only {} MB free disk space.", node_name, disk_usage.available / 1_000_000),
-                        );
-                        disk_usage_alert_sent = true;
+                    if let Some(disk_usages) = disk_usages {
+                        let less_space_disks: Vec<&HardwareUsage> =
+                            disk_usages.iter().filter(|usage| usage.total != 0 && usage.available < ONE_GB).collect();
+                        if !less_space_disks.is_empty() {
+                            let disk_spaces: String = less_space_disks
+                                .into_iter()
+                                .map(|usage| (usage.available / 1_000_000).to_string())
+                                .collect::<Vec<_>>()
+                                .join(", ");
+                            self.noti.warn(
+                                &network_id,
+                                &format!("{} has only {} MB free disk space.", node_name, disk_spaces),
+                            );
+                            disk_usage_alert_sent = true;
+                        } else {
+                            disk_usage_alert_sent = false;
+                        }
+                    } else if let Some(disk_usage) = disk_usage {
+                        if disk_usage.total != 0 && disk_usage.available < ONE_GB {
+                            self.noti.warn(
+                                &network_id,
+                                &format!(
+                                    "{} has only {} MB free disk space.",
+                                    node_name,
+                                    disk_usage.available / 1_000_000
+                                ),
+                            );
+                            disk_usage_alert_sent = true;
+                        } else if ONE_GB < disk_usage.available {
+                            disk_usage_alert_sent = false;
+                        }
                     }
-                } else if ONE_GB < disk_usage.available {
-                    disk_usage_alert_sent = false;
                 }
 
                 if !memory_usage_alert_sent {
@@ -450,6 +475,7 @@ impl Agent {
         ctrace!("Update state from {:?} to {:?}", *state, new_state);
         let number_of_peers = peers.len();
         let disk_usage = hardware.disk_usage;
+        let disk_usages = hardware.disk_usages.clone();
         let memory_usage = hardware.memory_usage;
         self.db_service.update_agent_query_result(db::AgentQueryResult {
             name: info.name.clone(),
@@ -483,6 +509,7 @@ impl Agent {
             number_of_peers,
             best_block_number: best_block_id.map(|id| id.block_number as u64),
             disk_usage,
+            disk_usages,
             memory_usage,
         };
 
@@ -553,7 +580,8 @@ pub struct UpdateResult {
     pub network_id: String,
     pub number_of_peers: usize,
     pub best_block_number: Option<u64>,
-    pub disk_usage: HardwareUsage,
+    pub disk_usage: Option<HardwareUsage>,
+    pub disk_usages: Option<Vec<HardwareUsage>>,
     pub memory_usage: HardwareUsage,
 }
 
