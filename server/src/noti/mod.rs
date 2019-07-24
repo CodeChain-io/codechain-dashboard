@@ -40,6 +40,29 @@ pub struct Noti {
 }
 
 impl Noti {
+    pub fn error(&self, network_id: &str, message: &str) {
+        let targets = self.targets();
+        if targets.is_empty() {
+            cerror!("No targets to send error: {}", message);
+            return
+        }
+        cinfo!("Send an error to {}: {}", targets.join(", "), message);
+
+        if let Some(slack) = self.slack.as_ref() {
+            if let Err(err) = slack.send(format!("{}: {}", network_id, message)) {
+                cerror!("Cannot send a slack message({}): {}", message, err);
+            }
+        }
+        if let Some(sendgrid) = self.sendgrid.as_ref() {
+            if let Err(err) = sendgrid.send(
+                format!("[error][{}][dashboard-server] Error at {}", network_id, Utc::now().to_rfc3339()),
+                message,
+            ) {
+                cerror!("Cannot send an email({}): {}", message, err);
+            }
+        }
+    }
+
     pub fn warn(&self, network_id: &str, message: &str) {
         let targets = self.targets();
         if targets.is_empty() {

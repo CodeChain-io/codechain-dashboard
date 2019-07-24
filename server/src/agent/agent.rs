@@ -362,7 +362,7 @@ impl Agent {
                                 .map(|usage| (usage.available / 1_000_000).to_string())
                                 .collect::<Vec<_>>()
                                 .join(", ");
-                            self.noti.warn(
+                            self.noti.error(
                                 &network_id,
                                 &format!("{} has only {} MB free disk space.", node_name, disk_spaces),
                             );
@@ -372,7 +372,7 @@ impl Agent {
                         }
                     } else if let Some(disk_usage) = disk_usage {
                         if disk_usage.total != 0 && disk_usage.available < THREE_GB {
-                            self.noti.warn(
+                            self.noti.error(
                                 &network_id,
                                 &format!(
                                     "{} has only {} MB free disk space.",
