@@ -388,7 +388,8 @@ impl Agent {
                 }
 
                 const ONE_GB: i64 = 1_000_000_000;
-                if !memory_usage_alert_sent {
+                let enable_memory_alarm = ::std::env::var("ENABLE_MEMORY_ALARM").is_ok();
+                if enable_memory_alarm && !memory_usage_alert_sent {
                     if memory_usage.total != 0 && memory_usage.available < (ONE_GB / 4) {
                         self.noti.warn(
                             &network_id,
