@@ -63,11 +63,12 @@ SLACK_HOOK_URL={web hook url} codechain-agent-hub
 Environmental Variables
 ------------------------
 
-| NAME              | DESCRIPTION                                                                                          |
-| ----------------- | ---------------------------------------------------------------------------------------------------- |
-| START_AT_CONNECT  | If this variable is set, a CodeChain instance is started once an agent connects to the agent server. |
-| NETWORK_ID        | Network ID information that is used in error messages or logs.                                       |
-| SLACK_WEBHOOK_URL | Used to send alarms to Slack.                                                                        |
-| SENDGRID_TO       | An email address to receive alarm emails.                                                            |
-| SENDGRID_API_KEY  | An API Key that is used to send alarms.                                                              |
-| PASSPHRASE        | A passphrase that is used to communicate with the Dashboard safely.                                  |
+| NAME                | DESCRIPTION                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| START_AT_CONNECT    | If this variable is set, a CodeChain instance is started once an agent connects to the agent server. |
+| NETWORK_ID          | Network ID information that is used in error messages or logs.                                       |
+| SLACK_WEBHOOK_URL   | Used to send alarms to Slack.                                                                        |
+| SENDGRID_TO         | An email address to receive alarm emails.                                                            |
+| SENDGRID_API_KEY    | An API Key that is used to send alarms.                                                              |
+| PASSPHRASE          | A passphrase that is used to communicate with the Dashboard safely.                                  |
+| ENABLE_MEMORY_ALARM | When this variable is set, the Agent Server sends memory alarms.                                     |
