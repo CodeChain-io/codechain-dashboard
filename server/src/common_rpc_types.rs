@@ -77,6 +77,7 @@ pub struct HardwareUsage {
 pub struct HardwareInfo {
     pub cpu_usage: Vec<f64>,
     pub disk_usage: HardwareUsage,
+    pub disk_usages: Vec<HardwareUsage>,
     pub memory_usage: HardwareUsage,
 }
 
