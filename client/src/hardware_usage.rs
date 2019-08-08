@@ -134,6 +134,21 @@ pub struct HardwareUsage {
     pub percentage_used: f64,
 }
 
+impl HardwareUsage {
+    fn new(total: i64, available: i64) -> HardwareUsage {
+        let percentage_used = if total == 0 {
+            0f64
+        } else {
+            (total - available) as f64 / total as f64
+        };
+        HardwareUsage {
+            total,
+            available,
+            percentage_used,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct HardwareInfo {
@@ -153,37 +168,22 @@ fn get_disk_usages(sys: &mut sysinfo::System) -> Vec<HardwareUsage> {
         let total = disk.get_total_space() as i64;
         let available = disk.get_available_space() as i64;
 
-        let percentage_used = if total == 0 {
-            0f64
-        } else {
-            (total - available) as f64 / total as f64
-        };
-        result.push(HardwareUsage {
-            total,
-            available,
-            percentage_used,
-        });
+        result.push(HardwareUsage::new(total, available));
     }
 
     result
 }
 
 fn merge_disk_usages(usages: &[HardwareUsage]) -> HardwareUsage {
-    let mut result = HardwareUsage::default();
+    let mut total = 0;
+    let mut available = 0;
 
     for usage in usages {
-        result.total += usage.total;
-        result.available += usage.available;
+        total += usage.total;
+        available += usage.available;
     }
 
-    let percentage_used = if result.total == 0 {
-        0f64
-    } else {
-        (result.total - result.available) as f64 / result.total as f64
-    };
-    result.percentage_used = percentage_used;
-
-    result
+    HardwareUsage::new(total, available)
 }
 
 fn get_memory_usage(sys: &mut systemstat::System) -> HardwareUsage {
@@ -194,16 +194,6 @@ fn get_memory_usage(sys: &mut systemstat::System) -> HardwareUsage {
 
     let total = mem.total.as_usize() as i64;
     let available = mem.free.as_usize() as i64;
-    let used = total - available;
-    let percentage_used = if total == 0 {
-        0f64
-    } else {
-        used as f64 / total as f64
-    };
 
-    HardwareUsage {
-        total,
-        available,
-        percentage_used,
-    }
+    HardwareUsage::new(total, available)
 }
