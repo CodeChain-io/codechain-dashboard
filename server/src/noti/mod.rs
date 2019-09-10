@@ -76,14 +76,6 @@ impl Noti {
                 cwarn!("Cannot send a slack message({}): {}", message, err);
             }
         }
-        if let Some(sendgrid) = self.sendgrid.as_ref() {
-            if let Err(err) = sendgrid.send(
-                format!("[warn][{}][dashboard-server] Warning at {}", network_id, Utc::now().to_rfc3339()),
-                message,
-            ) {
-                cwarn!("Cannot send an email({}): {}", message, err);
-            }
-        }
     }
 
     pub fn info(&self, network_id: &str, title: &str, message: &str) {
@@ -95,16 +87,8 @@ impl Noti {
         cinfo!("Send a info to {}: {}", targets.join(", "), message);
 
         if let Some(slack) = self.slack.as_ref() {
-            if let Err(err) = slack.send(format!("{}: {}", network_id, message)) {
+            if let Err(err) = slack.send(format!("{}-{}: {}", network_id, title, message)) {
                 cwarn!("Cannot send a slack message({}): {}", message, err);
-            }
-        }
-        if let Some(sendgrid) = self.sendgrid.as_ref() {
-            if let Err(err) = sendgrid.send(
-                format!("[info][{}][dashboard-server] {} at {}", network_id, title, Utc::now().to_rfc3339()),
-                message,
-            ) {
-                cwarn!("Cannot send an email({}): {}", message, err);
             }
         }
     }
