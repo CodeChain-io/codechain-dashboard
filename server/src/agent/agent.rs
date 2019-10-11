@@ -354,8 +354,10 @@ impl Agent {
                 const THREE_GB: i64 = 3_000_000_000;
                 if !disk_usage_alert_sent {
                     if let Some(disk_usages) = disk_usages {
-                        let less_space_disks: Vec<&HardwareUsage> =
-                            disk_usages.iter().filter(|usage| usage.total != 0 && usage.available < THREE_GB).collect();
+                        let less_space_disks: Vec<&HardwareUsage> = disk_usages
+                            .iter()
+                            .filter(|usage| usage.total > THREE_GB && usage.available < THREE_GB)
+                            .collect();
                         if !less_space_disks.is_empty() {
                             let disk_spaces: String = less_space_disks
                                 .into_iter()
@@ -371,7 +373,7 @@ impl Agent {
                             disk_usage_alert_sent = false;
                         }
                     } else if let Some(disk_usage) = disk_usage {
-                        if disk_usage.total != 0 && disk_usage.available < THREE_GB {
+                        if disk_usage.total > THREE_GB && disk_usage.available < THREE_GB {
                             self.noti.error(
                                 &network_id,
                                 &format!(
