@@ -18,7 +18,7 @@ pub fn insert(conn: &postgres::Connection, node_name: &str, logs: Vec<Structured
 
     for log_chunk in logs.chunks(1000) {
         let mut parameters_positions: Vec<String> = Vec::new();
-        let mut parameters: Vec<Box<ToSql>> = Vec::new();
+        let mut parameters: Vec<Box<dyn ToSql>> = Vec::new();
 
         for (row_index, log) in log_chunk.iter().enumerate() {
             let base_num = row_index * 6;
@@ -45,7 +45,7 @@ pub fn insert(conn: &postgres::Connection, node_name: &str, logs: Vec<Structured
             "INSERT INTO logs (name, level, target, message, timestamp, thread_name) VALUES {}",
             parameters_positions.join(", ")
         );
-        let parameters_ref: Vec<&ToSql> = parameters.iter().map(AsRef::as_ref).collect();
+        let parameters_ref: Vec<&dyn ToSql> = parameters.iter().map(AsRef::as_ref).collect();
         ctrace!("Full query is {}", full_sql);
         conn.execute(&full_sql, &parameters_ref)?;
     }
@@ -113,7 +113,7 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
     let query_string =
         vec!["SELECT * FROM logs", &where_clause, &order_by_clause, &limit_clause, &offset_clause].join(" ");
 
-    let query_params: Vec<&ToSql> = parameters.get().iter().map(Borrow::borrow).collect();
+    let query_params: Vec<&dyn ToSql> = parameters.get().iter().map(Borrow::borrow).collect();
     let rows = conn.query(&query_string, &query_params[..])?;
 
     Ok(rows
@@ -131,16 +131,16 @@ pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::
 
 #[derive(Default)]
 struct Parameters {
-    parameters: Vec<Rc<ToSql>>,
+    parameters: Vec<Rc<dyn ToSql>>,
 }
 
 impl Parameters {
-    pub fn add(&mut self, param: Rc<ToSql>) -> usize {
+    pub fn add(&mut self, param: Rc<dyn ToSql>) -> usize {
         self.parameters.push(param);
         self.parameters.len()
     }
 
-    pub fn get(&self) -> &Vec<Rc<ToSql>> {
+    pub fn get(&self) -> &Vec<Rc<dyn ToSql>> {
         &self.parameters
     }
 }

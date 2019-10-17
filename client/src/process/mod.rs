@@ -280,7 +280,6 @@ fn handle_message(
                 }
             }
             callback.send(result);
-            return
         }
         Message::Update {
             env,
