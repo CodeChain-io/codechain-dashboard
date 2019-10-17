@@ -13,7 +13,7 @@ pub trait Route {
 }
 
 pub struct Router<C> {
-    table: HashMap<&'static str, Box<Route<Context = C>>>,
+    table: HashMap<&'static str, Box<dyn Route<Context = C>>>,
 }
 
 impl<Arg, Result, C> Route for fn(context: C, Arg) -> RPCResponse<Result>
@@ -56,13 +56,13 @@ pub enum Error {
 
 impl<C> Router<C> {
     pub fn new() -> Self {
-        let table: HashMap<&'static str, Box<Route<Context = C>>> = HashMap::new();
+        let table: HashMap<&'static str, Box<dyn Route<Context = C>>> = HashMap::new();
         Self {
             table,
         }
     }
 
-    pub fn add_route(&mut self, method: &'static str, route: Box<Route<Context = C>>) {
+    pub fn add_route(&mut self, method: &'static str, route: Box<dyn Route<Context = C>>) {
         self.table.insert(method, route);
     }
 

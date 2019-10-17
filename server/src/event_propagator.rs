@@ -126,13 +126,7 @@ impl db::EventSubscriber for EventPropagator {
                     "name": name,
                 });
 
-                if before.is_none() {
-                    diff["startOption"] = json!({
-                        "env": after.prev_env,
-                        "args": after.prev_args,
-                    });
-                } else {
-                    let before = before.unwrap();
+                if let Some(before) = before {
                     if before == after {
                         return
                     }
@@ -143,6 +137,11 @@ impl db::EventSubscriber for EventPropagator {
                             "args": after.prev_args,
                         });
                     }
+                } else {
+                    diff["startOption"] = json!({
+                        "env": after.prev_env,
+                        "args": after.prev_args,
+                    });
                 }
 
                 let message = jsonrpc::serialize_notification("node_updated", diff);

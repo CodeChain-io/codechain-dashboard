@@ -32,8 +32,8 @@ pub fn run(args: &AgentArgs) {
     let context = Arc::new(HandlerContext {
         codechain_address: args.codechain_address,
         name: args.name.to_string(),
-        process: process.clone(),
-        hardware_service: hardware_service.clone(),
+        process,
+        hardware_service,
     });
 
     loop {

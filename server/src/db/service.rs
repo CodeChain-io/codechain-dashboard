@@ -57,12 +57,12 @@ struct State {
 
 pub struct Service {
     state: State,
-    event_subscriber: Box<EventSubscriber>,
+    event_subscriber: Box<dyn EventSubscriber>,
     db_conn: postgres::Connection,
 }
 
 pub struct ServiceNewArg {
-    pub event_subscriber: Box<EventSubscriber>,
+    pub event_subscriber: Box<dyn EventSubscriber>,
     pub db_user: String,
     pub db_password: String,
 }
@@ -298,7 +298,7 @@ impl Service {
         }
     }
 
-    fn save_start_option(&mut self, node_name: NodeName, env: &str, args: &str) -> Result<(), Box<error::Error>> {
+    fn save_start_option(&mut self, node_name: NodeName, env: &str, args: &str) -> Result<(), Box<dyn error::Error>> {
         let before_extra = queries::agent_extra::get(&self.db_conn, &node_name)?;
         let mut extra = before_extra.clone().unwrap_or_default();
 
@@ -316,7 +316,11 @@ impl Service {
         Ok(())
     }
 
-    fn get_agent_extra(&self, node_name: &str, callback: Sender<Option<AgentExtra>>) -> Result<(), Box<error::Error>> {
+    fn get_agent_extra(
+        &self,
+        node_name: &str,
+        callback: Sender<Option<AgentExtra>>,
+    ) -> Result<(), Box<dyn error::Error>> {
         let extra = queries::agent_extra::get(&self.db_conn, node_name)?;
         if let Err(err) = callback.send(extra) {
             cerror!("Callback error {}", err);
@@ -324,18 +328,18 @@ impl Service {
         Ok(())
     }
 
-    fn get_logs(&self, params: LogQueryParams, callback: Sender<Vec<Log>>) -> Result<(), Box<error::Error>> {
+    fn get_logs(&self, params: LogQueryParams, callback: Sender<Vec<Log>>) -> Result<(), Box<dyn error::Error>> {
         let logs = queries::logs::search(&self.db_conn, params)?;
         callback.send(logs)?;
         Ok(())
     }
 
-    fn write_logs(&self, node_name: &str, logs: Vec<StructuredLog>) -> Result<(), Box<error::Error>> {
+    fn write_logs(&self, node_name: &str, logs: Vec<StructuredLog>) -> Result<(), Box<dyn error::Error>> {
         queries::logs::insert(&self.db_conn, node_name, logs)?;
         Ok(())
     }
 
-    fn get_log_targets(&self, callback: Sender<Vec<String>>) -> Result<(), Box<error::Error>> {
+    fn get_log_targets(&self, callback: Sender<Vec<String>>) -> Result<(), Box<dyn error::Error>> {
         let targets = queries::logs::get_targets(&self.db_conn)?;
         callback.send(targets)?;
         Ok(())
@@ -346,7 +350,7 @@ impl Service {
         node_name: &str,
         network_usage: NetworkUsage,
         time: chrono::DateTime<chrono::Utc>,
-    ) -> Result<(), Box<error::Error>> {
+    ) -> Result<(), Box<dyn error::Error>> {
         queries::network_usage::insert(&self.db_conn, node_name, network_usage, time)?;
         Ok(())
     }
@@ -356,7 +360,7 @@ impl Service {
         node_name: &str,
         peer_count: i32,
         time: chrono::DateTime<chrono::Utc>,
-    ) -> Result<(), Box<error::Error>> {
+    ) -> Result<(), Box<dyn error::Error>> {
         queries::peer_count::insert(&self.db_conn, node_name, peer_count, time)?;
         Ok(())
     }
@@ -364,7 +368,7 @@ impl Service {
     fn get_network_out_all_graph(
         &self,
         args: GraphCommonArgs,
-    ) -> Result<Vec<GraphNetworkOutAllRow>, Box<error::Error>> {
+    ) -> Result<Vec<GraphNetworkOutAllRow>, Box<dyn error::Error>> {
         let rows = queries::network_usage_graph::query_network_out_all(&self.db_conn, args)?;
         Ok(rows)
     }
@@ -372,7 +376,7 @@ impl Service {
     fn get_network_out_all_avg_graph(
         &self,
         args: GraphCommonArgs,
-    ) -> Result<Vec<GraphNetworkOutAllRow>, Box<error::Error>> {
+    ) -> Result<Vec<GraphNetworkOutAllRow>, Box<dyn error::Error>> {
         let rows = queries::network_usage_graph::query_network_out_all_avg(&self.db_conn, args)?;
         Ok(rows)
     }
@@ -381,7 +385,7 @@ impl Service {
         &self,
         node_name: NodeName,
         args: GraphCommonArgs,
-    ) -> Result<Vec<GraphNetworkOutNodeExtensionRow>, Box<error::Error>> {
+    ) -> Result<Vec<GraphNetworkOutNodeExtensionRow>, Box<dyn error::Error>> {
         let rows = queries::network_usage_graph::query_network_out_node_extension(&self.db_conn, node_name, args)?;
         Ok(rows)
     }
@@ -390,7 +394,7 @@ impl Service {
         &self,
         node_name: NodeName,
         args: GraphCommonArgs,
-    ) -> Result<Vec<GraphNetworkOutNodePeerRow>, Box<error::Error>> {
+    ) -> Result<Vec<GraphNetworkOutNodePeerRow>, Box<dyn error::Error>> {
         let rows = queries::network_usage_graph::query_network_out_node_peer(&self.db_conn, node_name, args)?;
         Ok(rows)
     }
