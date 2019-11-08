@@ -18,12 +18,14 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate r2d2_postgres;
 extern crate slack_hook;
+extern crate time;
 extern crate ws;
 
 #[macro_use]
 mod logger;
 mod client;
 mod common_rpc_types;
+mod cron;
 mod daily_reporter;
 mod db;
 mod event_propagator;
@@ -110,6 +112,8 @@ fn main() {
                 .unwrap();
         })
         .expect("Should success listening client");
+
+    cron::remove_network_usage::run(db_user, db_password);
 
     let daily_reporter_join = daily_reporter::start(noti, db_service_sender, client_service_sender);
 
