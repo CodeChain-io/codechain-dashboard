@@ -1,5 +1,5 @@
 pub mod event;
-mod queries;
+pub mod queries;
 mod service;
 mod types;
 
