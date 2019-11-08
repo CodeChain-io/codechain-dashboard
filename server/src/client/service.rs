@@ -7,12 +7,12 @@ use parking_lot::RwLock;
 
 use super::super::db;
 use super::super::jsonrpc;
-use super::agent::{Agent, AgentSender, State as AgentState};
+use super::client::{Client, ClientSender, State as ClientState};
 use crate::noti::Noti;
 
 #[derive(Default)]
 pub struct State {
-    agents: Vec<(i32, AgentSender)>,
+    clients: Vec<(i32, ClientSender)>,
 }
 
 #[derive(Clone)]
@@ -26,24 +26,24 @@ impl ServiceSender {
         self.sender.send(message)
     }
 
-    pub fn get_agent(&self, name: &str) -> Option<AgentSender> {
+    pub fn get_client(&self, name: &str) -> Option<ClientSender> {
         let state = self.state.read();
-        let find_result = state.agents.iter().find(|(_, agent)| {
-            let agent_state = agent.read_state();
-            match agent_state.name() {
+        let find_result = state.clients.iter().find(|(_, client)| {
+            let client_state = client.read_state();
+            match client_state.name() {
                 None => false,
-                Some(agent_name) => agent_name == name,
+                Some(client_name) => client_name == name,
             }
         });
 
-        find_result.map(|(_, agent)| agent.clone())
+        find_result.map(|(_, client)| client.clone())
     }
 
-    pub fn get_agents_states(&self) -> Vec<AgentState> {
+    pub fn get_clients_states(&self) -> Vec<ClientState> {
         let state = self.state.read();
         let mut result = Vec::new();
-        for (_, agent) in state.agents.iter() {
-            let state = agent.read_state().clone();
+        for (_, client) in state.clients.iter() {
+            let state = client.read_state().clone();
             result.push(state);
         }
 
@@ -52,8 +52,8 @@ impl ServiceSender {
 
     pub fn reset_maximum_memory_usages(&self) {
         let state = self.state.write();
-        for (_, agent) in state.agents.iter() {
-            agent.reset_maximum_memory_usage();
+        for (_, client) in state.clients.iter() {
+            client.reset_maximum_memory_usage();
         }
     }
 }
@@ -66,9 +66,9 @@ pub struct Service {
 }
 
 pub enum Message {
-    InitializeAgent(jsonrpc::Context),
-    AddAgent(i32, AgentSender),
-    RemoveAgent(i32),
+    InitializeClient(jsonrpc::Context),
+    AddClient(i32, ClientSender),
+    RemoveClient(i32),
 }
 
 impl Service {
@@ -83,23 +83,23 @@ impl Service {
         let mut service = Service::new(service_sender.clone(), state, db_service);
 
         thread::Builder::new()
-            .name("agent service".to_string())
+            .name("client service".to_string())
             .spawn(move || {
                 for message in rx {
                     match message {
-                        Message::InitializeAgent(jsonrpc_context) => {
-                            service.create_agent(jsonrpc_context, Arc::clone(&noti));
+                        Message::InitializeClient(jsonrpc_context) => {
+                            service.create_client(jsonrpc_context, Arc::clone(&noti));
                         }
-                        Message::AddAgent(id, agent_sender) => {
-                            service.add_agent(id, agent_sender);
+                        Message::AddClient(id, client_sender) => {
+                            service.add_client(id, client_sender);
                         }
-                        Message::RemoveAgent(id) => {
-                            service.remove_agent(id);
+                        Message::RemoveClient(id) => {
+                            service.remove_client(id);
                         }
                     }
                 }
             })
-            .expect("Should success running agent service thread");
+            .expect("Should success running client service thread");
 
         service_sender
     }
@@ -113,28 +113,28 @@ impl Service {
         }
     }
 
-    fn create_agent(&mut self, jsonrpc_context: jsonrpc::Context, noti: Arc<Noti>) {
+    fn create_client(&mut self, jsonrpc_context: jsonrpc::Context, noti: Arc<Noti>) {
         let id = self.next_id;
         self.next_id += 1;
-        Agent::run_thread(id, jsonrpc_context, self.sender.clone(), self.db_service.clone(), noti);
-        cdebug!("Agent {} initialization starts", id);
+        Client::run_thread(id, jsonrpc_context, self.sender.clone(), self.db_service.clone(), noti);
+        cdebug!("Client {} initialization starts", id);
     }
 
-    fn add_agent(&mut self, id: i32, agent_sender: AgentSender) {
+    fn add_client(&mut self, id: i32, client_sender: ClientSender) {
         let mut state = self.state.write();
-        state.agents.push((id, agent_sender));
-        cdebug!("Agent {} is added to AgentService", id);
+        state.clients.push((id, client_sender));
+        cdebug!("Client {} is added to ClientService", id);
     }
 
-    fn remove_agent(&mut self, id: i32) {
+    fn remove_client(&mut self, id: i32) {
         let mut state = self.state.write();
 
-        let agent_index = state.agents.iter().position(|(iter_id, _)| *iter_id == id);
-        if agent_index.is_none() {
-            cerror!("Cannot find agent {} to delete", id);
+        let client_index = state.clients.iter().position(|(iter_id, _)| *iter_id == id);
+        if client_index.is_none() {
+            cerror!("Cannot find client {} to delete", id);
             return
         }
-        state.agents.remove(agent_index.unwrap());
-        cdebug!("Agent {} is removed from AgentService", id);
+        state.clients.remove(client_index.unwrap());
+        cdebug!("Client {} is removed from ClientService", id);
     }
 }

@@ -12,7 +12,7 @@ use super::super::common_rpc_types as rpc_type;
 use super::super::common_rpc_types::{NodeName, NodeStatus, StructuredLog};
 use super::event::{Event, EventSubscriber};
 use super::queries;
-use super::types::{AgentExtra, AgentQueryResult, Connection, Connections, Error as DBError, Log, LogQueryParams};
+use super::types::{ClientExtra, ClientQueryResult, Connection, Connections, Error as DBError, Log, LogQueryParams};
 use common_rpc_types::{
     GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
     GraphNetworkOutNodePeerRow, NetworkUsage,
@@ -22,13 +22,13 @@ use util;
 #[derive(Debug, Clone)]
 pub enum Message {
     CheckConnection(Sender<Result<(), DBError>>),
-    InitializeAgent(Box<AgentQueryResult>, Sender<bool>),
-    UpdateAgent(Box<AgentQueryResult>),
-    GetAgent(NodeName, Sender<Option<AgentQueryResult>>),
-    GetAgents(Sender<Vec<AgentQueryResult>>),
+    InitializeClient(Box<ClientQueryResult>, Sender<bool>),
+    UpdateClient(Box<ClientQueryResult>),
+    GetClient(NodeName, Sender<Option<ClientQueryResult>>),
+    GetClients(Sender<Vec<ClientQueryResult>>),
     GetConnections(Sender<Vec<rpc_type::Connection>>),
     SaveStartOption(NodeName, String, String),
-    GetAgentExtra(NodeName, Sender<Option<AgentExtra>>),
+    GetClientExtra(NodeName, Sender<Option<ClientExtra>>),
     GetLogs(LogQueryParams, Sender<Vec<Log>>),
     WriteLogs(NodeName, Vec<StructuredLog>),
     GetLogTargets(Sender<Vec<String>>),
@@ -51,7 +51,7 @@ pub struct ServiceSender {
 
 #[derive(Default)]
 struct State {
-    agent_query_result: HashMap<NodeName, AgentQueryResult>,
+    client_query_result: HashMap<NodeName, ClientQueryResult>,
     connection: Connections,
 }
 
@@ -102,17 +102,17 @@ impl Service {
                         Message::CheckConnection(callback) => {
                             service.check_connection(callback);
                         }
-                        Message::InitializeAgent(agent_query_result, callback) => {
-                            service.initialize_agent(&agent_query_result, callback);
+                        Message::InitializeClient(client_query_result, callback) => {
+                            service.initialize_client(&client_query_result, callback);
                         }
-                        Message::UpdateAgent(agent_query_result) => {
-                            service.update_agent(*agent_query_result);
+                        Message::UpdateClient(client_query_result) => {
+                            service.update_client(*client_query_result);
                         }
-                        Message::GetAgent(node_name, callback) => {
-                            service.get_agent(&node_name, callback);
+                        Message::GetClient(node_name, callback) => {
+                            service.get_client(&node_name, callback);
                         }
-                        Message::GetAgents(callback) => {
-                            service.get_agents(callback);
+                        Message::GetClients(callback) => {
+                            service.get_clients(callback);
                         }
                         Message::GetConnections(callback) => {
                             service.get_connections(callback);
@@ -120,8 +120,8 @@ impl Service {
                         Message::SaveStartOption(node_name, env, args) => {
                             util::log_error(&node_name, service.save_start_option(node_name.clone(), &env, &args));
                         }
-                        Message::GetAgentExtra(node_name, callback) => {
-                            util::log_error(&node_name, service.get_agent_extra(&node_name, callback));
+                        Message::GetClientExtra(node_name, callback) => {
+                            util::log_error(&node_name, service.get_client_extra(&node_name, callback));
                         }
                         Message::GetLogs(params, callback) => {
                             let result = service.get_logs(params, callback);
@@ -194,12 +194,12 @@ impl Service {
         }
     }
 
-    fn initialize_agent(&mut self, state: &AgentQueryResult, callback: Sender<bool>) {
+    fn initialize_client(&mut self, state: &ClientQueryResult, callback: Sender<bool>) {
         let name = state.name.clone();
-        let before = match self.state.agent_query_result.entry(name) {
+        let before = match self.state.client_query_result.entry(name) {
             Entry::Occupied(before) => before.into_mut(),
             Entry::Vacant(e) => {
-                self.event_subscriber.on_event(Event::AgentUpdated {
+                self.event_subscriber.on_event(Event::ClientUpdated {
                     before: None.into(),
                     after: state.clone().into(),
                 });
@@ -223,7 +223,7 @@ impl Service {
             return
         }
 
-        self.event_subscriber.on_event(Event::AgentUpdated {
+        self.event_subscriber.on_event(Event::ClientUpdated {
             before: None.into(),
             after: state.clone().into(),
         });
@@ -233,12 +233,12 @@ impl Service {
         }
     }
 
-    fn update_agent(&mut self, after: AgentQueryResult) {
+    fn update_client(&mut self, after: ClientQueryResult) {
         let name = after.name.clone();
-        debug_assert_ne!(None, self.state.agent_query_result.get(&name));
+        debug_assert_ne!(None, self.state.client_query_result.get(&name));
 
         {
-            let before = self.state.agent_query_result.get(&name).expect("Checked");
+            let before = self.state.client_query_result.get(&name).expect("Checked");
 
             let (added, removed) = self.state.connection.update(before, &after);
             if !added.is_empty() || !removed.is_empty() {
@@ -248,13 +248,13 @@ impl Service {
                 });
             }
 
-            self.event_subscriber.on_event(Event::AgentUpdated {
+            self.event_subscriber.on_event(Event::ClientUpdated {
                 before: Some(before.clone()).into(),
                 after: after.clone().into(),
             });
         }
 
-        let before = self.state.agent_query_result.get_mut(&name).expect("Checked");
+        let before = self.state.client_query_result.get_mut(&name).expect("Checked");
         *before = after;
     }
 
@@ -268,22 +268,22 @@ impl Service {
     fn socket_addr_to_name(&self, addr: &SocketAddr) -> Option<NodeName> {
         let find = self
             .state
-            .agent_query_result
+            .client_query_result
             .values()
-            .find(|agent| agent.address.map(|agent_address| agent_address == *addr).unwrap_or(false));
+            .find(|client| client.address.map(|client_address| client_address == *addr).unwrap_or(false));
 
-        find.map(|agent| agent.name.clone())
+        find.map(|client| client.name.clone())
     }
 
-    fn get_agent(&self, name: &str, callback: Sender<Option<AgentQueryResult>>) {
-        let agent_query_result = self.state.agent_query_result.get(name);
-        if let Err(err) = callback.send(agent_query_result.cloned()) {
-            cerror!("Cannot call calback get_agent, name: {}\nerr: {}", name, err);
+    fn get_client(&self, name: &str, callback: Sender<Option<ClientQueryResult>>) {
+        let client_query_result = self.state.client_query_result.get(name);
+        if let Err(err) = callback.send(client_query_result.cloned()) {
+            cerror!("Cannot call calback get_client, name: {}\nerr: {}", name, err);
         }
     }
 
-    fn get_agents(&self, callback: Sender<Vec<AgentQueryResult>>) {
-        let states = self.state.agent_query_result.values().cloned().collect();
+    fn get_clients(&self, callback: Sender<Vec<ClientQueryResult>>) {
+        let states = self.state.client_query_result.values().cloned().collect();
         if let Err(err) = callback.send(states) {
             cerror!("Callback error {}", err);
         }
@@ -299,15 +299,15 @@ impl Service {
     }
 
     fn save_start_option(&mut self, node_name: NodeName, env: &str, args: &str) -> Result<(), Box<dyn error::Error>> {
-        let before_extra = queries::agent_extra::get(&self.db_conn, &node_name)?;
+        let before_extra = queries::client_extra::get(&self.db_conn, &node_name)?;
         let mut extra = before_extra.clone().unwrap_or_default();
 
         extra.prev_env = env.to_string();
         extra.prev_args = args.to_string();
 
-        queries::agent_extra::upsert(&self.db_conn, &node_name, &extra)?;
+        queries::client_extra::upsert(&self.db_conn, &node_name, &extra)?;
 
-        self.event_subscriber.on_event(Event::AgentExtraUpdated {
+        self.event_subscriber.on_event(Event::ClientExtraUpdated {
             name: node_name,
             before: before_extra,
             after: extra,
@@ -316,12 +316,12 @@ impl Service {
         Ok(())
     }
 
-    fn get_agent_extra(
+    fn get_client_extra(
         &self,
         node_name: &str,
-        callback: Sender<Option<AgentExtra>>,
+        callback: Sender<Option<ClientExtra>>,
     ) -> Result<(), Box<dyn error::Error>> {
-        let extra = queries::agent_extra::get(&self.db_conn, node_name)?;
+        let extra = queries::client_extra::get(&self.db_conn, node_name)?;
         if let Err(err) = callback.send(extra) {
             cerror!("Callback error {}", err);
         }
@@ -413,29 +413,31 @@ impl ServiceSender {
         rx.recv()?
     }
 
-    pub fn initialize_agent_query_result(&self, agent_query_result: AgentQueryResult) -> Result<bool, DBError> {
+    pub fn initialize_client_query_result(&self, client_query_result: ClientQueryResult) -> Result<bool, DBError> {
         let (tx, rx) = channel();
-        self.sender.send(Message::InitializeAgent(agent_query_result.into(), tx)).expect("Should success update agent");
+        self.sender
+            .send(Message::InitializeClient(client_query_result.into(), tx))
+            .expect("Should success update client");
         let result = rx.recv()?;
         Ok(result)
     }
 
-    pub fn update_agent_query_result(&self, agent_query_result: AgentQueryResult) {
-        self.sender.send(Message::UpdateAgent(agent_query_result.into())).expect("Should success update agent");
+    pub fn update_client_query_result(&self, client_query_result: ClientQueryResult) {
+        self.sender.send(Message::UpdateClient(client_query_result.into())).expect("Should success update client");
     }
 
-    pub fn get_agent_query_result(&self, name: &str) -> Result<Option<AgentQueryResult>, DBError> {
+    pub fn get_client_query_result(&self, name: &str) -> Result<Option<ClientQueryResult>, DBError> {
         let (tx, rx) = channel();
-        self.sender.send(Message::GetAgent(name.to_string(), tx)).expect("Should success send request");
-        let agent_query_result = rx.recv()?;
-        Ok(agent_query_result)
+        self.sender.send(Message::GetClient(name.to_string(), tx)).expect("Should success send request");
+        let client_query_result = rx.recv()?;
+        Ok(client_query_result)
     }
 
-    pub fn get_agents_state(&self) -> Result<Vec<AgentQueryResult>, DBError> {
+    pub fn get_clients_state(&self) -> Result<Vec<ClientQueryResult>, DBError> {
         let (tx, rx) = channel();
-        self.sender.send(Message::GetAgents(tx)).expect("Should success send request");
-        let agents_state = rx.recv()?;
-        Ok(agents_state)
+        self.sender.send(Message::GetClients(tx)).expect("Should success send request");
+        let clients_state = rx.recv()?;
+        Ok(clients_state)
     }
 
     pub fn get_connections(&self) -> Result<Vec<rpc_type::Connection>, DBError> {
@@ -451,11 +453,11 @@ impl ServiceSender {
             .expect("Should success send request");
     }
 
-    pub fn get_agent_extra(&self, node_name: NodeName) -> Result<Option<AgentExtra>, DBError> {
+    pub fn get_client_extra(&self, node_name: NodeName) -> Result<Option<ClientExtra>, DBError> {
         let (tx, rx) = channel();
-        self.sender.send(Message::GetAgentExtra(node_name, tx)).expect("Should success send request");
-        let agent_extra = rx.recv()?;
-        Ok(agent_extra)
+        self.sender.send(Message::GetClientExtra(node_name, tx)).expect("Should success send request");
+        let client_extra = rx.recv()?;
+        Ok(client_extra)
     }
 
     pub fn get_logs(&self, params: LogQueryParams) -> Result<Vec<Log>, DBError> {

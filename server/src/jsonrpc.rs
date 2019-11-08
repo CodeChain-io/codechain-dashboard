@@ -245,7 +245,7 @@ pub fn on_receive(context: Context, text: String) {
 
 fn on_receive_internal(context: Context, text: String) -> Result<(), String> {
     let json_parsed_result: Output = serde_json::from_str(&text)
-        .map_err(|err| format!("Cannot parse response from agent, data is {}\n{}", text, err))?;
+        .map_err(|err| format!("Cannot parse response from client, data is {}\n{}", text, err))?;
 
     let id = json_parsed_result.id();
     let id = match id {

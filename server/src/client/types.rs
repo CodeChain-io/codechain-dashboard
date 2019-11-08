@@ -7,7 +7,7 @@ use super::super::common_rpc_types::{NodeName, NodeStatus};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct AgentGetInfoResponse {
+pub struct ClientGetInfoResponse {
     pub status: NodeStatus,
     pub name: NodeName,
     pub address: Option<SocketAddr>,

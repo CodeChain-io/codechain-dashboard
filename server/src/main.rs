@@ -21,7 +21,7 @@ extern crate ws;
 
 #[macro_use]
 mod logger;
-mod agent;
+mod client;
 mod common_rpc_types;
 mod daily_reporter;
 mod db;
@@ -67,7 +67,7 @@ fn main() {
     let noti = noti_builder.build();
 
     // FIXME: move to config
-    let db_user = "codechain-agent-hub";
+    let db_user = "codechain-dashboard-server";
     let db_password = "preempt-entreat-bell-chanson";
 
     let frontend_service_sender = frontend::Service::run_thread();
@@ -77,8 +77,8 @@ fn main() {
         db_user: db_user.to_string(),
         db_password: db_password.to_string(),
     });
-    let agent_service_sender = agent::Service::run_thread(db_service_sender.clone(), Arc::clone(&noti));
-    let agent_service_for_frontend = agent_service_sender.clone();
+    let client_service_sender = client::Service::run_thread(db_service_sender.clone(), Arc::clone(&noti));
+    let client_service_for_frontend = client_service_sender.clone();
 
     let db_service_sender_for_frontend = db_service_sender.clone();
     let frontend_join = thread::Builder::new()
@@ -87,7 +87,7 @@ fn main() {
             let mut frontend_router = Arc::new(Router::new());
             frontend::add_routing(Arc::get_mut(&mut frontend_router).unwrap());
             let frontend_context = frontend::Context {
-                agent_service: agent_service_for_frontend,
+                client_service: client_service_for_frontend,
                 db_service: db_service_sender_for_frontend.clone(),
                 passphrase: std::env::var("PASSPHRASE").unwrap_or_else(|_| "passphrase".to_string()),
             };
@@ -101,17 +101,18 @@ fn main() {
         })
         .expect("Should success listening frontend");
 
-    let agent_service_for_agent = agent_service_sender.clone();
-    let agent_join = thread::Builder::new()
-        .name("agent listen".to_string())
+    let client_service_for_client = client_service_sender.clone();
+    let client_join = thread::Builder::new()
+        .name("client listen".to_string())
         .spawn(move || {
-            listen("0.0.0.0:4012", |out| agent::WebSocketHandler::new(out, agent_service_for_agent.clone())).unwrap();
+            listen("0.0.0.0:4012", |out| client::WebSocketHandler::new(out, client_service_for_client.clone()))
+                .unwrap();
         })
-        .expect("Should success listening agent");
+        .expect("Should success listening client");
 
-    let daily_reporter_join = daily_reporter::start(noti, db_service_sender, agent_service_sender);
+    let daily_reporter_join = daily_reporter::start(noti, db_service_sender, client_service_sender);
 
     frontend_join.join().expect("Join frontend listener");
-    agent_join.join().expect("Join agent listener");
+    client_join.join().expect("Join client listener");
     daily_reporter_join.join().expect("Join daily reporter");
 }

@@ -1,26 +1,26 @@
 use ws;
 use ws::{CloseCode, Error as WSError, Handler, Handshake, Result, Sender as WSSender};
 
-use super::super::agent;
+use super::super::client;
 use super::super::jsonrpc;
 
 pub struct WebSocketHandler {
     pub out: WSSender,
     pub count: usize,
-    pub agent_service: agent::ServiceSender,
+    pub client_service: client::ServiceSender,
     pub jsonrpc_context: jsonrpc::Context,
 }
 
 impl WebSocketHandler {
-    pub fn new(out: WSSender, agent_service: agent::ServiceSender) -> Self {
+    pub fn new(out: WSSender, client_service: client::ServiceSender) -> Self {
         let jsonrpc_context = jsonrpc::Context::new(out.clone());
-        agent_service
-            .send(agent::Message::InitializeAgent(jsonrpc_context.clone()))
-            .expect("Should success send InitializeAgent to service");
+        client_service
+            .send(client::Message::InitializeClient(jsonrpc_context.clone()))
+            .expect("Should success send InitializeClient to service");
         Self {
             out,
             count: 0,
-            agent_service,
+            client_service,
             jsonrpc_context,
         }
     }
@@ -40,7 +40,7 @@ impl Handler for WebSocketHandler {
         match msg {
             ws::Message::Text(text) => jsonrpc::on_receive(self.jsonrpc_context.clone(), text),
             _ => {
-                cwarn!("Byte data received from agent");
+                cwarn!("Byte data received from client");
             }
         };
         Ok(())

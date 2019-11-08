@@ -3,15 +3,15 @@ use std::thread;
 
 use chrono;
 
-use super::agent::ServiceSender as AgentServiceSender;
-use super::agent::State as AgentState;
+use super::client::ServiceSender as ClientServiceSender;
+use super::client::State as ClientState;
 use super::db::ServiceSender as DBServiceSender;
 use super::noti::Noti;
 
 pub fn start(
     noti: Arc<Noti>,
     db_service: DBServiceSender,
-    agent_service: AgentServiceSender,
+    client_service: ClientServiceSender,
 ) -> thread::JoinHandle<()> {
     let network_id = std::env::var("NETWORK_ID").expect("NETWORK_ID environment variable is needed");
 
@@ -23,7 +23,7 @@ pub fn start(
             loop {
                 let new_date = chrono::Utc::now().date();
                 if new_date != current_date {
-                    send_daily_report(&network_id, Arc::clone(&noti), db_service.clone(), agent_service.clone());
+                    send_daily_report(&network_id, Arc::clone(&noti), db_service.clone(), client_service.clone());
                 }
                 current_date = new_date;
                 thread::sleep(std::time::Duration::from_secs(1000));
@@ -44,7 +44,7 @@ pub fn send_daily_report(
     network_id: &str,
     noti: Arc<Noti>,
     db_service: DBServiceSender,
-    agent_service: AgentServiceSender,
+    client_service: ClientServiceSender,
 ) {
     let result = db_service.check_connection();
     let db_status = match result {
@@ -53,19 +53,19 @@ pub fn send_daily_report(
     };
     let mut messages = vec!["CodeChain Server is running".to_string(), db_status];
 
-    let agent_states = agent_service.get_agents_states();
-    agent_service.reset_maximum_memory_usages();
-    for agent_state in agent_states {
-        match agent_state {
-            AgentState::Initializing => {}
-            AgentState::Normal {
+    let client_states = client_service.get_clients_states();
+    client_service.reset_maximum_memory_usages();
+    for client_state in client_states {
+        match client_state {
+            ClientState::Initializing => {}
+            ClientState::Normal {
                 name,
                 address,
                 status,
                 recent_update_result,
                 maximum_memory_usage,
             } => {
-                messages.push(format!("Agent: {}", name));
+                messages.push(format!("Client: {}", name));
                 messages.push(format!("  address: {:?}", address));
                 messages.push(format!("  status: {:?}", status));
                 if let Some(update_result) = recent_update_result {
@@ -107,14 +107,14 @@ pub fn send_daily_report(
                     messages.push(format!("  memory usage: {} MB / {} MB", used_mb, total_mb));
                 }
             }
-            AgentState::Stop {
+            ClientState::Stop {
                 name,
                 address,
                 status,
                 maximum_memory_usage,
                 ..
             } => {
-                messages.push(format!("Agent: {}", name));
+                messages.push(format!("Client: {}", name));
                 messages.push(format!("  address: {:?}", address));
                 messages.push(format!("  status: {:?}", status));
 

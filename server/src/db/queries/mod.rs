@@ -1,4 +1,4 @@
-pub mod agent_extra;
+pub mod client_extra;
 pub mod config;
 pub mod logs;
 pub mod network_usage;

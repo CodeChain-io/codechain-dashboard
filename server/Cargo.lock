@@ -165,7 +165,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "codechain-agent-hub"
+name = "codechain-dashboard-server"
 version = "0.1.0"
 dependencies = [
  "atty 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",

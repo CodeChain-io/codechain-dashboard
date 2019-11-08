@@ -8,15 +8,15 @@ use serde_json::Value;
 use super::super::common_rpc_types::{
     BlackList, BlockId, NetworkUsage, NodeStatus, PendingTransaction, StructuredLog, WhiteList,
 };
-use super::agent::{AgentSender, SendAgentRPC};
+use super::client::{ClientSender, SendClientRPC};
 use super::types::ChainGetBestBlockIdResponse;
 
 pub struct CodeChainRPC {
-    sender: AgentSender,
+    sender: ClientSender,
 }
 
 impl CodeChainRPC {
-    pub fn new(sender: AgentSender) -> Self {
+    pub fn new(sender: ClientSender) -> Self {
         Self {
             sender,
         }

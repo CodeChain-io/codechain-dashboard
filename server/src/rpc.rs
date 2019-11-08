@@ -14,19 +14,19 @@ pub type RPCResult<T> = Result<T, RPCError>;
 #[derive(Debug)]
 pub enum RPCError {
     Internal(String),
-    FromAgent(JSONRPCError),
+    FromClient(JSONRPCError),
     FromDB(DBError),
 
-    AgentNotFound,
+    ClientNotFound,
 }
 
 impl fmt::Display for RPCError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             RPCError::Internal(err) => write!(f, "RPCError {}", err),
-            RPCError::FromAgent(err) => write!(f, "JSONRPCError from Agent {:?}", err),
+            RPCError::FromClient(err) => write!(f, "JSONRPCError from Client {:?}", err),
             RPCError::FromDB(err) => write!(f, "JSONRPCError from DB {:?}", err),
-            RPCError::AgentNotFound => write!(f, "Agent not found"),
+            RPCError::ClientNotFound => write!(f, "Client not found"),
         }
     }
 }
@@ -41,18 +41,18 @@ impl From<RPCError> for JSONRPCError {
     fn from(err: RPCError) -> Self {
         match err {
             RPCError::Internal(str) => RPCError::create_internal_rpc_error(str),
-            RPCError::FromAgent(mut error) => {
+            RPCError::FromClient(mut error) => {
                 error.data = match error.data {
-                    None => Some(json!("Error from agent")),
+                    None => Some(json!("Error from client")),
                     Some(inner_data) => Some(json!({
-                        "message": "This error is from the agent",
+                        "message": "This error is from the client",
                         "inner": inner_data,
                     })),
                 };
                 error
             }
             RPCError::FromDB(_) => RPCError::create_internal_rpc_error(err.to_string()),
-            RPCError::AgentNotFound => RPCError::create_rpc_error(ERR_AGENT_NOT_FOUND, err.to_string()),
+            RPCError::ClientNotFound => RPCError::create_rpc_error(ERR_AGENT_NOT_FOUND, err.to_string()),
         }
     }
 }
@@ -80,7 +80,7 @@ impl From<SerdeError> for RPCError {
 impl From<jsonrpc::CallError> for RPCError {
     fn from(err: jsonrpc::CallError) -> Self {
         match err {
-            jsonrpc::CallError::Response(jsonrpc_error) => RPCError::FromAgent(jsonrpc_error),
+            jsonrpc::CallError::Response(jsonrpc_error) => RPCError::FromClient(jsonrpc_error),
             _ => RPCError::Internal(format!("Internal error about jsonrpc call : {:?}", err)),
         }
     }

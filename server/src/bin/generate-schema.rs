@@ -1,31 +1,31 @@
 #[macro_use]
-extern crate codechain_agent_hub as chub;
+extern crate codechain_dashboard_server as dashboard_server;
 extern crate postgres;
 #[macro_use]
 extern crate log;
 
-use chub::logger_init;
+use dashboard_server::logger_init;
 use postgres::{Connection, TlsMode};
 
 fn main() {
     logger_init().expect("Logger should be initialized");
 
     // FIXME: move to configuration file
-    let user = "codechain-agent-hub";
+    let user = "codechain-dashboard-server";
     let password = "preempt-entreat-bell-chanson";
     let conn_uri = format!("postgres://{}:{}@localhost", user, password);
     let conn = Connection::connect(conn_uri, TlsMode::None).unwrap();
 
-    create_agent_extra_schema(&conn);
+    create_client_extra_schema(&conn);
     create_logs_schema(&conn);
     create_peer_count_schema(&conn);
     create_network_usage_schema(&conn);
 }
 
-fn create_agent_extra_schema(conn: &Connection) {
-    cinfo!("Create agent_extra table");
+fn create_client_extra_schema(conn: &Connection) {
+    cinfo!("Create client_extra table");
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS agent_extra (
+        "CREATE TABLE IF NOT EXISTS client_extra (
         id SERIAL PRIMARY KEY,
         name VARCHAR NOT NULL UNIQUE,
         prev_env VARCHAR NOT NULL,
