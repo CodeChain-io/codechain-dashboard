@@ -26,14 +26,14 @@ cargo run -- --agent-hub-url <agent-hub-url> --codechain-dir <codechain-dir> --c
 Make sure you run `rustfmt` before creating a PR to the repo. You need to install the nightly-2018-12-06 version of `rustfmt`.
 
 ```
-rustup toolchain install nightly-2018-12-06
-rustup component add rustfmt-preview --toolchain nightly-2018-12-06
+rustup toolchain install nightly-2019-10-13
+rustup component add rustfmt-preview --toolchain nightly-2019-10-13
 ```
 
 To run `rustfmt`,
 
 ```
-cargo +nightly-2018-12-06 fmt
+cargo +nightly-2019-10-13 fmt
 ```
 
 ## User Manual
