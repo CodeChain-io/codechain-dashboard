@@ -5,8 +5,7 @@ use std::net::SocketAddr;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
-use postgres;
-use postgres::TlsMode;
+use r2d2_postgres::PostgresConnectionManager;
 
 use super::super::common_rpc_types as rpc_type;
 use super::super::common_rpc_types::{NodeName, NodeStatus, StructuredLog};
@@ -17,6 +16,7 @@ use common_rpc_types::{
     GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
     GraphNetworkOutNodePeerRow, NetworkUsage,
 };
+use db::types::DBConnection;
 use util;
 
 #[derive(Debug, Clone)]
@@ -58,7 +58,7 @@ struct State {
 pub struct Service {
     state: State,
     event_subscriber: Box<dyn EventSubscriber>,
-    db_conn: postgres::Connection,
+    pool: r2d2::Pool<PostgresConnectionManager>,
 }
 
 pub struct ServiceNewArg {
@@ -75,15 +75,20 @@ impl Service {
             db_password,
         }: ServiceNewArg,
     ) -> Self {
-        let conn_uri = format!("postgres://{}:{}@localhost", db_user, db_password);
+        let manager = PostgresConnectionManager::new(
+            format!("postgres://{}:{}@localhost", db_user, db_password),
+            r2d2_postgres::TlsMode::None,
+        )
+        .expect("Create connection manager");
+        let pool = r2d2::Pool::new(manager).expect("Create connection pool");
 
-        let conn = postgres::Connection::connect(conn_uri, TlsMode::None).unwrap();
-        queries::config::set_query_timeout(&conn).unwrap();
+        let connection = pool.get().expect("Get connection");
+        queries::config::set_query_timeout(&connection).unwrap();
 
         Self {
             state: State::default(),
             event_subscriber,
-            db_conn: conn,
+            pool,
         }
     }
 
@@ -187,8 +192,19 @@ impl Service {
         service_sender
     }
 
+    fn db_conn(&self) -> Result<DBConnection, DBError> {
+        self.pool.get().map_err(|err| DBError::Internal(err.to_string()))
+    }
+
     fn check_connection(&self, callback: Sender<Result<(), DBError>>) {
-        let result = self.db_conn.execute(&"SELECT 1", &[]).map_err(|err| DBError::Internal(err.to_string()));
+        let conn = match self.db_conn() {
+            Ok(conn) => conn,
+            Err(err) => {
+                cerror!("check_connection: {:?}", err);
+                return
+            }
+        };
+        let result = conn.execute(&"SELECT 1", &[]).map_err(|err| DBError::Internal(err.to_string()));
         if let Err(err) = callback.send(result.map(|_| ())) {
             cerror!("Cannot send callback : {}", err);
         }
@@ -299,13 +315,13 @@ impl Service {
     }
 
     fn save_start_option(&mut self, node_name: NodeName, env: &str, args: &str) -> Result<(), Box<dyn error::Error>> {
-        let before_extra = queries::client_extra::get(&self.db_conn, &node_name)?;
+        let before_extra = queries::client_extra::get(&self.db_conn()?, &node_name)?;
         let mut extra = before_extra.clone().unwrap_or_default();
 
         extra.prev_env = env.to_string();
         extra.prev_args = args.to_string();
 
-        queries::client_extra::upsert(&self.db_conn, &node_name, &extra)?;
+        queries::client_extra::upsert(&self.db_conn()?, &node_name, &extra)?;
 
         self.event_subscriber.on_event(Event::ClientExtraUpdated {
             name: node_name,
@@ -321,7 +337,7 @@ impl Service {
         node_name: &str,
         callback: Sender<Option<ClientExtra>>,
     ) -> Result<(), Box<dyn error::Error>> {
-        let extra = queries::client_extra::get(&self.db_conn, node_name)?;
+        let extra = queries::client_extra::get(&self.db_conn()?, node_name)?;
         if let Err(err) = callback.send(extra) {
             cerror!("Callback error {}", err);
         }
@@ -329,18 +345,18 @@ impl Service {
     }
 
     fn get_logs(&self, params: LogQueryParams, callback: Sender<Vec<Log>>) -> Result<(), Box<dyn error::Error>> {
-        let logs = queries::logs::search(&self.db_conn, params)?;
+        let logs = queries::logs::search(&self.db_conn()?, params)?;
         callback.send(logs)?;
         Ok(())
     }
 
     fn write_logs(&self, node_name: &str, logs: Vec<StructuredLog>) -> Result<(), Box<dyn error::Error>> {
-        queries::logs::insert(&self.db_conn, node_name, logs)?;
+        queries::logs::insert(&self.db_conn()?, node_name, logs)?;
         Ok(())
     }
 
     fn get_log_targets(&self, callback: Sender<Vec<String>>) -> Result<(), Box<dyn error::Error>> {
-        let targets = queries::logs::get_targets(&self.db_conn)?;
+        let targets = queries::logs::get_targets(&self.db_conn()?)?;
         callback.send(targets)?;
         Ok(())
     }
@@ -351,7 +367,7 @@ impl Service {
         network_usage: NetworkUsage,
         time: chrono::DateTime<chrono::Utc>,
     ) -> Result<(), Box<dyn error::Error>> {
-        queries::network_usage::insert(&self.db_conn, node_name, network_usage, time)?;
+        queries::network_usage::insert(&self.db_conn()?, node_name, network_usage, time)?;
         Ok(())
     }
 
@@ -361,7 +377,7 @@ impl Service {
         peer_count: i32,
         time: chrono::DateTime<chrono::Utc>,
     ) -> Result<(), Box<dyn error::Error>> {
-        queries::peer_count::insert(&self.db_conn, node_name, peer_count, time)?;
+        queries::peer_count::insert(&self.db_conn()?, node_name, peer_count, time)?;
         Ok(())
     }
 
@@ -369,7 +385,7 @@ impl Service {
         &self,
         args: GraphCommonArgs,
     ) -> Result<Vec<GraphNetworkOutAllRow>, Box<dyn error::Error>> {
-        let rows = queries::network_usage_graph::query_network_out_all(&self.db_conn, args)?;
+        let rows = queries::network_usage_graph::query_network_out_all(&self.db_conn()?, args)?;
         Ok(rows)
     }
 
@@ -377,7 +393,7 @@ impl Service {
         &self,
         args: GraphCommonArgs,
     ) -> Result<Vec<GraphNetworkOutAllRow>, Box<dyn error::Error>> {
-        let rows = queries::network_usage_graph::query_network_out_all_avg(&self.db_conn, args)?;
+        let rows = queries::network_usage_graph::query_network_out_all_avg(&self.db_conn()?, args)?;
         Ok(rows)
     }
 
@@ -386,7 +402,7 @@ impl Service {
         node_name: NodeName,
         args: GraphCommonArgs,
     ) -> Result<Vec<GraphNetworkOutNodeExtensionRow>, Box<dyn error::Error>> {
-        let rows = queries::network_usage_graph::query_network_out_node_extension(&self.db_conn, node_name, args)?;
+        let rows = queries::network_usage_graph::query_network_out_node_extension(&self.db_conn()?, node_name, args)?;
         Ok(rows)
     }
 
@@ -395,7 +411,7 @@ impl Service {
         node_name: NodeName,
         args: GraphCommonArgs,
     ) -> Result<Vec<GraphNetworkOutNodePeerRow>, Box<dyn error::Error>> {
-        let rows = queries::network_usage_graph::query_network_out_node_peer(&self.db_conn, node_name, args)?;
+        let rows = queries::network_usage_graph::query_network_out_node_peer(&self.db_conn()?, node_name, args)?;
         Ok(rows)
     }
 }

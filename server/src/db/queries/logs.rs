@@ -6,10 +6,11 @@ use postgres;
 use postgres::types::ToSql;
 
 use super::super::super::common_rpc_types::StructuredLog;
+use super::super::types::DBConnection;
 use super::super::types::OrderBy;
 use super::super::types::{Log, LogQueryParams};
 
-pub fn insert(conn: &postgres::Connection, node_name: &str, logs: Vec<StructuredLog>) -> postgres::Result<()> {
+pub fn insert(conn: &DBConnection, node_name: &str, logs: Vec<StructuredLog>) -> postgres::Result<()> {
     ctrace!("Add log {} : {:?}", node_name, logs);
 
     if logs.is_empty() {
@@ -53,7 +54,7 @@ pub fn insert(conn: &postgres::Connection, node_name: &str, logs: Vec<Structured
     Ok(())
 }
 
-pub fn search(conn: &postgres::Connection, params: LogQueryParams) -> postgres::Result<Vec<Log>> {
+pub fn search(conn: &DBConnection, params: LogQueryParams) -> postgres::Result<Vec<Log>> {
     ctrace!("Search log with {:?}", params);
     let mut parameters = Parameters::default();
     let mut where_conditions = Vec::new();
@@ -145,7 +146,7 @@ impl Parameters {
     }
 }
 
-pub fn get_targets(conn: &postgres::Connection) -> postgres::Result<Vec<String>> {
+pub fn get_targets(conn: &DBConnection) -> postgres::Result<Vec<String>> {
     ctrace!("Query targets");
 
     //    let rows = conn.query("SELECT DISTINCT target FROM logs", &[])?;

@@ -1,8 +1,7 @@
-use postgres;
-
+use super::super::types::DBConnection;
 use super::super::ClientExtra;
 
-pub fn get(conn: &postgres::Connection, node_name: &str) -> postgres::Result<Option<ClientExtra>> {
+pub fn get(conn: &DBConnection, node_name: &str) -> postgres::Result<Option<ClientExtra>> {
     ctrace!("Query client extra by name {}", node_name);
 
     let rows = conn.query("SELECT * FROM client_extra WHERE name=$1;", &[&node_name])?;
@@ -16,7 +15,7 @@ pub fn get(conn: &postgres::Connection, node_name: &str) -> postgres::Result<Opt
     }))
 }
 
-pub fn upsert(conn: &postgres::Connection, node_name: &str, client_extra: &ClientExtra) -> postgres::Result<()> {
+pub fn upsert(conn: &DBConnection, node_name: &str, client_extra: &ClientExtra) -> postgres::Result<()> {
     ctrace!("Upsert client extra {:?}", client_extra);
     let result = conn.execute(
         "INSERT INTO client_extra (name, prev_env, prev_args) VALUES ($1, $2, $3) \
