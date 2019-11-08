@@ -16,6 +16,7 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
+extern crate r2d2_postgres;
 extern crate slack_hook;
 extern crate ws;
 

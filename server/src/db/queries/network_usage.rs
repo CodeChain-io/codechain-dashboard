@@ -2,11 +2,12 @@ use chrono;
 use postgres;
 use regex::{Captures, Regex};
 
+use super::super::types::DBConnection;
 use common_rpc_types::NetworkUsage;
 use util::{floor_to_5min, start_of_day, start_of_hour};
 
 pub fn insert(
-    conn: &postgres::Connection,
+    conn: &DBConnection,
     node_name: &str,
     network_usage: NetworkUsage,
     time: chrono::DateTime<chrono::Utc>,

@@ -8,6 +8,9 @@ use std::sync::mpsc::RecvError;
 use super::super::common_rpc_types::{
     BlackList, BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, PendingTransaction, WhiteList,
 };
+use serde::export::Formatter;
+
+pub type DBConnection = r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>;
 
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct ClientQueryResult {
@@ -182,5 +185,15 @@ pub enum Error {
 impl From<RecvError> for Error {
     fn from(error: RecvError) -> Self {
         Error::Internal(error.to_string())
+    }
+}
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+        match self {
+            Error::Internal(log) => write!(f, "{}", log),
+        }
     }
 }

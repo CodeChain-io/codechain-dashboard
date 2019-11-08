@@ -4,8 +4,10 @@ use common_rpc_types::{
 };
 use postgres;
 
+use super::super::types::DBConnection;
+
 pub fn query_network_out_all(
-    conn: &postgres::Connection,
+    conn: &DBConnection,
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutAllRow>> {
     let time_column_name = get_sql_column_name_by_period(graph_args.period);
@@ -38,7 +40,7 @@ fn get_sql_column_name_by_period(period: GraphPeriod) -> &'static str {
 }
 
 pub fn query_network_out_all_avg(
-    conn: &postgres::Connection,
+    conn: &DBConnection,
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutAllRow>> {
     let time_column_name = get_sql_column_name_by_period(graph_args.period);
@@ -63,7 +65,7 @@ pub fn query_network_out_all_avg(
 }
 
 pub fn query_network_out_node_extension(
-    conn: &postgres::Connection,
+    conn: &DBConnection,
     node_name: NodeName,
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutNodeExtensionRow>> {
@@ -90,7 +92,7 @@ pub fn query_network_out_node_extension(
 }
 
 pub fn query_network_out_node_peer(
-    conn: &postgres::Connection,
+    conn: &DBConnection,
     node_name: NodeName,
     graph_args: GraphCommonArgs,
 ) -> postgres::Result<Vec<GraphNetworkOutNodePeerRow>> {

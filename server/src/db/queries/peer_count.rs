@@ -1,8 +1,10 @@
 use chrono;
 use postgres;
 
+use super::super::types::DBConnection;
+
 pub fn insert(
-    conn: &postgres::Connection,
+    conn: &DBConnection,
     node_name: &str,
     peer_count: i32,
     time: chrono::DateTime<chrono::Utc>,
