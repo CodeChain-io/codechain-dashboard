@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use super::super::agent;
+use super::super::client;
 use super::super::common_rpc_types;
 use super::super::common_rpc_types::{
     BlackList, BlockId, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
@@ -11,7 +11,7 @@ use super::super::db;
 
 #[derive(Clone)]
 pub struct Context {
-    pub agent_service: agent::ServiceSender,
+    pub client_service: client::ServiceSender,
     pub db_service: db::ServiceSender,
     pub passphrase: String,
 }
@@ -40,7 +40,7 @@ pub enum DashboardNode {
 }
 
 impl DashboardNode {
-    pub fn from_db_state(state: &db::AgentQueryResult) -> Self {
+    pub fn from_db_state(state: &db::ClientQueryResult) -> Self {
         DashboardNode::Normal {
             status: state.status,
             name: state.name.clone(),
@@ -143,7 +143,7 @@ impl NodeGetInfoResponse {
         }
     }
 
-    pub fn from_db_state(state: &db::AgentQueryResult, extra: &Option<db::AgentExtra>) -> Self {
+    pub fn from_db_state(state: &db::ClientQueryResult, extra: &Option<db::ClientExtra>) -> Self {
         let mut dummy = Self::dummy();
         dummy.address = state.address;
         dummy.status = state.status;

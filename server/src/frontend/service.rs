@@ -40,7 +40,7 @@ impl Service {
                     }
                 }
             })
-            .expect("Should success running agent service thread");
+            .expect("Should success running client service thread");
 
         service_sender
     }

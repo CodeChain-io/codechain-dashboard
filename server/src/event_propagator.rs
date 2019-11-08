@@ -20,7 +20,7 @@ impl EventPropagator {
 impl db::EventSubscriber for EventPropagator {
     fn on_event(&self, event: db::Event) {
         match event {
-            db::Event::AgentUpdated {
+            db::Event::ClientUpdated {
                 before,
                 after,
             } => {
@@ -117,7 +117,7 @@ impl db::EventSubscriber for EventPropagator {
 
                 self.frontend_service.send(frontend::Message::SendEvent(message)).expect("Should success send event");
             }
-            db::Event::AgentExtraUpdated {
+            db::Event::ClientExtraUpdated {
                 name,
                 before,
                 after,

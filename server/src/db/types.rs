@@ -10,7 +10,7 @@ use super::super::common_rpc_types::{
 };
 
 #[derive(PartialEq, Clone, Debug, Default)]
-pub struct AgentQueryResult {
+pub struct ClientQueryResult {
     pub name: NodeName,
     pub status: NodeStatus,
     pub address: Option<SocketAddr>,
@@ -24,7 +24,7 @@ pub struct AgentQueryResult {
 }
 
 #[derive(PartialEq, Clone, Debug, Default)]
-pub struct AgentExtra {
+pub struct ClientExtra {
     pub prev_env: String,
     pub prev_args: String,
 }
@@ -45,8 +45,8 @@ pub struct Connections {
 impl Connections {
     pub fn update(
         &mut self,
-        before: &AgentQueryResult,
-        after: &AgentQueryResult,
+        before: &ClientQueryResult,
+        after: &ClientQueryResult,
     ) -> (Vec<Connection>, Vec<Connection>) {
         if before.address.is_none() || after.address.is_none() {
             return (Vec::new(), Vec::new())
@@ -73,7 +73,7 @@ impl Connections {
         (ret_added, ret_removed)
     }
 
-    fn get_added(before: &AgentQueryResult, after: &AgentQueryResult) -> Vec<Connection> {
+    fn get_added(before: &ClientQueryResult, after: &ClientQueryResult) -> Vec<Connection> {
         let before_peers: HashSet<&SocketAddr> = before.peers.iter().collect();
         after
             .peers
@@ -83,7 +83,7 @@ impl Connections {
             .collect()
     }
 
-    fn get_removed(before: &AgentQueryResult, after: &AgentQueryResult) -> Vec<Connection> {
+    fn get_removed(before: &ClientQueryResult, after: &ClientQueryResult) -> Vec<Connection> {
         let after_peers: HashSet<&SocketAddr> = after.peers.iter().collect();
         before
             .peers

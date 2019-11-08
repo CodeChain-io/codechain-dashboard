@@ -21,7 +21,7 @@ use super::super::jsonrpc;
 use super::super::rpc::RPCResult;
 use super::codechain_rpc::CodeChainRPC;
 use super::service::{Message as ServiceMessage, ServiceSender};
-use super::types::{AgentGetInfoResponse, CodeChainCallRPCResponse};
+use super::types::{ClientGetInfoResponse, CodeChainCallRPCResponse};
 use crate::common_rpc_types::HardwareUsage;
 use crate::noti::Noti;
 
@@ -166,12 +166,12 @@ impl State {
 }
 
 #[derive(Clone)]
-pub struct AgentSender {
+pub struct ClientSender {
     jsonrpc_context: jsonrpc::Context,
     state: Arc<RwLock<State>>,
 }
 
-impl AgentSender {
+impl ClientSender {
     pub fn new(jsonrpc_context: jsonrpc::Context, state: Arc<RwLock<State>>) -> Self {
         Self {
             jsonrpc_context,
@@ -188,9 +188,9 @@ impl AgentSender {
     }
 }
 
-pub struct Agent {
+pub struct Client {
     id: i32,
-    sender: AgentSender,
+    sender: ClientSender,
     state: Arc<RwLock<State>>,
     service_sender: ServiceSender,
     closed: bool,
@@ -199,7 +199,7 @@ pub struct Agent {
     noti: Arc<Noti>,
 }
 
-pub enum AgentCleanupReason {
+pub enum ClientCleanupReason {
     Error(String),
     #[allow(dead_code)]
     Success,
@@ -207,7 +207,7 @@ pub enum AgentCleanupReason {
     Unexpected,
 }
 
-impl Agent {
+impl Client {
     fn new(
         id: i32,
         jsonrpc_context: jsonrpc::Context,
@@ -216,7 +216,7 @@ impl Agent {
         noti: Arc<Noti>,
     ) -> Self {
         let state = Arc::new(RwLock::new(State::new()));
-        let sender = AgentSender::new(jsonrpc_context, Arc::clone(&state));
+        let sender = ClientSender::new(jsonrpc_context, Arc::clone(&state));
         Self {
             id,
             state,
@@ -235,28 +235,28 @@ impl Agent {
         service_sender: ServiceSender,
         db_service: db::ServiceSender,
         noti: Arc<Noti>,
-    ) -> AgentSender {
-        let mut agent = Self::new(id, jsonrpc_context, service_sender, db_service, noti);
-        let sender = agent.sender.clone();
+    ) -> ClientSender {
+        let mut client = Self::new(id, jsonrpc_context, service_sender, db_service, noti);
+        let sender = client.sender.clone();
 
         thread::Builder::new()
-            .name(format!("agent-{}", id))
-            .spawn(move || match agent.run() {
+            .name(format!("client-{}", id))
+            .spawn(move || match client.run() {
                 Ok(StopCause::AlreadyConnected) => {
-                    agent.clean_up(AgentCleanupReason::AlreadyConnected);
+                    client.clean_up(ClientCleanupReason::AlreadyConnected);
                 }
                 Err(err) => {
-                    cerror!("Agent failed : {}", err);
-                    agent.clean_up(AgentCleanupReason::Error(err));
+                    cerror!("Client failed : {}", err);
+                    client.clean_up(ClientCleanupReason::Error(err));
                 }
             })
-            .expect("Should success running agent thread");
+            .expect("Should success running client thread");
 
         sender
     }
 
     fn run(&mut self) -> Result<StopCause, String> {
-        cinfo!("Agent-{} started", self.id);
+        cinfo!("Client-{} started", self.id);
 
         self.update()?;
         if let State::Stop {
@@ -267,14 +267,14 @@ impl Agent {
             return Ok(cause)
         }
         self.service_sender
-            .send(ServiceMessage::AddAgent(self.id, self.sender.clone()))
-            .map_err(|err| format!("AddAgent failed {}", err))?;
+            .send(ServiceMessage::AddClient(self.id, self.sender.clone()))
+            .map_err(|err| format!("AddClient failed {}", err))?;
 
         // get prev data from db
         // if exist, run it.
         let name = self.state.read().name().expect("Updated").clone();
 
-        if let Ok(Some(extra)) = self.db_service.get_agent_extra(name) {
+        if let Ok(Some(extra)) = self.db_service.get_client_extra(name) {
             match ::std::env::var("START_AT_CONNECT") {
                 Ok(_) => {
                     if let Err(err) = self.sender.shell_start_codechain(ShellStartCodeChainRequest {
@@ -297,7 +297,7 @@ impl Agent {
         let mut disk_usage_alert_sent = false;
         let mut memory_usage_alert_sent = false;
         loop {
-            ctrace!("Agent-{} update", self.id);
+            ctrace!("Client-{} update", self.id);
             let update_result = self.update()?;
             let node_name = match &*self.state.read() {
                 State::Stop {
@@ -408,7 +408,7 @@ impl Agent {
     }
 
     fn update(&mut self) -> Result<Option<UpdateResult>, String> {
-        let info = self.sender.agent_get_info().map_err(|err| format!("{}", err))?;
+        let info = self.sender.client_get_info().map_err(|err| format!("{}", err))?;
 
         let mut state = self.state.write();
         let new_state = State::Normal {
@@ -422,7 +422,7 @@ impl Agent {
         if let State::Initializing = *state {
             let success = self
                 .db_service
-                .initialize_agent_query_result(db::AgentQueryResult {
+                .initialize_client_query_result(db::ClientQueryResult {
                     name: info.name.clone(),
                     status: info.status,
                     address: info.address,
@@ -474,14 +474,14 @@ impl Agent {
         let whitelist = self.codechain_rpc.get_whitelist(info.status)?;
         let blacklist = self.codechain_rpc.get_blacklist(info.status)?;
         let network_usage = self.codechain_rpc.get_network_usage(info.status)?;
-        let hardware = self.sender.hardware_get().map_err(|err| format!("Agent Update {}", err))?;
+        let hardware = self.sender.hardware_get().map_err(|err| format!("Client Update {}", err))?;
 
         ctrace!("Update state from {:?} to {:?}", *state, new_state);
         let number_of_peers = peers.len();
         let disk_usage = hardware.disk_usage;
         let disk_usages = hardware.disk_usages.clone();
         let memory_usage = hardware.memory_usage;
-        self.db_service.update_agent_query_result(db::AgentQueryResult {
+        self.db_service.update_client_query_result(db::ClientQueryResult {
             name: info.name.clone(),
             status: info.status,
             address: info.address,
@@ -522,31 +522,31 @@ impl Agent {
         Ok(Some(update_result))
     }
 
-    fn clean_up(&mut self, reason: AgentCleanupReason) {
+    fn clean_up(&mut self, reason: ClientCleanupReason) {
         if self.closed {
             return
         }
         self.closed = true;
 
         let (is_error, error_msg) = match reason {
-            AgentCleanupReason::Error(err) => {
-                cerror!("Agent is cleaned up because {}", err);
+            ClientCleanupReason::Error(err) => {
+                cerror!("Client is cleaned up because {}", err);
                 (true, err)
             }
-            AgentCleanupReason::Unexpected => {
+            ClientCleanupReason::Unexpected => {
                 let err = "Unexpected cleanup";
-                cerror!("Agent is cleaned up because {}", err);
+                cerror!("Client is cleaned up because {}", err);
                 (true, err.to_string())
             }
-            AgentCleanupReason::AlreadyConnected => {
-                (true, "An agent which has same name is already connected".to_string())
+            ClientCleanupReason::AlreadyConnected => {
+                (true, "A client which has same name is already connected".to_string())
             }
-            AgentCleanupReason::Success => (false, "".to_string()),
+            ClientCleanupReason::Success => (false, "".to_string()),
         };
 
-        let send_result = self.service_sender.send(ServiceMessage::RemoveAgent(self.id));
+        let send_result = self.service_sender.send(ServiceMessage::RemoveClient(self.id));
         if let Err(error) = send_result {
-            cerror!("Agent cleanup error {}", error);
+            cerror!("Client cleanup error {}", error);
         }
 
         let state = self.state.read();
@@ -556,7 +556,7 @@ impl Agent {
             ..
         } = &*state
         {
-            self.db_service.update_agent_query_result(db::AgentQueryResult {
+            self.db_service.update_client_query_result(db::ClientQueryResult {
                 name: name.clone(),
                 status: NodeStatus::Error,
                 address: *address,
@@ -574,7 +574,7 @@ impl Agent {
         );
 
         if let Err(err) = ws_close_result {
-            cerror!("Agent cleanup error {}", err);
+            cerror!("Client cleanup error {}", err);
         }
     }
 }
@@ -589,24 +589,24 @@ pub struct UpdateResult {
     pub memory_usage: HardwareUsage,
 }
 
-impl Drop for Agent {
+impl Drop for Client {
     fn drop(&mut self) {
-        self.clean_up(AgentCleanupReason::Unexpected)
+        self.clean_up(ClientCleanupReason::Unexpected)
     }
 }
 
-pub trait SendAgentRPC {
+pub trait SendClientRPC {
     fn shell_start_codechain(&self, _req: ShellStartCodeChainRequest) -> RPCResult<()>;
     fn shell_stop_codechain(&self) -> RPCResult<()>;
     fn shell_update_codechain(&self, _req: ShellUpdateCodeChainRequest) -> RPCResult<()>;
     fn shell_get_codechain_log(&self) -> RPCResult<Vec<StructuredLog>>;
-    fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse>;
+    fn client_get_info(&self) -> RPCResult<ClientGetInfoResponse>;
     fn codechain_call_rpc_raw(&self, args: (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>;
     fn codechain_call_rpc(&self, args: (String, Vec<Value>)) -> RPCResult<Output>;
     fn hardware_get(&self) -> RPCResult<HardwareInfo>;
 }
 
-impl SendAgentRPC for AgentSender {
+impl SendClientRPC for ClientSender {
     fn shell_start_codechain(&self, req: ShellStartCodeChainRequest) -> RPCResult<()> {
         jsonrpc::call_one_arg(self.jsonrpc_context.clone(), "shell_startCodeChain", req)?;
         Ok(())
@@ -633,8 +633,8 @@ impl SendAgentRPC for AgentSender {
         Ok(logs)
     }
 
-    fn agent_get_info(&self) -> RPCResult<AgentGetInfoResponse> {
-        let result: AgentGetInfoResponse = jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "agent_getInfo")?;
+    fn client_get_info(&self) -> RPCResult<ClientGetInfoResponse> {
+        let result: ClientGetInfoResponse = jsonrpc::call_no_arg(self.jsonrpc_context.clone(), "client_getInfo")?;
         Ok(result)
     }
 
