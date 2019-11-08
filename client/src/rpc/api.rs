@@ -8,7 +8,7 @@ use super::super::process::{Error as ProcessError, Message as ProcessMessage, Pr
 use super::super::types::HandlerContext;
 use super::router::Router;
 use super::types::{
-    response, AgentGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellGetCodeChainLogRequest,
+    response, ClientGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellGetCodeChainLogRequest,
     ShellStartCodeChainRequest, UpdateCodeChainRequest,
 };
 use rpc::types::RPCError;
@@ -34,8 +34,21 @@ pub fn add_routing(router: &mut Router) {
             shell_get_codechain_log as fn(&HandlerContext, (ShellGetCodeChainLogRequest,)) -> RPCResult<Vec<Value>>,
         ),
     );
-    router
-        .add_route("agent_getInfo", Box::new(agent_get_info as fn(&HandlerContext) -> RPCResult<AgentGetInfoResponse>));
+    // agent_getInfo is deprecated. Please use client_getInfo
+    router.add_route(
+        "agent_getInfo",
+        Box::new(client_get_info as fn(&HandlerContext) -> RPCResult<ClientGetInfoResponse>),
+    );
+    router.add_route(
+        "codechain_callRPC",
+        Box::new(
+            codechain_call_rpc as fn(&HandlerContext, (String, Vec<Value>)) -> RPCResult<CodeChainCallRPCResponse>,
+        ),
+    );
+    router.add_route(
+        "client_getInfo",
+        Box::new(client_get_info as fn(&HandlerContext) -> RPCResult<ClientGetInfoResponse>),
+    );
     router.add_route(
         "codechain_callRPC",
         Box::new(
@@ -102,7 +115,7 @@ fn shell_get_codechain_log(context: &HandlerContext, req: (ShellGetCodeChainLogR
     response(result)
 }
 
-fn agent_get_info(context: &HandlerContext) -> RPCResult<AgentGetInfoResponse> {
+fn client_get_info(context: &HandlerContext) -> RPCResult<ClientGetInfoResponse> {
     let (tx, rx) = channel::unbounded();
     context.process.send(ProcessMessage::GetStatus {
         callback: tx,
@@ -114,7 +127,7 @@ fn agent_get_info(context: &HandlerContext) -> RPCResult<AgentGetInfoResponse> {
         commit_hash,
         binary_checksum,
     } = process_result?;
-    response(AgentGetInfoResponse {
+    response(ClientGetInfoResponse {
         name: context.name.clone(),
         status,
         address: port.map(|port| SocketAddr::new(context.codechain_address, port)),

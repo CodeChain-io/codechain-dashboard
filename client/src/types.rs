@@ -7,7 +7,7 @@ use super::process::Message as ProcessMessage;
 
 pub type CommitHash = String;
 
-pub struct AgentArgs<'a> {
+pub struct ClientArgs<'a> {
     pub codechain_dir: &'a str,
     pub log_file_path: &'a str,
     pub hub_url: &'a str,

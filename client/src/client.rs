@@ -12,9 +12,9 @@ use super::logger::init as logger_init;
 use super::process::{self, ProcessOption};
 use super::rpc::api::add_routing;
 use super::rpc::router::Router;
-use super::types::{AgentArgs, HandlerContext};
+use super::types::{ClientArgs, HandlerContext};
 
-pub fn run(args: &AgentArgs) {
+pub fn run(args: &ClientArgs) {
     logger_init().expect("Logger should be initialized");
 
     let count = Rc::new(Cell::new(0));
