@@ -1,8 +1,8 @@
-name: cagent
+name: codechain-dashboard-client
 version: "0.1.0"
 version_short: "v"
 author: CodeChain Team <codechain@kodebox.io>
-about: CodeChain Agent
+about: CodeChain Dashboard Client
 args:
     - codechain-dir:
         long: codechain-dir
@@ -28,6 +28,6 @@ args:
     - name:
         long: name
         short: n
-        help: Agent's name. This will be present in the Dashboard.
+        help: Dashboard Client's name. This will be present in the Dashboard.
         required: true
         takes_value: true

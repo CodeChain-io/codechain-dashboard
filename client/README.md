@@ -1,8 +1,8 @@
-# CodeChain Agent
+# CodeChain Dashboard Client
 
 ## Requirements
 
-The following are the software dependencies required to install and run CodeChain-agent:
+The following are the software dependencies required to install and run CodeChain-Dashboard-Client:
 
 - [CodeChain](https://github.com/CodeChain-io/codechain)
 - [CodeChain-agent-server](../server)
@@ -15,7 +15,7 @@ sudo apt install pkg-config libssl-dev
 
 ## Run
 
-To run CodeChain-agent, just run
+To run CodeChain-Dashboard-Client, just run
 
 ```
 cargo run -- --agent-hub-url <agent-hub-url> --codechain-dir <codechain-dir> --codechain-p2p-address <codechain-p2p-address> --name <name>

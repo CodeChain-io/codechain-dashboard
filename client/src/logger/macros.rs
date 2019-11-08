@@ -1,16 +1,16 @@
 #[macro_export]
 macro_rules! log_target {
     (PROCESS) => {
-        "agent-process"
+        "client-process"
     };
     (MAIN) => {
-        "agent-main"
+        "client-main"
     };
     (WEB) => {
-        "agent-web"
+        "client-web"
     };
     (HARDWARE) => {
-        "agent-hardware"
+        "client-hardware"
     };
 }
 
