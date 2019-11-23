@@ -1,5 +1,5 @@
 use super::super::client::SendClientRPC;
-use super::super::common_rpc_types::{NodeName, ShellStartCodeChainRequest};
+use super::super::common_rpc_types::{GraphCommonArgs, NodeName, ShellStartCodeChainRequest, UpdateCodeChainRequest};
 use super::super::router::Router;
 use super::super::rpc::{response, RPCError, RPCResponse};
 use super::types::{
@@ -7,7 +7,6 @@ use super::types::{
     GraphNetworkOutNodeExtensionResponse, GraphNetworkOutNodePeerResponse, LogGetRequest, LogGetResponse,
     LogGetTargetsResponse, NodeConnection, NodeGetInfoResponse,
 };
-use common_rpc_types::{GraphCommonArgs, UpdateCodeChainRequest};
 
 pub fn add_routing(router: &mut Router<Context>) {
     router.add_route("ping", Box::new(ping as fn(Context) -> RPCResponse<String>));

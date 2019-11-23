@@ -1,11 +1,10 @@
-use std::format;
-use std::thread;
+use std::{format, thread};
 
 use chrono;
-use db::queries::network_usage::remove_older_logs;
-use postgres;
-use postgres::TlsMode;
+use postgres::{self, TlsMode};
 use time;
+
+use crate::db::queries::network_usage::remove_older_logs;
 
 pub fn run(db_user: &str, db_password: &str) {
     let conn_uri = format!("postgres://{}:{}@localhost", db_user, db_password);

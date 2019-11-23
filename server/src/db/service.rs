@@ -8,16 +8,16 @@ use std::thread;
 use r2d2_postgres::PostgresConnectionManager;
 
 use super::super::common_rpc_types as rpc_type;
-use super::super::common_rpc_types::{NodeName, NodeStatus, StructuredLog};
+use super::super::common_rpc_types::{
+    GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
+    GraphNetworkOutNodePeerRow, NetworkUsage, NodeName, NodeStatus, StructuredLog,
+};
+use super::super::util;
 use super::event::{Event, EventSubscriber};
 use super::queries;
-use super::types::{ClientExtra, ClientQueryResult, Connection, Connections, Error as DBError, Log, LogQueryParams};
-use common_rpc_types::{
-    GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
-    GraphNetworkOutNodePeerRow, NetworkUsage,
+use super::types::{
+    ClientExtra, ClientQueryResult, Connection, Connections, DBConnection, Error as DBError, Log, LogQueryParams,
 };
-use db::types::DBConnection;
-use util;
 
 #[derive(Debug, Clone)]
 pub enum Message {

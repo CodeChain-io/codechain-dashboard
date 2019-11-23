@@ -11,8 +11,7 @@ use super::types::{
     response, ClientGetInfoResponse, CodeChainCallRPCResponse, RPCResult, ShellGetCodeChainLogRequest,
     ShellStartCodeChainRequest, UpdateCodeChainRequest,
 };
-use rpc::types::RPCError;
-use rpc::types::ERR_NETWORK_ERROR;
+use super::types::{RPCError, ERR_NETWORK_ERROR};
 
 pub fn add_routing(router: &mut Router) {
     router.add_route("ping", Box::new(ping as fn(&HandlerContext) -> RPCResult<String>));
