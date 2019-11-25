@@ -60,7 +60,7 @@ fn parse_network_usage_key(key: &str) -> Result<(String, String), String> {
     Ok((reg_result["extension"].to_string(), reg_result["ip"].to_string()))
 }
 
-pub fn remove_older_logs(conn: &postgres::Connection, time: chrono::DateTime<chrono::Utc>) -> postgres::Result<()> {
+pub fn remove_older_logs(conn: &DBConnection, time: chrono::DateTime<chrono::Utc>) -> postgres::Result<()> {
     ctrace!("Remove network usage older than {}", time);
 
     let result = conn.execute("DELETE FROM network_usage WHERE time<$1", &[&time])?;
