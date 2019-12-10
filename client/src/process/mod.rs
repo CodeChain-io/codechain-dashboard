@@ -7,8 +7,11 @@ mod rpc;
 mod update;
 
 use std::cell::Cell;
+use std::convert::TryFrom;
+use std::fs;
 use std::io::Error as IOError;
 use std::option::Option;
+use std::path::Path;
 use std::result::Result;
 use std::sync::Arc;
 use std::thread;
@@ -19,6 +22,7 @@ use crossbeam::channel::{Receiver, Sender};
 use parking_lot::Mutex;
 use serde_json::Value;
 use subprocess::{Exec, ExitStatus, PopenError};
+use toml;
 
 use self::codechain_process::CodeChainProcess;
 use super::rpc::types::{NodeStatus, UpdateCodeChainRequest};
@@ -475,7 +479,7 @@ fn run(
 
     let args_iter = args.split_whitespace();
     let args_vec: Vec<String> = args_iter.map(ToString::to_string).collect();
-    let (p2p_port, ipc_path) = parse_flags(&args_vec);
+    let (p2p_port, ipc_path) = parse_flags(&args_vec, option);
     let envs = parse_env(env)?;
 
     *child.lock() = Some(CodeChainProcess::new(envs, args_vec, option).map_err(Error::Unknown)?);
@@ -618,25 +622,39 @@ fn get_commit_hash(option: &ProcessOption, codechain_status: &CodeChainStatus) -
     }
 }
 
-fn parse_flags(args: &[String]) -> (u16, String) {
-    let p2p_port = parse_port(args);
-    let ipc_path = parse_path(args);
+fn parse_flags(args: &[String], option: &ProcessOption) -> (u16, String) {
+    let p2p_port = parse_port(args, option);
+    let ipc_path = parse_path(args, option);
 
     (p2p_port.unwrap_or(3485), ipc_path.unwrap_or_else(|| "/tmp/jsonrpc.ipc".to_string()))
 }
 
-fn parse_port(args: &[String]) -> Option<u16> {
+fn parse_port(args: &[String], option: &ProcessOption) -> Option<u16> {
     if let Some(position) = args.iter().position(|arg| arg == "--port") {
         args.get(position + 1)?.parse().ok()
+    } else if let Some(config) = read_config(args, Path::new(&option.codechain_dir)) {
+        let network_config = config.as_table()?.get("network")?;
+        let raw_port = network_config.as_table()?.get("port")?.as_integer()?;
+        u16::try_from(raw_port).ok()
     } else {
         None
     }
 }
 
-fn parse_path(args: &[String]) -> Option<String> {
+fn parse_path(args: &[String], option: &ProcessOption) -> Option<String> {
     if let Some(position) = args.iter().position(|arg| arg == "--ipc-path") {
         args.get(position + 1).cloned()
+    } else if let Some(config) = read_config(args, Path::new(&option.codechain_dir)) {
+        let ipc_config = config.as_table()?.get("ipc")?;
+        ipc_config.as_table()?.get("path")?.as_str().map(String::from)
     } else {
         None
     }
+}
+
+fn read_config(args: &[String], base: &Path) -> Option<toml::Value> {
+    let position = args.iter().position(|arg| arg == "--config")?;
+    let path = Path::new(args.get(position + 1)?);
+    let config_str = fs::read_to_string(base.join(path)).ok()?;
+    toml::from_str(&config_str).ok()
 }

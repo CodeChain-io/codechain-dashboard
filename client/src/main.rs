@@ -19,6 +19,7 @@ extern crate systemstat;
 extern crate tokio;
 extern crate tokio_codec;
 extern crate tokio_uds;
+extern crate toml;
 extern crate ws;
 
 #[macro_use]
