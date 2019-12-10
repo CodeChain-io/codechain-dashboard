@@ -619,22 +619,24 @@ fn get_commit_hash(option: &ProcessOption, codechain_status: &CodeChainStatus) -
 }
 
 fn parse_flags(args: &[String]) -> (u16, String) {
-    let p2p_port = parse_port(args, "--port");
-    let ipc_path = parse_path(args, "--ipc-path");
+    let p2p_port = parse_port(args);
+    let ipc_path = parse_path(args);
 
     (p2p_port.unwrap_or(3485), ipc_path.unwrap_or_else(|| "/tmp/jsonrpc.ipc".to_string()))
 }
 
-fn parse_port(args: &[String], option_name: &str) -> Option<u16> {
-    let option_position = args.iter().position(|arg| arg == option_name);
-    let interface_pos = option_position.map(|pos| pos + 1);
-    let interface_string = interface_pos.and_then(|pos| args.get(pos));
-    interface_string.and_then(|port| port.parse().ok())
+fn parse_port(args: &[String]) -> Option<u16> {
+    if let Some(position) = args.iter().position(|arg| arg == "--port") {
+        args.get(position + 1)?.parse().ok()
+    } else {
+        None
+    }
 }
 
-fn parse_path(args: &[String], option_name: &str) -> Option<String> {
-    let option_position = args.iter().position(|arg| arg == option_name);
-    let interface_pos = option_position.map(|pos| pos + 1);
-    let interface_string = interface_pos.and_then(|pos| args.get(pos));
-    interface_string.cloned()
+fn parse_path(args: &[String]) -> Option<String> {
+    if let Some(position) = args.iter().position(|arg| arg == "--ipc-path") {
+        args.get(position + 1).cloned()
+    } else {
+        None
+    }
 }
