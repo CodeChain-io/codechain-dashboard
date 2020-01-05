@@ -3,9 +3,8 @@ mod logger;
 #[macro_use]
 pub mod macros;
 
-pub use log::Level;
-
 use self::logger::Logger;
+pub use log::Level;
 use log::SetLoggerError;
 
 pub fn init() -> Result<(), SetLoggerError> {

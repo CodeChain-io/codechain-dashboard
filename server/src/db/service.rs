@@ -1,23 +1,20 @@
+use super::super::common_rpc_types::{
+    GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
+    GraphNetworkOutNodePeerRow, NetworkUsage, NodeName, NodeStatus, StructuredLog,
+};
+use super::super::{common_rpc_types as rpc_type, util};
+use super::event::{Event, EventSubscriber};
+use super::queries;
+use super::types::{
+    ClientExtra, ClientQueryResult, Connection, Connections, DBConnection, Error as DBError, Log, LogQueryParams,
+};
+use r2d2_postgres::PostgresConnectionManager;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::error;
 use std::net::SocketAddr;
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
-
-use r2d2_postgres::PostgresConnectionManager;
-
-use super::super::common_rpc_types as rpc_type;
-use super::super::common_rpc_types::{
-    GraphCommonArgs, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
-    GraphNetworkOutNodePeerRow, NetworkUsage, NodeName, NodeStatus, StructuredLog,
-};
-use super::super::util;
-use super::event::{Event, EventSubscriber};
-use super::queries;
-use super::types::{
-    ClientExtra, ClientQueryResult, Connection, Connections, DBConnection, Error as DBError, Log, LogQueryParams,
-};
 
 #[derive(Debug, Clone)]
 pub enum Message {

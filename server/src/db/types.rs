@@ -1,3 +1,7 @@
+use super::super::common_rpc_types::{
+    BlackList, BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, PendingTransaction, WhiteList,
+};
+use serde::export::Formatter;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
@@ -5,11 +9,6 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::net::SocketAddr;
 use std::sync::mpsc::RecvError;
-
-use super::super::common_rpc_types::{
-    BlackList, BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, PendingTransaction, WhiteList,
-};
-use serde::export::Formatter;
 
 pub type DBConnection = r2d2::PooledConnection<r2d2_postgres::PostgresConnectionManager>;
 

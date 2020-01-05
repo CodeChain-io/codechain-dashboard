@@ -1,8 +1,7 @@
+use super::super::process::Error as ProcessError;
 use jsonrpc_core::types::{Error as JSONRPCError, ErrorCode};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::{Error as SerdeError, Value};
-
-use super::super::process::Error as ProcessError;
 use std::net::SocketAddr;
 
 #[derive(Debug, Serialize, Deserialize)]

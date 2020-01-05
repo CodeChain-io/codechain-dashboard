@@ -1,14 +1,11 @@
+use super::super::{db, jsonrpc};
+use super::client::{Client, ClientSender, State as ClientState};
+use crate::noti::Noti;
+use parking_lot::RwLock;
 use std::sync::mpsc::{channel, SendError, Sender};
 use std::sync::Arc;
 use std::thread;
 use std::vec::Vec;
-
-use parking_lot::RwLock;
-
-use super::super::db;
-use super::super::jsonrpc;
-use super::client::{Client, ClientSender, State as ClientState};
-use crate::noti::Noti;
 
 #[derive(Default)]
 pub struct State {

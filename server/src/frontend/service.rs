@@ -1,7 +1,6 @@
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 use std::vec::Vec;
-
 use ws;
 
 #[derive(Default)]

@@ -1,10 +1,7 @@
-use std::thread;
-
-use crossbeam;
-
-use super::fs_util;
 use super::update::{CallbackResult, Sender};
-use super::Error;
+use super::{fs_util, Error};
+use crossbeam;
+use std::thread;
 
 pub struct Job {}
 

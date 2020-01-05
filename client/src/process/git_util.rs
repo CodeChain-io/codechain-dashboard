@@ -1,6 +1,5 @@
 use super::super::types::CommitHash;
-use super::Error;
-use super::Exec;
+use super::{Error, Exec};
 
 pub fn current_hash(codechain_dir: String) -> Result<CommitHash, Error> {
     cdebug!(PROCESS, "Run git rev-parse HEAD at {}", codechain_dir);

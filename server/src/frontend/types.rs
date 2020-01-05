@@ -1,14 +1,11 @@
-use serde_derive::Serialize;
-use std::net::SocketAddr;
-
-use super::super::client;
-use super::super::common_rpc_types;
 use super::super::common_rpc_types::{
-    BlackList, BlockId, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
+    self, BlackList, BlockId, GraphNetworkOutAllAVGRow, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow,
     GraphNetworkOutNodePeerRow, HardwareInfo, HardwareUsage, NodeName, NodeStatus, NodeVersion, PendingTransaction,
     WhiteList,
 };
-use super::super::db;
+use super::super::{client, db};
+use serde_derive::Serialize;
+use std::net::SocketAddr;
 
 #[derive(Clone)]
 pub struct Context {

@@ -1,14 +1,10 @@
-use std::borrow::Borrow;
-use std::rc::Rc;
-
+use super::super::super::common_rpc_types::StructuredLog;
+use super::super::types::{DBConnection, Log, LogQueryParams, OrderBy};
 use chrono;
 use postgres;
 use postgres::types::ToSql;
-
-use super::super::super::common_rpc_types::StructuredLog;
-use super::super::types::DBConnection;
-use super::super::types::OrderBy;
-use super::super::types::{Log, LogQueryParams};
+use std::borrow::Borrow;
+use std::rc::Rc;
 
 pub fn insert(conn: &DBConnection, node_name: &str, logs: Vec<StructuredLog>) -> postgres::Result<()> {
     ctrace!("Add log {} : {:?}", node_name, logs);

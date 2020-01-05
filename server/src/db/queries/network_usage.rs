@@ -1,11 +1,10 @@
+use super::super::types::DBConnection;
+use crate::common_rpc_types::NetworkUsage;
+use crate::util::{floor_to_5min, start_of_day, start_of_hour};
 use chrono;
 use lazy_static::lazy_static;
 use postgres;
 use regex::{Captures, Regex};
-
-use super::super::types::DBConnection;
-use crate::common_rpc_types::NetworkUsage;
-use crate::util::{floor_to_5min, start_of_day, start_of_hour};
 
 pub fn insert(
     conn: &DBConnection,

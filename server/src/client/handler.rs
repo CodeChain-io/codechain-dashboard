@@ -1,8 +1,5 @@
-use ws;
-use ws::{CloseCode, Error as WSError, Handler, Handshake, Result, Sender as WSSender};
-
-use super::super::client;
-use super::super::jsonrpc;
+use super::super::{client, jsonrpc};
+use ws::{self, CloseCode, Error as WSError, Handler, Handshake, Result, Sender as WSSender};
 
 pub struct WebSocketHandler {
     pub out: WSSender,

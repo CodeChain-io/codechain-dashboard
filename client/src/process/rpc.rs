@@ -1,11 +1,10 @@
-use std::io::Error as IoError;
-use std::path::Path;
-use std::sync::Arc;
-
 use jsonrpc_core;
 use jsonrpc_core::types::Version;
 use parking_lot::Mutex;
 use serde_json::{Error as SerdeError, Value};
+use std::io::Error as IoError;
+use std::path::Path;
+use std::sync::Arc;
 use tokio::io::{write_all, AsyncRead};
 use tokio::prelude::future::Future;
 use tokio::prelude::stream::Stream;
