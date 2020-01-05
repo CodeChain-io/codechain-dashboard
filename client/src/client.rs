@@ -12,7 +12,7 @@ use std::thread;
 use std::time::Duration;
 use ws::connect;
 
-pub fn run(args: &ClientArgs) {
+pub fn run(args: &ClientArgs<'_>) {
     logger_init().expect("Logger should be initialized");
 
     let count = Rc::new(Cell::new(0));

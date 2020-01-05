@@ -20,7 +20,7 @@ pub enum CallRPCError {
 }
 
 impl ::std::fmt::Display for CallRPCError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
         match self {
             CallRPCError::Serde(err) => err.fmt(f),
             CallRPCError::Io(err) => err.fmt(f),
