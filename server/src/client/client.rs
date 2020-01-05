@@ -1,3 +1,17 @@
+use super::super::common_rpc_types::{
+    BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest, ShellUpdateCodeChainRequest,
+    StructuredLog,
+};
+use super::super::rpc::RPCResult;
+use super::super::{db, jsonrpc};
+use super::codechain_rpc::CodeChainRPC;
+use super::service::{Message as ServiceMessage, ServiceSender};
+use super::types::{ClientGetInfoResponse, CodeChainCallRPCResponse};
+use crate::common_rpc_types::HardwareUsage;
+use crate::noti::Noti;
+use jsonrpc_core::Output;
+use parking_lot::{RwLock, RwLockReadGuard};
+use serde_json::{self, json, Value};
 use std::cmp::PartialEq;
 use std::convert::TryFrom;
 use std::net::SocketAddr;
@@ -5,24 +19,7 @@ use std::ops::Drop;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-
-use jsonrpc_core::Output;
-use parking_lot::{RwLock, RwLockReadGuard};
-use serde_json::{self, json, Value};
 use ws::CloseCode as WSCloseCode;
-
-use super::super::common_rpc_types::{
-    BlockId, HardwareInfo, NodeName, NodeStatus, NodeVersion, ShellStartCodeChainRequest, ShellUpdateCodeChainRequest,
-    StructuredLog,
-};
-use super::super::db;
-use super::super::jsonrpc;
-use super::super::rpc::RPCResult;
-use super::codechain_rpc::CodeChainRPC;
-use super::service::{Message as ServiceMessage, ServiceSender};
-use super::types::{ClientGetInfoResponse, CodeChainCallRPCResponse};
-use crate::common_rpc_types::HardwareUsage;
-use crate::noti::Noti;
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug)]

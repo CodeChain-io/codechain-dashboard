@@ -1,15 +1,13 @@
+use super::ProcessOption;
+use parking_lot::Mutex;
+use reopen::Reopen;
 use std::fs::OpenOptions;
 use std::io::{self, Read, Write};
 use std::path::Path;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-
-use parking_lot::Mutex;
-use reopen::Reopen;
 use subprocess::{Exec, ExitStatus, Popen, PopenError, Redirection};
-
-use super::ProcessOption;
 
 #[derive(Clone)]
 pub struct CodeChainProcess {

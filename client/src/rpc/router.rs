@@ -1,12 +1,9 @@
-use std::collections::HashMap;
-
-use serde::de::Deserialize;
-use serde::Serialize;
-use serde_json;
-use serde_json::Value;
-
 use super::super::types::HandlerContext;
 use super::types::{RPCError, RPCResult};
+use serde::de::Deserialize;
+use serde::Serialize;
+use serde_json::{self, Value};
+use std::collections::HashMap;
 
 pub trait Route {
     fn run(&self, context: &HandlerContext, value: Value) -> RPCResult<Value>;

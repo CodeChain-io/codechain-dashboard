@@ -1,12 +1,10 @@
 mod sendgrid;
 mod slack;
 
-use std::sync::Arc;
-
-use chrono::Utc;
-
 use self::sendgrid::Sendgrid;
-use self::slack::Slack;
+use chrono::Utc;
+use slack::Slack;
+use std::sync::Arc;
 
 #[derive(Default)]
 pub struct NotiBuilder {

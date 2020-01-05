@@ -1,8 +1,5 @@
+use super::{db, frontend, jsonrpc};
 use serde_json::{self, json, Value};
-
-use super::db;
-use super::frontend;
-use super::jsonrpc;
 
 pub struct EventPropagator {
     frontend_service: frontend::ServiceSender,

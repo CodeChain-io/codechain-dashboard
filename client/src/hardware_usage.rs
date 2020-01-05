@@ -1,16 +1,13 @@
-use std::error::Error;
-use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
-
 use crossbeam::channel::{Receiver, Sender};
 use crossbeam::{channel, select};
 use parking_lot::Mutex;
 use serde_derive::Serialize;
-use sysinfo;
-use sysinfo::{DiskExt, SystemExt};
-use systemstat;
-use systemstat::{CPULoad, DelayedMeasurement, Platform};
+use std::error::Error;
+use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
+use sysinfo::{self, DiskExt, SystemExt};
+use systemstat::{self, CPULoad, DelayedMeasurement, Platform};
 
 /**
  * We use both sysinfo and systemstat

@@ -1,15 +1,12 @@
-use std::net::SocketAddr;
-
-use jsonrpc_core::types::{Failure, Output, Success};
-use serde::de::DeserializeOwned;
-use serde_json;
-use serde_json::Value;
-
 use super::super::common_rpc_types::{
     BlackList, BlockId, NetworkUsage, NodeStatus, PendingTransaction, StructuredLog, WhiteList,
 };
 use super::client::{ClientSender, SendClientRPC};
 use super::types::ChainGetBestBlockIdResponse;
+use jsonrpc_core::types::{Failure, Output, Success};
+use serde::de::DeserializeOwned;
+use serde_json::{self, Value};
+use std::net::SocketAddr;
 
 pub struct CodeChainRPC {
     sender: ClientSender,

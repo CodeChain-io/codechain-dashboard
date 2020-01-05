@@ -1,13 +1,10 @@
-use std::error::Error;
-use std::fmt;
-use std::sync::Arc;
-
-use ws;
-use ws::{CloseCode, Error as WSError, ErrorKind, Handler, Handshake, Result, Sender};
-
 use super::super::jsonrpc;
 use super::super::router::Router;
 use super::types::Context;
+use std::error::Error;
+use std::fmt;
+use std::sync::Arc;
+use ws::{self, CloseCode, Error as WSError, ErrorKind, Handler, Handshake, Result, Sender};
 
 #[derive(Debug)]
 struct CustomError {}

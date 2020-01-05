@@ -1,10 +1,8 @@
-use std::net::SocketAddr;
-
+use super::super::common_rpc_types::{NodeName, NodeStatus};
 use primitives::H256;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
-
-use super::super::common_rpc_types::{NodeName, NodeStatus};
+use std::net::SocketAddr;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

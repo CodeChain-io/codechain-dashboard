@@ -1,11 +1,3 @@
-use std::cell::Cell;
-use std::rc::Rc;
-use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
-
-use ws::connect;
-
 use super::handler::WebSocketHandler;
 use super::hardware_usage::HardwareService;
 use super::logger::init as logger_init;
@@ -13,6 +5,12 @@ use super::process::{self, ProcessOption};
 use super::rpc::api::add_routing;
 use super::rpc::router::Router;
 use super::types::{ClientArgs, HandlerContext};
+use std::cell::Cell;
+use std::rc::Rc;
+use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
+use ws::connect;
 
 pub fn run(args: &ClientArgs) {
     logger_init().expect("Logger should be initialized");

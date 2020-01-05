@@ -13,15 +13,13 @@ mod router;
 mod rpc;
 mod util;
 
-use std::sync::Arc;
-use std::thread;
-
-use ws::listen;
-
 use self::event_propagator::EventPropagator;
 use self::logger::init as logger_init;
 use self::noti::NotiBuilder;
 use self::router::Router;
+use std::sync::Arc;
+use std::thread;
+use ws::listen;
 
 fn main() {
     logger_init().expect("Logger should be initialized");

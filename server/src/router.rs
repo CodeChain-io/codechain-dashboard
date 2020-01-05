@@ -1,11 +1,8 @@
-use std::collections::HashMap;
-
+use super::rpc::{RPCError, RPCResponse};
 use serde::de::Deserialize;
 use serde::Serialize;
-use serde_json;
-use serde_json::Value;
-
-use super::rpc::{RPCError, RPCResponse};
+use serde_json::{self, Value};
+use std::collections::HashMap;
 
 pub trait Route {
     type Context;

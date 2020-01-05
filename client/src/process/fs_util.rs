@@ -1,8 +1,6 @@
-use std::path::Path;
-
-use subprocess::Exec;
-
 use super::Error;
+use std::path::Path;
+use subprocess::Exec;
 
 pub fn move_file(dir: &str, from: &str, to: &str) -> Result<(), Error> {
     cdebug!(PROCESS, "Move {} to {}", from, to);

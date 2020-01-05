@@ -1,12 +1,9 @@
-use std::env;
-use std::thread;
-
 use atty;
 use colored::Colorize;
 use env_logger::filter::{Builder as FilterBuilder, Filter};
-use time;
-
 use log::{LevelFilter, Log, Metadata, Record};
+use std::{env, thread};
+use time;
 
 pub struct Logger {
     filter: Filter,

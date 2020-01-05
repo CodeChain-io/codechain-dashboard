@@ -1,15 +1,13 @@
-use std::cell::Cell;
-use std::rc::Rc;
-use std::sync::Arc;
-
+use super::rpc::router::{Error as RouterError, Router};
+use super::types::HandlerContext;
 use jsonrpc_core::types::{
     Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Response, Success, Version,
 };
 use serde_json;
+use std::cell::Cell;
+use std::rc::Rc;
+use std::sync::Arc;
 use ws::{CloseCode, Error as WSError, Handler, Handshake, Message, Result, Sender};
-
-use super::rpc::router::{Error as RouterError, Router};
-use super::types::HandlerContext;
 
 pub struct WebSocketHandler {
     pub out: Sender,

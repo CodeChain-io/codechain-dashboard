@@ -1,9 +1,7 @@
-use std::net::IpAddr;
-
-use crossbeam::Sender;
-
 use super::hardware_usage::HardwareService;
 use super::process::Message as ProcessMessage;
+use crossbeam::Sender;
+use std::net::IpAddr;
 
 pub type CommitHash = String;
 

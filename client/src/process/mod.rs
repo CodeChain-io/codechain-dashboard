@@ -6,27 +6,23 @@ mod git_util;
 mod rpc;
 mod update;
 
+use self::codechain_process::CodeChainProcess;
+use super::rpc::types::{NodeStatus, UpdateCodeChainRequest};
+use super::types::CommitHash;
+use crossbeam::channel::{self, Receiver, Sender};
+use parking_lot::Mutex;
+use serde_json::Value;
 use std::cell::Cell;
 use std::convert::TryFrom;
-use std::fs;
 use std::io::Error as IOError;
 use std::option::Option;
 use std::path::Path;
 use std::result::Result;
 use std::sync::Arc;
-use std::thread;
 use std::time::Duration;
-
-use crossbeam::channel;
-use crossbeam::channel::{Receiver, Sender};
-use parking_lot::Mutex;
-use serde_json::Value;
+use std::{fs, thread};
 use subprocess::{Exec, ExitStatus, PopenError};
 use toml;
-
-use self::codechain_process::CodeChainProcess;
-use super::rpc::types::{NodeStatus, UpdateCodeChainRequest};
-use super::types::CommitHash;
 
 #[derive(Debug)]
 pub enum Error {

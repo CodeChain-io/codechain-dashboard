@@ -1,11 +1,8 @@
-use std::thread;
-
-use crossbeam;
-
 use super::super::types::CommitHash;
-use super::git_util;
 use super::update::{CallbackResult, Sender};
-use super::Error;
+use super::{git_util, Error};
+use crossbeam;
+use std::thread;
 
 pub struct Job {}
 
