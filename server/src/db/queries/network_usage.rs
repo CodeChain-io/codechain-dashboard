@@ -1,4 +1,5 @@
 use chrono;
+use lazy_static::lazy_static;
 use postgres;
 use regex::{Captures, Regex};
 

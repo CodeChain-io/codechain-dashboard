@@ -1,28 +1,4 @@
 #[macro_use]
-extern crate clap;
-#[macro_use]
-extern crate log;
-extern crate parking_lot;
-#[macro_use]
-extern crate serde_derive;
-
-extern crate core;
-#[macro_use]
-extern crate crossbeam;
-extern crate jsonrpc_core;
-extern crate reqwest;
-extern crate serde;
-extern crate serde_json;
-extern crate subprocess;
-extern crate sysinfo;
-extern crate systemstat;
-extern crate tokio;
-extern crate tokio_codec;
-extern crate tokio_uds;
-extern crate toml;
-extern crate ws;
-
-#[macro_use]
 mod logger;
 mod client;
 mod handler;
@@ -32,6 +8,7 @@ mod rpc;
 mod types;
 
 use self::client::run;
+use clap::load_yaml;
 use types::ClientArgs;
 
 fn main() {

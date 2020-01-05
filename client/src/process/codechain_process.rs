@@ -1,6 +1,3 @@
-extern crate libc;
-extern crate reopen;
-
 use std::fs::OpenOptions;
 use std::io::{self, Read, Write};
 use std::path::Path;
@@ -9,11 +6,10 @@ use std::thread;
 use std::time::Duration;
 
 use parking_lot::Mutex;
+use reopen::Reopen;
 use subprocess::{Exec, ExitStatus, Popen, PopenError, Redirection};
 
 use super::ProcessOption;
-
-use self::reopen::Reopen;
 
 #[derive(Clone)]
 pub struct CodeChainProcess {

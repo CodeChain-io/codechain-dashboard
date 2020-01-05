@@ -1,10 +1,4 @@
-#[macro_use]
-extern crate codechain_dashboard_server as dashboard_server;
-extern crate postgres;
-#[macro_use]
-extern crate log;
-
-use dashboard_server::logger_init;
+use codechain_dashboard_server::{cinfo, logger_init};
 use postgres::{Connection, TlsMode};
 
 fn main() {

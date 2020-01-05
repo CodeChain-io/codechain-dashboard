@@ -1,8 +1,4 @@
-extern crate codechain_dashboard_server as dashboard_server;
-extern crate log;
-extern crate postgres;
-
-use dashboard_server::logger_init;
+use codechain_dashboard_server::logger_init;
 use postgres::{Connection, TlsMode};
 
 fn main() {
