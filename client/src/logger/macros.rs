@@ -17,7 +17,7 @@ macro_rules! log_target {
 #[macro_export]
 macro_rules! clog {
     ($target:ident, $lvl:expr, $($arg:tt)+) => ({
-        log!(target: log_target!($target), $lvl, $($arg)*);
+        log::log!(target: log_target!($target), $lvl, $($arg)*);
     });
 }
 

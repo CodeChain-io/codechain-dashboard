@@ -1,3 +1,4 @@
+use serde_derive::Serialize;
 use std::net::SocketAddr;
 
 use super::super::client;

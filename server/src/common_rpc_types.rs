@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
-use cprimitives::H256;
+use primitives::H256;
+use serde_derive::{Deserialize, Serialize};
 use serde_json;
 
 pub type NodeName = String;

@@ -19,7 +19,7 @@ use serde_json;
 use serde_json::{Error as SerdeError, Value};
 
 use super::router::Error as RouterError;
-use super::ws::{Error as WSError, Message, Sender as WSSender};
+use ws::{Error as WSError, Message, Sender as WSSender};
 
 pub fn handle<F>(router: F, text: String) -> Option<String>
 where

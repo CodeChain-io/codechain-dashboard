@@ -8,8 +8,7 @@ use std::time::Duration;
 
 use jsonrpc_core::Output;
 use parking_lot::{RwLock, RwLockReadGuard};
-use serde_json;
-use serde_json::Value;
+use serde_json::{self, json, Value};
 use ws::CloseCode as WSCloseCode;
 
 use super::super::common_rpc_types::{

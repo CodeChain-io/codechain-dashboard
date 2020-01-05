@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 
-use cprimitives::H256;
+use primitives::H256;
+use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
 
 use super::super::common_rpc_types::{NodeName, NodeStatus};
