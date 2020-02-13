@@ -1,7 +1,7 @@
 CodeChain Dashboard Server
 ==========================
 
-[![Join the chat at https://gitter.im/CodeChain-io/codechain-agent-hub](https://badges.gitter.im/CodeChain-io/codechain-agent-hub.svg)](https://gitter.im/CodeChain-io/codechain-agent-hub?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Gitter](https://badges.gitter.im/CodeChain-io.svg)](https://gitter.im/CodeChain-io/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 CodeChain Dashboard Server is a server which collects many CodeChain node's information(best block, pending transactions, log, ...). Also, CodeChain Dashboard Server serves collected data to CodeChain Dashboard.
 
