@@ -1,4 +1,5 @@
-use crate::db::queries::network_usage::remove_older_logs;
+use crate::db::queries::network_usage;
+use crate::db::queries::peer_count;
 use r2d2_postgres::PostgresConnectionManager;
 use std::{format, thread};
 
@@ -20,7 +21,10 @@ pub fn run(db_user: &str, db_password: &str) {
 
             match pool.get() {
                 Ok(connection) => {
-                    if let Err(err) = remove_older_logs(&connection, one_week_ago) {
+                    if let Err(err) = network_usage::remove_older_logs(&connection, one_week_ago) {
+                        cwarn!("Fail remove_older_logs: {:?}", err)
+                    }
+                    if let Err(err) = peer_count::remove_older_logs(&connection, one_week_ago) {
                         cwarn!("Fail remove_older_logs: {:?}", err)
                     }
                 }
