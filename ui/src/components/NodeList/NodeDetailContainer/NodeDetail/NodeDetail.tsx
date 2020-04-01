@@ -89,9 +89,8 @@ const getMemoryUsage = (memoryUsage: {
 const getCpuUsage = (cpuUsage: number[]) => {
   const dataSet = _.map(cpuUsage, usage => Math.floor(usage * 100 * 100) / 100);
   const labels = _.map(cpuUsage, (usage, index) => `CPU-${index}`);
-  const colors = _.map(
-    cpuUsage,
-    (usage, index) => (usage < 0.9 ? "#54A2E5" : "#dc3545")
+  const colors = _.map(cpuUsage, (usage, index) =>
+    usage < 0.9 ? "#54A2E5" : "#dc3545"
   );
   return {
     datasets: [

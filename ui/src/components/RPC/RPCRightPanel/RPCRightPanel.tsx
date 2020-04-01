@@ -328,7 +328,4 @@ const mapDispatchToProps = (dispatch: any) => ({
   }
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(RPCRightPanel);
+export default connect(mapStateToProps, mapDispatchToProps)(RPCRightPanel);

@@ -325,7 +325,4 @@ const mapDispatchToProps = (dispatch: any) => ({
     dispatch(fetchChainNetworksIfNeeded());
   }
 });
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Dashboard);
+export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);

@@ -4,12 +4,10 @@ import "./RPCLeftPanel.css";
 
 interface Props {
   className?: string;
-  onClickHistoryItem: (
-    rpc: {
-      method: string;
-      params: object[] | object;
-    }
-  ) => void;
+  onClickHistoryItem: (rpc: {
+    method: string;
+    params: object[] | object;
+  }) => void;
 }
 export class RPCLeftPanel extends React.Component<Props> {
   public render() {
