@@ -4,7 +4,6 @@ use jsonrpc_core::types::{
     Version,
 };
 use parking_lot::Mutex;
-use rand;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::{self, Error as SerdeError, Value};

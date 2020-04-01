@@ -1,4 +1,3 @@
-use jsonrpc_core;
 use jsonrpc_core::types::Version;
 use parking_lot::Mutex;
 use serde_json::{Error as SerdeError, Value};

@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use primitives::H256;
 use serde_derive::{Deserialize, Serialize};
-use serde_json;
 use std::collections::HashMap;
 use std::net::IpAddr;
 

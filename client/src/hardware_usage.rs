@@ -2,7 +2,6 @@ use crossbeam::channel::{Receiver, Sender};
 use crossbeam::{channel, select};
 use parking_lot::Mutex;
 use serde_derive::Serialize;
-use std::error::Error;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -81,12 +80,12 @@ impl HardwareService {
 
     fn prepare_cpu_usage(&self) -> Result<CpuMeasurement, String> {
         let sys = systemstat::System::new();
-        Ok(sys.cpu_load().map_err(|err| err.description().to_string())?)
+        Ok(sys.cpu_load().map_err(|err| err.to_string())?)
     }
 
     fn update(&mut self, cpu_measure: Option<CpuMeasurement>, sysinfo_sys: &mut sysinfo::System) -> Result<(), String> {
         let cpu_usage = if let Some(measure) = cpu_measure {
-            let cpu = measure.done().map_err(|err| err.description().to_string())?;
+            let cpu = measure.done().map_err(|err| err.to_string())?;
             cpu.iter().map(|core| f64::from(core.user + core.system)).collect()
         } else {
             Vec::new()

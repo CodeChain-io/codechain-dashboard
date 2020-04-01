@@ -1,6 +1,5 @@
 use super::update::{CallbackResult, Sender};
 use super::{fs_util, Error};
-use crossbeam;
 use std::thread;
 
 pub struct Job {}

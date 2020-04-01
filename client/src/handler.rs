@@ -3,7 +3,6 @@ use super::types::HandlerContext;
 use jsonrpc_core::types::{
     Call, Error as JSONRPCError, ErrorCode, Failure, Id, MethodCall, Response, Success, Version,
 };
-use serde_json;
 use std::cell::Cell;
 use std::rc::Rc;
 use std::sync::Arc;
