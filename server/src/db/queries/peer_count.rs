@@ -15,3 +15,11 @@ pub fn insert(
     ])?;
     Ok(())
 }
+
+pub fn remove_older_logs(conn: &DBConnection, time: chrono::DateTime<chrono::Utc>) -> postgres::Result<()> {
+    ctrace!("Remove peer count older than {}", time);
+
+    let result = conn.execute("DELETE FROM peer_count WHERE time<$1", &[&time])?;
+    ctrace!("Delete result {}", result);
+    Ok(())
+}
