@@ -1,7 +1,5 @@
 use super::super::super::common_rpc_types::StructuredLog;
 use super::super::types::{DBConnection, Log, LogQueryParams, OrderBy};
-use chrono;
-use postgres;
 use postgres::types::ToSql;
 use std::borrow::Borrow;
 use std::rc::Rc;

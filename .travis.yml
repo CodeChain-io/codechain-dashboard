@@ -1,6 +1,6 @@
 language: rust
 rust:
-  - 1.38.0
+  - 1.42.0
 jobs:
     include:
         - name: server
@@ -8,29 +8,29 @@ jobs:
             - cd $TRAVIS_JOB_NAME
           install:
             - rustup set profile minimal
-            - rustup toolchain install nightly-2019-10-13
-            - rustup component add rustfmt-preview --toolchain nightly-2019-10-13
-            - rustup component add clippy-preview --toolchain nightly-2019-10-13
+            - rustup toolchain install nightly-2020-02-23
+            - rustup component add rustfmt-preview --toolchain nightly-2020-02-23
+            - rustup component add clippy-preview --toolchain nightly-2020-02-23
           before_script:
             - cargo fetch --verbose
           script:
-            - cargo +nightly-2019-10-13 fmt -- --check
+            - cargo +nightly-2020-02-23 fmt -- --check
               && RUST_BACKTRACE=1 cargo test --verbose --all
-              && cargo +nightly-2019-10-13 clippy --all --all-targets -- -D warnings
+              && cargo +nightly-2020-02-23 clippy --all --all-targets -- -D warnings
         - name: client
           before_install:
             - cd $TRAVIS_JOB_NAME
           install:
             - rustup set profile minimal
-            - rustup toolchain install nightly-2019-10-13
-            - rustup component add rustfmt-preview --toolchain nightly-2019-10-13
-            - rustup component add clippy-preview --toolchain nightly-2019-10-13
+            - rustup toolchain install nightly-2020-02-23
+            - rustup component add rustfmt-preview --toolchain nightly-2020-02-23
+            - rustup component add clippy-preview --toolchain nightly-2020-02-23
           before_script:
             - cargo fetch --verbose
           script:
-            - cargo +nightly-2019-10-13 fmt -- --check
+            - cargo +nightly-2020-02-23 fmt -- --check
               && RUST_BACKTRACE=1 cargo test --verbose --all
-              && cargo +nightly-2019-10-13 clippy --all --all-targets -- -D warnings
+              && cargo +nightly-2020-02-23 clippy --all --all-targets -- -D warnings
         - name: ui
           before_install:
             - cd $TRAVIS_JOB_NAME

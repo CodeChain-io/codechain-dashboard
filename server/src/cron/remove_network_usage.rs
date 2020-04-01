@@ -1,8 +1,6 @@
 use crate::db::queries::network_usage::remove_older_logs;
-use chrono;
 use r2d2_postgres::PostgresConnectionManager;
 use std::{format, thread};
-use time;
 
 pub fn run(db_user: &str, db_password: &str) {
     let manager = PostgresConnectionManager::new(

@@ -22,7 +22,6 @@ use std::sync::Arc;
 use std::time::Duration;
 use std::{fs, thread};
 use subprocess::{Exec, ExitStatus, PopenError};
-use toml;
 
 #[derive(Debug)]
 pub enum Error {

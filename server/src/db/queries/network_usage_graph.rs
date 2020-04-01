@@ -3,7 +3,6 @@ use crate::common_rpc_types::{
     GraphCommonArgs, GraphNetworkOutAllRow, GraphNetworkOutNodeExtensionRow, GraphNetworkOutNodePeerRow, GraphPeriod,
     NodeName,
 };
-use postgres;
 
 pub fn query_network_out_all(
     conn: &DBConnection,

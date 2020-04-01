@@ -1,7 +1,6 @@
 use super::client::{ServiceSender as ClientServiceSender, State as ClientState};
 use super::db::ServiceSender as DBServiceSender;
 use super::noti::Noti;
-use chrono;
 use std::sync::Arc;
 use std::thread;
 

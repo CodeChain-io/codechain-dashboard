@@ -1,6 +1,4 @@
 use super::super::types::DBConnection;
-use chrono;
-use postgres;
 
 pub fn insert(
     conn: &DBConnection,
