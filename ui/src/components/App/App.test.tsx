@@ -15,7 +15,7 @@ it("renders without crashing", () => {
     composeEnhancers(applyMiddleware(thunkMiddleware))
   );
   ReactDOM.render(
-    <Provider store={store}>
+    <Provider store={store as any}>
       <App />
     </Provider>,
     div

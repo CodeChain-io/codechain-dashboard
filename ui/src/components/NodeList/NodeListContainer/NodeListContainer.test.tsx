@@ -1,4 +1,4 @@
-import { NetworkNodeInfo } from "src/requests/types";
+import { NetworkNodeInfo } from "../../../requests/types";
 import * as NLC from "./NodeListContainer";
 
 describe("Test node ordering", () => {

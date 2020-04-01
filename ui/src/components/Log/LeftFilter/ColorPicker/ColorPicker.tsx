@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ColorResult, GithubPicker } from "react-color";
+import { ColorState, GithubPicker } from "react-color";
 
 import "./ColorPicker.css";
 
@@ -46,7 +46,7 @@ export default class ColorPicker extends React.Component<Props, State> {
   public handleClose = () => {
     this.setState({ isColorPickerOpen: false });
   };
-  public handleOnChangeColor = (color: ColorResult) => {
+  public handleOnChangeColor = (color: ColorState) => {
     this.setState({
       isColorPickerOpen: false
     });

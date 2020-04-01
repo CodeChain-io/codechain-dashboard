@@ -19,7 +19,7 @@ const store = createStore(
 );
 
 ReactDOM.render(
-  <Provider store={store}>
+  <Provider store={store as any}>
     <App />
   </Provider>,
   document.getElementById("root") as HTMLElement

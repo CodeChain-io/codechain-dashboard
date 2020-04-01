@@ -212,7 +212,7 @@ const mapStateToProps = (state: ReducerConfigure) => ({
   selectedTargets: state.logReducer.filter.targets,
   nodes:
     state.chainNetworksReducer.chainNetworks &&
-    state.chainNetworksReducer.chainNetworks.nodes,
+    (state.chainNetworksReducer.chainNetworks.nodes as any[]),
   targets: state.logReducer.targets,
   nodeColors: state.logReducer.nodeColor
 });

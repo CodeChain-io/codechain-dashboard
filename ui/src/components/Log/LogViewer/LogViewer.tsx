@@ -126,7 +126,7 @@ class LogViewer extends React.Component<Props, any> {
   };
 }
 const mapStateToProps = (state: ReducerConfigure) => ({
-  logs: state.logReducer.logs,
+  logs: state.logReducer.logs as any[],
   orderBy: state.logReducer.orderBy,
   isFetchingLog: state.logReducer.isFetchingLog,
   noMoreData: state.logReducer.noMoreData,

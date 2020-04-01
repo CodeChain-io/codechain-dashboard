@@ -15,7 +15,7 @@ interface OwnProps {
 }
 
 interface StateProps {
-  nodeInfo?: NodeInfo;
+  nodeInfo?: NodeInfo | null;
 }
 
 interface DispatchProps {
