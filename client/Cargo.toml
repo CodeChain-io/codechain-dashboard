@@ -8,7 +8,7 @@ edition = "2018"
 atty = "0.2"
 clap = { version = "*", features = ["yaml"] }
 colored = "1.6"
-crossbeam = "0.4"
+crossbeam = "0.7"
 env_logger = "0.5.7"
 jsonrpc-core = { git = "https://github.com/paritytech/jsonrpc.git", branch = "parity-1.11" }
 libc = "0.2"
